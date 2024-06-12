@@ -2,6 +2,7 @@
 # define CONFIG_HPP
 
 # include "Common.hpp"
+# include "ConfigServer.hpp"
 # include <regex>
 # include <vector>
 # include <string>
@@ -23,11 +24,14 @@ public:
 
 	Config &		operator=( Config const & rhs );
 
+	int				CreateConfigServer( );
 
 private:
 	Config ( void );
-	ifstream		_ConfigFile;	
-
+	ifstream					_ConfigFile;
+	string						_Filename;
+	vector<ConfigServer>		_ConfigServers;
+	
 };
 
-#endif /* ************************************************ BITCOINEXCHANGE_H */
+#endif /* ************************************************ BITCOINEXCHANGE_H */	

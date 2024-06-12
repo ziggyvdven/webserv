@@ -1,5 +1,5 @@
 # include "../includes/Common.hpp"
-# include "../includes/Config.hpp"
+# include "../includes/ConfigGlobal.hpp"
 
 using namespace std;
 #define PORT 8080

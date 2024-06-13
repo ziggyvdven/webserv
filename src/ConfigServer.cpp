@@ -3,18 +3,31 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-ConfigServer::ConfigServer(): _block(){
-	// cout << G << "ConfigServer Default constructor called" << END << std::endl;
-}
+// ConfigServer::ConfigServer(): _Block(), _Config(this){
+// 	// cout << G << "ConfigServer Default constructor called" << END << std::endl;
+// }
 
-ConfigServer::ConfigServer(vector<string> const & conf): _block(conf){
+ConfigServer::ConfigServer(vector<string> const & conf, Config & config): _Block(conf), _Config(config){
 	// cout << G << "ConfigServer constructor by param called" << END << std::endl;
 	cout << endl << "SERVER CONFIGURATION" << endl;
-	for (vector<string>::iterator it = _block.begin(); it != _block.end(); ++it)
-		cout << *it << endl;
+	string 			whitespace = " \t";
+	string			line;
+	for (vector<string>::iterator it = _Block.begin(); it != _Block.end(); ++it){
+		line = *it;
+		// cut the first word from the string
+		if (!line.empty() && line.find_first_not_of(whitespace) != string::npos){
+			size_t start = line.find_first_not_of(whitespace);
+			size_t end = line.find_first_of(whitespace, start) - 1;
+			line = line.substr(start, end);
+		}
+		cout << line << endl;
+		unordered_set<string>		directives = _Config.getDirectives();
+		if (directives.find(line) == directives.end())
+			throw (runtime_error("unknown directive " + line + " in " + "config/" + _Config.getFilename()));
+		}
 }
 
-ConfigServer::ConfigServer( const ConfigServer & src ){
+ConfigServer::ConfigServer( const ConfigServer & src ): _Config(src._Config){
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
 	*this = src;
 }
@@ -36,7 +49,7 @@ ConfigServer &				ConfigServer::operator=( ConfigServer const & rhs )
 	// std::cout << "ConfigServer Copy assignment operator called" << std::endl;
 	if ( this != &rhs )
 	{
-
+		_Config = rhs._Config;
 	}
 	return *this;
 }

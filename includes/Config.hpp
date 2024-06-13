@@ -6,6 +6,7 @@
 # include <regex>
 # include <vector>
 # include <string>
+# include <unordered_set>
 
 using namespace std;
 
@@ -15,6 +16,9 @@ using namespace std;
 # define B "\033[0;34m"
 # define R "\033[0;31m"
 
+const string CONFIG_FOLDER = "config";
+
+class ConfigServer;
 
 class Config {
 public:
@@ -22,14 +26,17 @@ public:
 	Config ( Config const & src);
 	~Config( void );
 
-	Config &		operator=( Config const & rhs );
+	Config &					operator=( Config const & rhs );
 
-	int				CreateConfigServer( );
+	int							CreateConfigServer( );
+	unordered_set<string>&		getDirectives();
+	string						getFilename() const;
 
 private:
 	Config ( void );
 	ifstream					_ConfigFile;
 	string						_Filename;
+	unordered_set<string>		_Directives;
 	vector<ConfigServer>		_ConfigServers;
 	
 };

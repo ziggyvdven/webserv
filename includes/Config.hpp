@@ -10,6 +10,8 @@
 # include <utility>
 # include <cstdlib>
 
+# define NUM_DIRECTIVES 12
+
 const string CONFIG_FOLDER = "config";
 
 class ConfigServer;

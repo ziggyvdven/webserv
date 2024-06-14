@@ -26,15 +26,14 @@ public:
 
 	ConfigServer &		operator=( ConfigServer const & rhs );
 
-	void				Parseline(pair<string, unsigned> & linepair);
-	// void				ParseListen();
+	void				Parseline(pair<string, unsigned> & linepair, string line);
+	void				ParseListen(pair<string, unsigned> & linepair);
 
 
 private:
 	vector<pair<string, unsigned> > 	_Block;
 	Config&								_Config;
-	void 								(ConfigServer::*_func[1])(string line);
-	// int								_Port;
+	int									_Port;
 	// string							_Host;
 	// string							_ServerName;
 	// long								_ClientMaxBodySize;

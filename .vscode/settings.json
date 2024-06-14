@@ -20,7 +20,8 @@
     "map": "cpp",
     "string_view": "cpp",
     "unordered_map": "cpp",
-    "stdexcept": "cpp"
+    "stdexcept": "cpp",
+    "utility": "cpp"
   },
   "C_Cpp_Runner.cCompilerPath": "clang",
   "C_Cpp_Runner.cppCompilerPath": "clang++",

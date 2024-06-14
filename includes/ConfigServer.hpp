@@ -20,23 +20,26 @@ class Config;
 
 class ConfigServer {
 public:
-	ConfigServer(vector<string> const & block, Config & config);
+	ConfigServer(vector<pair<string, unsigned> > const & conf, Config & config);
 	ConfigServer ( ConfigServer const & src);
 	~ConfigServer( void );
 
 	ConfigServer &		operator=( ConfigServer const & rhs );
 
+	void				Parseline(pair<string, unsigned> & linepair);
+	// void				ParseListen();
+
 
 private:
-	// ConfigServer();
-	vector<string> 			_Block;
-	Config &				_Config;
-	// int					_Port;
-	// string				_Host;
-	// string				_ServerName;
-	// long					_ClientMaxBodySize;
-	// map<short, string>	_ErrorPages;
-	// bool					_AutoIndex;
+	vector<pair<string, unsigned> > 	_Block;
+	Config&								_Config;
+	void 								(ConfigServer::*_func[1])(string line);
+	// int								_Port;
+	// string							_Host;
+	// string							_ServerName;
+	// long								_ClientMaxBodySize;
+	// map<short, string>				_ErrorPages;
+	// bool								_AutoIndex;
 
 
 

@@ -7,14 +7,8 @@
 # include <vector>
 # include <string>
 # include <unordered_set>
-
-using namespace std;
-
-# define BOLD "\033[1;37m"
-# define END "\033[0m"
-# define G "\033[0;32m"
-# define B "\033[0;34m"
-# define R "\033[0;31m"
+# include <utility>
+# include <cstdlib>
 
 const string CONFIG_FOLDER = "config";
 
@@ -29,11 +23,16 @@ public:
 	Config &					operator=( Config const & rhs );
 
 	int							CreateConfigServer( );
+	void 						init_directives( void );
+
+
 	unordered_set<string>&		getDirectives();
+	unsigned					getLinenumber() const;
 	string						getFilename() const;
+	void						incrementLinenumber();
 
 private:
-	Config ( void );
+	unsigned					_Linenumber;
 	ifstream					_ConfigFile;
 	string						_Filename;
 	unordered_set<string>		_Directives;

@@ -1,35 +1,30 @@
 #include "../includes/Config.hpp"
 
-
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Config::Config() {
-}
-
-Config::Config(string const & input) {
+Config::Config(string const & input) : _Linenumber(0){
 	regex 			config_filename(CONFIG_FOLDER + "\\/[a-zA-Z_0-9]+\\.conf");
 	regex			server_reg("^server\\s*\\{");
 	string			line;
-
+	
 	// check the input extension .conf
 	if (!regex_match(input, config_filename))
 		throw(runtime_error(input + " is not a valid .conf file"));
+	init_directives();
 	_Filename = input;
 	// open the input file
 	_ConfigFile.open(input);
 	if (!_ConfigFile.good())
 		throw(runtime_error("unable to open: " + input));
-	// look for server {
+	// look for "server {""
 	while (getline(_ConfigFile, line)){
-		if (regex_match(line, server_reg)){
+		_Linenumber++;
+		if (regex_match(line, server_reg))
 			CreateConfigServer( );
-		}
 		else if (!line.empty())
-			throw (runtime_error(input + " invalid entry in config file: " + line));
+			throw (runtime_error("unknown directive \"" + line + "\" in " + _Filename + ":" + to_string(_Linenumber)));
 	}
-	_Directives.insert("listen");
-	_Directives.insert("host");
 }
 
 Config::Config( const Config & src ){
@@ -65,28 +60,53 @@ Config & Config::operator=( Config const & rhs )
 
 int	Config::CreateConfigServer( ){
 // function to create a server setting block from the opening { to the closin }
-	string 			whitespace = " \t";
-	regex			server_reg("^server\\s*\\{");
-	vector<string>	block;
-	string			line;
-	long			opening_brackets = 1;
-	long			closing_brackets = 0;
+	string 							whitespace = " \t";
+	regex							server_reg("^server\\s*\\{");
+	vector<pair<string, unsigned> >	block;
+	string							line;
+	pair<string, unsigned> 			linepair;
+	long							opening_brackets = 1;
+	long							closing_brackets = 0;
 
 	while (getline(_ConfigFile, line))
 	{
-		if (line.find("}") != string::npos)
+		_Linenumber++;
+		if (line[line.find_first_not_of(whitespace)] != '#' && line.find("}") != string::npos)
 			closing_brackets++;
-		if (line.find("{") != string::npos)
+		if (line[line.find_first_not_of(whitespace)] != '#' && line.find("{") != string::npos)
 			opening_brackets++;
 		if (opening_brackets == closing_brackets)
-			break;
+			goto match;
 		if (regex_match(line, server_reg))
 			throw (runtime_error(_Filename + " missing closing bracket for server configuration"));	
 		if (!line.empty() && line[line.find_first_not_of(whitespace)] != '#' && line.find_first_not_of(whitespace) != string::npos)
-			block.push_back(line);
+		{
+			linepair.first = line;
+			linepair.second = _Linenumber;
+			block.push_back(linepair);
+		}
 	}
+	throw (runtime_error(_Filename + " missing closing bracket for server configuration"));	
+	match:
 	_ConfigServers.push_back(ConfigServer(block, *this));
 	return (0);
+
+}
+
+void Config::init_directives( void ){
+// Creaset a set of possible directives
+	_Directives.insert("listen");
+	_Directives.insert("host");
+	_Directives.insert("server_name");
+	_Directives.insert("client_max_body_size");
+	_Directives.insert("error_page");
+	_Directives.insert("location");
+	_Directives.insert("allow_methods");
+	_Directives.insert("autoindex");
+	_Directives.insert("index");
+	_Directives.insert("root");
+	_Directives.insert("cgi_path");
+	_Directives.insert("cgi_ext");
 }
 
 /*
@@ -94,11 +114,19 @@ int	Config::CreateConfigServer( ){
 */
 
 unordered_set<string>&		Config::getDirectives(){
-	return (this->_Directives);
+	return (_Directives);
 }
 
 string						Config::getFilename() const{
 	return (this->_Filename);
+}
+
+unsigned					Config::getLinenumber() const{
+	return (_Linenumber);
+}
+
+void						Config::incrementLinenumber(){
+	_Linenumber++;
 }
 
 

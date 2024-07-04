@@ -63,7 +63,7 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 
 void	ConfigServer::Parseline(pair<string, unsigned> &linepair){
 
-
+	(void) linepair;
 }
 
 

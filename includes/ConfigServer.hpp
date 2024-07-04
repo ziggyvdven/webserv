@@ -33,7 +33,7 @@ public:
 private:
 	vector<pair<string, unsigned> > 	_Block;
 	Config&								_Config;
-	void 								(ConfigServer::*_func[1])(string line);
+	// void 								(ConfigServer::*_func[1])(string line);
 	// int								_Port;
 	// string							_Host;
 	// string							_ServerName;

@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/04 15:29:50 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/04 18:34:12 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -137,11 +137,6 @@ int	WebServer::run(void)
 	return (0);
 }
 
-// std::string const	_parseHttpRequest(const char *msg)
-// {
-// 	return (HttpRequest(msg));
-// }
-
 void	WebServer::_sendData(int socket, const char* str, size_t len) const
 {
 	ssize_t	rtn = 0;
@@ -203,69 +198,6 @@ void	WebServer::_compressFdsArray(void)
 	}
 }
 
-std::string const	WebServer::_getContentType(std::string const &path)
-{
-	size_t dotPos = path.rfind('.');
-	if (dotPos != std::string::npos) {
-		std::string ext = path.substr(dotPos);
-		std::unordered_map<std::string, std::string>::const_iterator it = mimeTypes.find(ext);
-		if (it != mimeTypes.end()) {
-			return it->second;
-		}
-	}
-	return "application/octet-stream"; // Default binary type
-}
-
-std::string const	WebServer::_onMessageReceived(const char* msg)
-{
-	// GET /index.html HTTP/1.1
-
-	// Parse out the document requested
-	std::istringstream	iss(msg);
-	std::vector<std::string>	parsed((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
-
-	std::string		content = "<h1>404 Not Found</h1>";
-	std::string		htmlFile = "/index.html";
-	std::string		contentType = "text/html";
-	int				errorCode = 404;
-
-	if (parsed.size() >= 3 && parsed[0] == "GET")
-	{
-		htmlFile = parsed[1];
-		if (htmlFile == "/")
-		{
-			htmlFile = "/index.html";
-		}
-	}
-
-	// Open the document in the local file system
-	std::ifstream	f("./wwwroot" + htmlFile, std::ios::binary);
-
-	if (f.good())
-	{
-		// std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-		// content = str;
-		std::vector<char> buffer((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-		content = std::string(buffer.begin(), buffer.end());
-		contentType = _getContentType(htmlFile);
-		errorCode = 200;
-	}
-
-	f.close();
-
-	// Write the document back to the client
-	std::ostringstream	oss;
-	oss << "HTTP/1.1 " << errorCode << " OK\r\n";
-	oss << "Cache-Control: no-cache, private\r\n";
-	oss << "Content-Type: " << contentType << "\r\n";
-	oss << "Content-Length: " << content.size() << "\r\n";
-	oss << "\r\n";
-	oss << content;
-
-	std::string	output = oss.str();
-	return (output);
-}
-
 int	WebServer::_errorMessage(std::string const msg) const
 {
 	std::cerr << msg << std::endl;
@@ -276,3 +208,66 @@ int	WebServer::_errorMessage(std::string const msg) const
 	}
 	return (1);
 }
+
+// std::string const	WebServer::_getContentType(std::string const &path)
+// {
+// 	size_t dotPos = path.rfind('.');
+// 	if (dotPos != std::string::npos) {
+// 		std::string ext = path.substr(dotPos);
+// 		std::unordered_map<std::string, std::string>::const_iterator it = mimeTypes.find(ext);
+// 		if (it != mimeTypes.end()) {
+// 			return it->second;
+// 		}
+// 	}
+// 	return "application/octet-stream"; // Default binary type
+// }
+
+// std::string const	WebServer::_onMessageReceived(const char* msg)
+// {
+// 	// GET /index.html HTTP/1.1
+
+// 	// Parse out the document requested
+// 	std::istringstream	iss(msg);
+// 	std::vector<std::string>	parsed((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
+
+// 	std::string		content = "<h1>404 Not Found</h1>";
+// 	std::string		htmlFile = "/index.html";
+// 	std::string		contentType = "text/html";
+// 	int				errorCode = 404;
+
+// 	if (parsed.size() >= 3 && parsed[0] == "GET")
+// 	{
+// 		htmlFile = parsed[1];
+// 		if (htmlFile == "/")
+// 		{
+// 			htmlFile = "/index.html";
+// 		}
+// 	}
+
+// 	// Open the document in the local file system
+// 	std::ifstream	f("./wwwroot" + htmlFile, std::ios::binary);
+
+// 	if (f.good())
+// 	{
+// 		// std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+// 		// content = str;
+// 		std::vector<char> buffer((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+// 		content = std::string(buffer.begin(), buffer.end());
+// 		contentType = _getContentType(htmlFile);
+// 		errorCode = 200;
+// 	}
+
+// 	f.close();
+
+// 	// Write the document back to the client
+// 	std::ostringstream	oss;
+// 	oss << "HTTP/1.1 " << errorCode << " OK\r\n";
+// 	oss << "Cache-Control: no-cache, private\r\n";
+// 	oss << "Content-Type: " << contentType << "\r\n";
+// 	oss << "Content-Length: " << content.size() << "\r\n";
+// 	oss << "\r\n";
+// 	oss << content;
+
+// 	std::string	output = oss.str();
+// 	return (output);
+// }

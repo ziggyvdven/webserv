@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/04 15:42:25 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/04 18:41:42 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,10 +51,10 @@ std::string const	HttpHandler::handleRequest(std::string request)
 	f = _request.find('\n', i);
 	_version = _request.substr(i, f - i);
 
-	i = _parseHeaderFields(i, f);
+	// i = _parseHeaderFields(i, f);
 	
-	if (_request[i])
-		_body = &_request[i];
+	// if (_request[i])
+	// 	_body = &_request[i];
 
 	_buildResponse();
 	return (_response);
@@ -106,7 +106,7 @@ void	HttpHandler::_buildResponse()
 {
 	std::ifstream		f("./data/www" + _target, std::ios::binary);
 	std::ostringstream	oss;
-	std::string			content;
+	std::string			content = _request;
 	int					errorCode = 404;
 
 	if (f.good())

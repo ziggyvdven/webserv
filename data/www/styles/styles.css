@@ -1,0 +1,11 @@
+/* styles.css */
+
+body {
+	background-color: lightpink;
+}
+
+#main-container {
+	width: 50%;
+	background-color: blueviolet;
+	padding: 20px;
+}

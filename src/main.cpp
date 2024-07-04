@@ -14,6 +14,11 @@ int main(int argc, char **argv)
 		}
 		try {
 			Config  config(input);
+
+			vector<ConfigServer>		_ConfigServers = config.GetConfigServers();
+			// cout << _ConfigServers[1].getPort() << endl;
+			cout << config.GetServer(0) << endl;
+			cout << config.GetServer(1) << endl;
 		}
 		catch (exception &e)
 		{

@@ -3,7 +3,7 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Config::Config(string const & input) : _Linenumber(0){
+Config::Config(string const & input) : _Linenumber(0), _NServers(0){
 	regex 			config_filename(CONFIG_FOLDER + "\\/[a-zA-Z_0-9]+\\.conf");
 	regex			server_reg("^server\\s*\\{");
 	string			line;
@@ -59,7 +59,7 @@ Config & Config::operator=( Config const & rhs )
 */
 
 int	Config::CreateConfigServer( ){
-// function to create a server setting block from the opening { to the closin }
+// function to create a server setting block from the opening { to the closing }
 	string 							whitespace = " \t";
 	regex							server_reg("^server\\s*\\{");
 	vector<pair<string, unsigned> >	block;
@@ -89,12 +89,13 @@ int	Config::CreateConfigServer( ){
 	throw (runtime_error(_Filename + " missing closing bracket for server configuration"));	
 	match:
 	_ConfigServers.push_back(ConfigServer(block, *this));
+	_NServers++;
 	return (0);
 
 }
 
 void Config::init_directives( void ){
-// Creaset a set of possible directives
+// Creates a set of possible directives
 	_Directives.insert("listen");
 	_Directives.insert("host");
 	_Directives.insert("server_name");
@@ -127,6 +128,16 @@ unsigned					Config::getLinenumber() const{
 
 void						Config::incrementLinenumber(){
 	_Linenumber++;
+}
+
+vector<ConfigServer>&		Config::GetConfigServers(){
+	return(_ConfigServers);
+}
+
+ConfigServer&				Config::GetServer(size_t index){
+	if (index < 0 || index > _NServers)
+		throw (runtime_error("GetServer index out of bounds"));
+	return (_ConfigServers[index]);
 }
 
 

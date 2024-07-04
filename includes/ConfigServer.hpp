@@ -7,6 +7,7 @@
 # include <string>
 # include <map>
 # include <unordered_set>
+# include <arpa/inet.h>
 
 using namespace std;
 
@@ -26,16 +27,23 @@ public:
 
 	ConfigServer &		operator=( ConfigServer const & rhs );
 
-	void				Parseline(pair<string, unsigned> & linepair, string line);
+	void				Parseline(pair<string, unsigned> & linepair, string& line);
 	void				ParseListen(pair<string, unsigned> & linepair);
+	void				ParseServerName(pair<string, unsigned> & linepair);
+
+	unsigned short		getPort() const;
+	string				getHost() const;
+	string				getServerName() const;
+
+	bool				ValidatePort(string& line, string N) const;
 
 
 private:
 	vector<pair<string, unsigned> > 	_Block;
 	Config&								_Config;
-	int									_Port;
-	// string							_Host;
-	// string							_ServerName;
+	unsigned short						_Port;
+	string								_Host;
+	string								_ServerName;
 	// long								_ClientMaxBodySize;
 	// map<short, string>				_ErrorPages;
 	// bool								_AutoIndex;
@@ -43,5 +51,7 @@ private:
 
 
 };
+
+std::ostream &			operator<<( std::ostream & o, ConfigServer const & i );
 
 #endif /* ********************************************************** SERVER_H */

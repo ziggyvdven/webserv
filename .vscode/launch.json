@@ -1,12 +1,13 @@
 {
   "version": "0.2.0",
   "configurations": [
+
     {
       "name": "C/C++ Runner: Debug Session",
       "type": "lldb",
       "request": "launch",
       "args": ["config/webserv.conf"],
-      "cwd": "/Users/zvan-de-/42/webserv",
+      "cwd": "/Users/zvan-de-/42/webserv/",
       "program": "/Users/zvan-de-/42/webserv/webserv"
     }
   ]

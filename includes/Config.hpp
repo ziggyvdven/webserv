@@ -33,8 +33,12 @@ public:
 	string						getFilename() const;
 	void						incrementLinenumber();
 
+	vector<ConfigServer>&		GetConfigServers();
+	ConfigServer&				GetServer(size_t index);
+
 private:
 	unsigned					_Linenumber;
+	unsigned					_NServers;
 	ifstream					_ConfigFile;
 	string						_Filename;
 	unordered_set<string>		_Directives;

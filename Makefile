@@ -6,7 +6,7 @@
 #    By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/06/07 15:49:57 by zvan-de-         ###   ########.fr        #
+#    Updated: 2024/07/03 19:17:56 by zvan-de-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -91,7 +91,7 @@ $(OBJS_PATH):
 	@mkdir -p $(OBJS_PATH)
 
 run: all
-	@./$(NAME) input.txt
+	@./$(NAME) config/webserv.conf
 
 clean:
 	@rm -rf $(OBJS) $(OBJS_PATH)

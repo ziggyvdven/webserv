@@ -8,6 +8,8 @@
 # include <map>
 # include <unordered_set>
 # include <arpa/inet.h>
+# include <sstream>
+# include <algorithm>
 
 using namespace std;
 
@@ -27,15 +29,16 @@ public:
 
 	ConfigServer &		operator=( ConfigServer const & rhs );
 
-	void				Parseline(pair<string, unsigned> & linepair, string& line);
-	void				ParseListen(pair<string, unsigned> & linepair);
-	void				ParseServerName(pair<string, unsigned> & linepair);
 
 	unsigned short		getPort() const;
 	string				getHost() const;
 	string				getServerName() const;
+	long long			getClientMaxBodySize() const;
+	string				getErrorPage(short const & errorcode) const;
+	map<short, string>&	getErrorPageMap() const;
 
 	bool				ValidatePort(string& line, string N) const;
+	string 				trim(const std::string& str);
 
 
 private:
@@ -44,10 +47,17 @@ private:
 	unsigned short						_Port;
 	string								_Host;
 	string								_ServerName;
-	// long								_ClientMaxBodySize;
-	// map<short, string>				_ErrorPages;
+	long long							_ClientMaxBodySize;
+	map<short, string>					_ErrorPages;
 	// bool								_AutoIndex;
 
+	void				Parseline(pair<string, unsigned> & linepair, string& line);
+	void				ParseListen(pair<string, unsigned> & linepair);
+	void				ParseHost(pair<string, unsigned> & linepair);
+	void				ParseServerName(pair<string, unsigned> & linepair);
+	void				ParseClientMaxBodySize(pair<string, unsigned> & linepair);
+	void				ParseErrorPage(pair<string, unsigned> & linepair);
+	void				ParseErrorCodes(std::vector<std::string> &tokens, unsigned const & linenumber) const;
 
 
 };

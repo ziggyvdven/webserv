@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 			Config  config(input);
 
 			vector<ConfigServer>		_ConfigServers = config.GetConfigServers();
-			cout << _ConfigServers[0].getErrorPage(300) << endl;
+			// cout << _ConfigServers[0].getErrorPage(300) << endl;
 			cout << config.GetServer(0) << endl;
 			cout << config.GetServer(1) << endl;
 			

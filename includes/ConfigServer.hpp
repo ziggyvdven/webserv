@@ -30,15 +30,13 @@ public:
 	ConfigServer &		operator=( ConfigServer const & rhs );
 
 
-	unsigned short		getPort() const;
-	string				getHost() const;
-	string				getServerName() const;
-	long long			getClientMaxBodySize() const;
-	string				getErrorPage(short const & errorcode) const;
-	map<short, string>&	getErrorPageMap() const;
+	unsigned short				getPort() const;
+	string						getHost() const;
+	string						getServerName() const;
+	long long					getClientMaxBodySize() const;
+	string						getErrorPage(short const & errorcode) const;
+	const map<short, string>&	getErrorPageMap() const;
 
-	bool				ValidatePort(string& line, string N) const;
-	string 				trim(const std::string& str);
 
 
 private:
@@ -50,6 +48,9 @@ private:
 	long long							_ClientMaxBodySize;
 	map<short, string>					_ErrorPages;
 	// bool								_AutoIndex;
+
+	bool				ValidatePort(string& line, string N) const;
+	string 				trim(const std::string& str);
 
 	void				Parseline(pair<string, unsigned> & linepair, string& line);
 	void				ParseListen(pair<string, unsigned> & linepair);

@@ -75,8 +75,8 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 	}
 	else
 		o << "MAX C.BODY| " << i.getClientMaxBodySize() << " Bytes" << endl;
-	o << "ERROR-PAGES| ";
-	for (map<short, string>::iterator it = _ErrorPages.begin(); it != _ErrorPages.end(); ++it) {
+	o << "ERRORPAGES| ";
+	for (map<short, string>::const_iterator it = i.getErrorPageMap().begin(); it != i.getErrorPageMap().end(); ++it) {
         o << it->first << ": " << it->second << " ";
     }
 	o << endl;
@@ -254,21 +254,22 @@ void	ConfigServer::ParseErrorPage(pair<string, unsigned> & linepair){
 	string  line = linepair.first;
 
 	//cut the error_page of the line;
-	size_t start = line.find("error_page") + 10;
-	size_t end = line.find(";") - 1;
+	size_t start = line.find("error_page") + 11;
+	size_t end = line.back();
+	if (end != ';')
+		throw (runtime_error("Missing trailing ';' in the \"error_page\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 	string errorpages = line.substr(line.find_first_not_of(" \t", start), end);
-	// cout << errorpages << endl;
-	// if (regex_match(line, error_page_line)){
-		istringstream iss(errorpages);
-    	vector<std::string> tokens;
-    	string token;
-    	while (iss >> token) 
-        	tokens.push_back(trim(token));
-		string page = tokens.back();
-		tokens.pop_back();
-		ParseErrorCodes(tokens, linepair.second);
-		for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it)
-			_ErrorPages[stoi(*it)] = page;
+	istringstream iss(errorpages);
+	vector<std::string> tokens;
+	string token;
+	while (iss >> token) 
+		tokens.push_back(trim(token));
+	string page = tokens.back();
+	tokens.pop_back();
+	page.pop_back();
+	ParseErrorCodes(tokens, linepair.second);
+	for (std::vector<std::string>::iterator it = tokens.begin(); it != tokens.end(); ++it)
+		_ErrorPages[stoi(*it)] = page;
 }
 
 
@@ -303,7 +304,7 @@ string	ConfigServer::getErrorPage(short const & errorcode) const{
 	return ("");
 }
 
-map<short, string>*	ConfigServer::getErrorPageMap() const{
+const map<short, string>&	ConfigServer::getErrorPageMap() const{
 	return (this->_ErrorPages);
 }
 

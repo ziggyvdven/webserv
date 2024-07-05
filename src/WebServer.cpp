@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/04 18:34:12 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/05 15:11:59 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,13 +14,6 @@
 
 WebServer::WebServer(void)
 {
-	mimeTypes[".html"] = "text/html";
-	mimeTypes[".htm"] = "text/html";
-	mimeTypes[".avif"] = "image/avif";
-	mimeTypes[".jpg"] = "image/jpeg";
-	mimeTypes[".jpeg"] = "image/jpeg";
-	mimeTypes[".png"] = "image/png";
-	mimeTypes[".gif"] = "image/gif";
 	_listeningSocketCreated = false;
 	_nfds = 1;
 }

@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/04 18:41:42 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/05 16:13:01 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,8 @@ std::string const	HttpHandler::handleRequest(std::string request)
 	_target = _request.substr(i, f - i);
 	if (_target == "/")
 		_target = "/index.html";
+	// else if (_target == "/cgi-bin/upload.py")
+	// 	_execCgiScript();
 
 	i = f + 1;
 	f = _request.find('\n', i);
@@ -127,7 +129,34 @@ void	HttpHandler::_buildResponse()
 	_response = oss.str();
 }
 
+// void	HttpHandler::_execCgiScript(void) const
+// {
+// 	char 			**argv = new char *[2];
+// 	pid_t			process_id;
+
+// 	argv[0] = _getScriptName().c_str();
+// 	process_id = fork();
+// 	if (process_id < 0)
+// 		perror ("fork() failed");
+// 	else if (process_id == 0)
+// 	{
+// 		execve (_target.c_str(), argv, NULL);
+// 		perror ("execve() failed");
+// 		exit (EXIT_FAILURE);
+// 	}
+// }
+
 /*	Utils	***************************************************************** */
+
+std::string	HttpHandler::_getScriptName(void) const
+{
+	size_t	i;
+	
+	i = _target.find("/cgi-bin/");
+	i = _target.find('/', i);
+
+	return (&_target[i + 1]);
+}
 
 void	HttpHandler::_printHeaderFields(void) const
 {

@@ -5,6 +5,7 @@ body {
 }
 
 #main-container {
+	margin: auto;
 	width: 50%;
 	background-color: blueviolet;
 	padding: 20px;

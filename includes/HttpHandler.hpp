@@ -6,13 +6,14 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/04 15:21:53 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/05 16:06:18 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef HTTPHANDLER_HPP
 # define HTTPHANDLER_HPP
 
+# include <unistd.h>
 # include <fstream>
 # include <iostream>
 # include <sstream>
@@ -36,6 +37,9 @@ private:
 	std::string							_body;
 
 	static std::string const			_fieldList[FIELD_COUNT];
+
+	void								_execCgiScript(void) const;
+	std::string							_getScriptName(void) const;
 
 	size_t								_findField(std::string const key) const;
 	void								_buildResponse();

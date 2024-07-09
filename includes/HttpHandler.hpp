@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/05 16:06:18 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/08 14:22:35 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 # include <iostream>
 # include <sstream>
 # include <string>
+# include <vector>
 # include <map>
 
 # define FIELD_COUNT	1
@@ -39,7 +40,7 @@ private:
 	static std::string const			_fieldList[FIELD_COUNT];
 
 	void								_execCgiScript(void) const;
-	std::string							_getScriptName(void) const;
+	char const							*_getScriptName(void) const;
 
 	size_t								_findField(std::string const key) const;
 	void								_buildResponse();

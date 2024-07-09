@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/05 15:12:15 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/09 18:04:18 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,28 +16,22 @@
 # include <fstream>
 # include <iostream>
 # include <sstream>
-# include <netinet/in.h>
 # include <poll.h>
 # include <sys/socket.h>
-# include <sys/ioctl.h>
-# include <fcntl.h>
 # include <unistd.h>
 # include <vector>
 # include "HttpHandler.hpp"
-
-# define PORT			8080
+# include "Socket.hpp"
 
 class WebServer
 {
 private:
 
-	struct sockaddr_in	_address;
 	struct pollfd		_fds[FD_SETSIZE];
-	int 				_listeningSocket;
-	bool				_listeningSocketCreated;
+	// int 				_listeningSocket;
 	int					_nfds;
 
-	int					_errorMessage(std::string const msg) const;
+	// int					_errorMessage(std::string const msg) const;
 
 	void				_acceptConnections(void);
 	void				_cleanUpSockets(void) const;
@@ -52,7 +46,7 @@ public:
 	WebServer(void);
 	~WebServer();
 
-	int	init(void);
+	int	init(std::vector<Socket> socketList);
 	int	run(void);
 
 };

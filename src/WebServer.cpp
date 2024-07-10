@@ -6,13 +6,14 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/09 18:01:20 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/10 15:10:02 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/WebServer.hpp"
 
-WebServer::WebServer(void) : _nfds(0)
+WebServer::WebServer(std::vector<Socket> socketList) : _nfds(0), \
+_socketList(socketList), _socketListSize(socketList.size())
 {
 	memset(_fds, 0, sizeof(_fds));
 }
@@ -22,19 +23,17 @@ WebServer::~WebServer()
 
 }
 
-int	WebServer::init(std::vector<Socket> socketList)
+int	WebServer::init(void)
 {
-	size_t	vectorSize = socketList.size();
-
-	for (size_t i = 0; i < vectorSize; ++i)
+	for (size_t i = 0; i < _socketListSize; ++i)
 	{
-		if (socketList[i].createSocket() < 0)
+		if (_socketList[i].createSocket() < 0)
 		{
 			_cleanUpSockets();
 			return (-1);
 		}
 		// Add the listening socket in our fd set
-		_fds[i].fd = socketList[i].getSocketFD();
+		_fds[i].fd = _socketList[i].getSocketFD();
 		_fds[i].events = POLLIN;
 		_nfds++;
 	}
@@ -44,10 +43,10 @@ int	WebServer::init(std::vector<Socket> socketList)
 int	WebServer::run(void)
 {
 	HttpHandler	http;
-	char		buffer[8000];
+	char		buffer[8000 + 1];
 	int			current_fds_size = 0;
 	ssize_t		read_size = 0;
-	std::string	str;
+	std::string	response;
 
 	while (true)
 	{
@@ -63,29 +62,24 @@ int	WebServer::run(void)
 		{
 			if (_fds[i].revents & POLLIN)
 			{
-				if (_fds[i].fd == _listeningSocket)
+				if (_findInSocketList(_fds[i].fd))
 				{
 					// This is a listening socket
 					// Process incoming connections and add to fds array
-					_acceptConnections();
+					_acceptConnections(_fds[i].fd);
 				}
 				else
 				{
 					// This is an accepting socket. Do recv/send loop
 					memset(buffer, 0, sizeof(buffer));
-					read_size = recv(_fds[i].fd, buffer, 8000 + 1, 0);
+					read_size = recv(_fds[i].fd, buffer, 8000, 0);
 					if (read_size > 0)
 					{
 						// std::cout << "Request length: " << read_size << std::endl;
 						std::cout << buffer << std::endl;
 						// Send HTTP Response
-						str = http.handleRequest(buffer);
-						// str = _onMessageReceived(buffer);
-						_sendData(_fds[i].fd, str.c_str(), str.size() + 1);
-						// if (send(_fds[i].fd, str.c_str(), str.size() + 1, 0) < 0)
-						// {
-						// 	std::cerr << "send() failed" << std::endl;
-						// }
+						response = http.handleRequest(buffer);
+						_sendData(_fds[i].fd, response.c_str(), response.size() + 1);
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
 					// Close Accepting Socket
@@ -100,6 +94,38 @@ int	WebServer::run(void)
 	return (0);
 }
 
+bool	WebServer::_findInSocketList(int fd) const
+{
+	for (size_t i = 0; i < _socketListSize; ++i)
+	{
+		if (fd == _socketList[i].getSocketFD())
+			return (true);
+	}
+	return (false);
+}
+
+void	WebServer::_acceptConnections(int fd)
+{
+	int	new_fd = 0;
+
+	while (true)
+	{
+		new_fd = accept(fd, NULL, NULL);
+		if (new_fd < 0)
+		{
+			// If errno is EWOULDBLOCK, then all connections have been accepted
+			if (errno != EWOULDBLOCK)
+			{
+				std::cerr << "accept() failed" << std::endl;
+			}
+			return ;
+		}
+		_fds[_nfds].fd = new_fd;
+		_fds[_nfds].events = POLLIN;
+		_nfds++;
+	}
+}
+
 void	WebServer::_sendData(int socket, const char* str, size_t len) const
 {
 	ssize_t	rtn = 0;
@@ -112,39 +138,16 @@ void	WebServer::_sendData(int socket, const char* str, size_t len) const
 	}
 }
 
-void	WebServer::_acceptConnections(void)
-{
-	int	new_fd = 0;
-
-	while (true)
-	{
-		new_fd = accept(_listeningSocket, NULL, NULL);
-		if (new_fd < 0)
-		{
-			// If errno is EWOULDBLOCK, then all connections have been accepted
-			if (errno != EWOULDBLOCK)
-			{
-				std::cerr << "accept() failed" << std::endl;
-			}
-			return ;
-		}
-		// std::cout << "New incoming connection - " << new_fd << std::endl;
-		_fds[_nfds].fd = new_fd;
-		_fds[_nfds].events = POLLIN;
-		_nfds++;
-	}
-}
-
 void	WebServer::_compressFdsArray(void)
 {
 	for (int i = 0; i < _nfds; i++)
 	{
-		std::cout << i << std::endl;
+		// std::cout << i << std::endl;
 		if (_fds[i].fd == -1)
 		{
 			for(int j = i; j < _nfds - 1; j++)
 			{
-				_fds[j].fd = _fds[j + 1].fd;
+				_fds[j] = _fds[j + 1];
 			}
 			i--;
 			_nfds--;
@@ -160,14 +163,3 @@ void	WebServer::_cleanUpSockets(void) const
 			close(_fds[i].fd);
 	}
 }
-
-// int	WebServer::_errorMessage(std::string const msg) const
-// {
-// 	std::cerr << msg << std::endl;
-// 	// if (_listeningSocketCreated)
-// 	// {
-// 	// 	close (_listeningSocket);
-// 	// 	std::cout << "Listening Socket Closed" << std::endl;
-// 	// }
-// 	return (1);
-// }

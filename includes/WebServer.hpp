@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/09 18:04:18 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/10 15:06:25 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,30 +23,29 @@
 # include "HttpHandler.hpp"
 # include "Socket.hpp"
 
+# define BUFFER_SIZE 256
+
 class WebServer
 {
 private:
 
 	struct pollfd		_fds[FD_SETSIZE];
-	// int 				_listeningSocket;
 	int					_nfds;
+	std::vector<Socket>	_socketList;
+	size_t const		_socketListSize;
 
-	// int					_errorMessage(std::string const msg) const;
-
-	void				_acceptConnections(void);
+	bool				_findInSocketList(int fd) const;
+	void				_acceptConnections(int fd);
 	void				_cleanUpSockets(void) const;
 	void				_compressFdsArray(void);
-	std::string const	_getContentType(std::string const &path);
-	std::string const	_onMessageReceived(const char* msg);
-
 	void				_sendData(int socket, const char* str, size_t len) const;
 
 public:
 
-	WebServer(void);
+	WebServer(std::vector<Socket> socketList);
 	~WebServer();
 
-	int	init(std::vector<Socket> socketList);
+	int	init(void);
 	int	run(void);
 
 };

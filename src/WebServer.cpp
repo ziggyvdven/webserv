@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/11 21:14:55 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/12 16:50:57 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,10 +43,7 @@ int	WebServer::init(void)
 int	WebServer::run(void)
 {
 	HttpHandler	http;
-	// char		buffer[200000 + 1];
-	int			current_fds_size = 0;
-	// ssize_t		read_size = 0;
-	// std::string	response;
+	int			current_fds_size;
 
 	while (true)
 	{
@@ -62,24 +59,21 @@ int	WebServer::run(void)
 		{
 			if (_fds[i].revents & POLLIN)
 			{
-				if (_findInSocketList(_fds[i].fd))
+				if (_isListeningSocket(_fds[i].fd))
 				{
 					// This is a listening socket
 					// Process incoming connections and add to fds array
-					_acceptConnections(_fds[i].fd);
+					_acceptConnection(_fds[i].fd);
 				}
 				else
 				{
 					// This is an accepting socket. Do recv/send loop
-					// memset(buffer, 0, sizeof(buffer));
-					// read_size = recv(_fds[i].fd, buffer, 200000, 0);
-					// if (read_size > 0)
 					if (_readData(_fds[i].fd))
 					{
+						// _printRequest();	// For testing purposes
 						std::cout << _request << std::endl;
 						// Send HTTP Response
 						_response = http.handleRequest(_request);
-						// response = "HTTP/1.1 100 Continue\r\n\r\n";
 						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
@@ -95,7 +89,7 @@ int	WebServer::run(void)
 	return (0);
 }
 
-bool	WebServer::_findInSocketList(int fd) const
+bool	WebServer::_isListeningSocket(int fd) const
 {
 	for (size_t i = 0; i < _socketListSize; ++i)
 	{
@@ -105,37 +99,34 @@ bool	WebServer::_findInSocketList(int fd) const
 	return (false);
 }
 
-void	WebServer::_acceptConnections(int fd)
+void	WebServer::_acceptConnection(int fd)
 {
 	int	new_fd = 0;
 
-	// while (true)
-	// {
-		new_fd = accept(fd, NULL, NULL);
-		if (new_fd < 0)
+	new_fd = accept(fd, NULL, NULL);
+	if (new_fd < 0)
+	{
+		// If errno is EWOULDBLOCK, then all connections have been accepted
+		if (errno != EWOULDBLOCK)
 		{
-			// If errno is EWOULDBLOCK, then all connections have been accepted
-			if (errno != EWOULDBLOCK)
-			{
-				std::cerr << "accept() failed" << std::endl;
-			}
-			return ;
+			std::cerr << "accept() failed" << std::endl;
 		}
-		_fds[_nfds].fd = new_fd;
-		_fds[_nfds].events = POLLIN;
-		_nfds++;
-	// }
+		return ;
+	}
+	_fds[_nfds].fd = new_fd;
+	_fds[_nfds].events = POLLIN;
+	_nfds++;
 }
 
 bool	WebServer::_readData(int socket)
 {
-	char		buffer[256 + 1];
+	char		buffer[255 + 1];
 	std::string	buffer_str;
 	std::string	request;
 	ssize_t		rtn = 0;
 	
 	memset(buffer, 0, sizeof (buffer));
-	while ((rtn = recv(socket, buffer, 256, 0)) > 0)
+	while ((rtn = recv(socket, buffer, 255, 0)) > 0)
 	{
 		buffer_str = buffer;
 		request += buffer_str.substr(0, rtn);
@@ -165,7 +156,6 @@ void	WebServer::_compressFdsArray(void)
 {
 	for (int i = 0; i < _nfds; i++)
 	{
-		// std::cout << i << std::endl;
 		if (_fds[i].fd == -1)
 		{
 			for(int j = i; j < _nfds - 1; j++)

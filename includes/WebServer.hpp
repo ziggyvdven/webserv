@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/11 20:29:34 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/12 16:46:39 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,14 +16,14 @@
 # include <fstream>
 # include <iostream>
 # include <sstream>
+# include <string>
 # include <poll.h>
 # include <sys/socket.h>
 # include <unistd.h>
+# include <csignal>
 # include <vector>
 # include "HttpHandler.hpp"
 # include "Socket.hpp"
-
-# define BUFFER_SIZE 256
 
 class WebServer
 {
@@ -37,12 +37,14 @@ private:
 	std::string			_request;
 	std::string			_response;
 
-	bool				_findInSocketList(int fd) const;
-	void				_acceptConnections(int fd);
+	bool				_isListeningSocket(int fd) const;
+	void				_acceptConnection(int fd);
 	void				_cleanUpSockets(void) const;
 	void				_compressFdsArray(void);
 	bool				_readData(int socket);
 	void				_sendData(int socket, const char* str, size_t len) const;
+
+	void				_printRequest(void);
 
 public:
 

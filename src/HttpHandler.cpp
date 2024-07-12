@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/11 19:23:17 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/12 13:23:43 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ std::string const	HttpHandler::handleRequest(std::string request)
 
 	f = _request.find(' ', i);
 	_method = _request.substr(i, f - i);
+	// std::cout << "METHOD = " << _method << std::endl;
 
 	i = f + 1;
 	f = _request.find(' ', i);

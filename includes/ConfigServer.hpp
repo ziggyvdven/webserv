@@ -36,6 +36,7 @@ public:
 	long long					getClientMaxBodySize() const;
 	string						getErrorPage(short const & errorcode) const;
 	const map<short, string>&	getErrorPageMap() const;
+	bool						getAutoIndex() const;
 
 
 
@@ -47,7 +48,7 @@ private:
 	string								_ServerName;
 	long long							_ClientMaxBodySize;
 	map<short, string>					_ErrorPages;
-	// bool								_AutoIndex;
+	bool								_AutoIndex;
 
 	bool				ValidatePort(string& line, string N) const;
 	string 				trim(const std::string& str);
@@ -59,7 +60,7 @@ private:
 	void				ParseClientMaxBodySize(pair<string, unsigned> & linepair);
 	void				ParseErrorPage(pair<string, unsigned> & linepair);
 	void				ParseErrorCodes(std::vector<std::string> &tokens, unsigned const & linenumber) const;
-
+	void 				ParseAutoIndex(pair<string, unsigned> & linepair);
 
 };
 

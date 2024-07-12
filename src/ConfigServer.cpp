@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 ConfigServer::ConfigServer(vector<pair<string, unsigned> > const & conf, Config & config): _Block(conf), _Config(config), 
-_Port(0), _ClientMaxBodySize(0){
+_Port(0), _ClientMaxBodySize(0), _AutoIndex(false){
 	// cout << G << "ConfigServer constructor by param called" << END << std::endl;
 	// cout << endl << "SERVER CONFIGURATION" << endl;
 	string 			whitespace = " \t";
@@ -29,7 +29,7 @@ _Port(0), _ClientMaxBodySize(0){
 }
 
 ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
-_ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages){
+_ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex){
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
 	*this = src;
 }
@@ -51,13 +51,14 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 	// std::cout << "ConfigServer Copy assignment operator called" << std::endl;
 	if ( this != &rhs )
 	{
+		_Block = rhs._Block;
 		_Config = rhs._Config;
 		_Port = rhs._Port;
 		_Host = rhs._Host;
-		_Block = rhs._Block;
 		_ServerName = rhs._ServerName;
 		_ClientMaxBodySize = rhs._ClientMaxBodySize;
 		_ErrorPages = rhs._ErrorPages;
+		_AutoIndex = rhs._AutoIndex;
 	}
 	return *this;
 }
@@ -68,7 +69,7 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 	o << "SEVER NAME| " << i.getServerName() << endl;
 	o << "      HOST| " << i.getHost() << endl;
 	o << "      PORT| " << i.getPort() << endl;
-	o << "AUTO-INDEX| " << endl;
+	o << "AUTO-INDEX| " << i.getAutoIndex() << endl;
 	if (i.getClientMaxBodySize() >= 1048576){
 		long long max = i.getClientMaxBodySize() >> 20;
 		o << "MAX C.BODY| " << max << " MegaBytes" << endl;
@@ -90,7 +91,7 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
     string	Directives[NUM_DIRECTIVES] = {
         "listen", "host", "server_name", "client_max_body_size", 
-        "error_page", "location", "allow_methods", "autoindex", 
+        "error_page", "autoindex", "location", "allow_methods",  
         "index", "root", "cgi_path", "cgi_ext"
     };
 	for (int i = 0; i <= NUM_DIRECTIVES; i++){
@@ -111,6 +112,9 @@ void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
 					break;
 				case 4:
 					ParseErrorPage(linepair);
+					break;
+				case 5:
+					ParseAutoIndex(linepair);
 					break;
 				break;
 			}
@@ -251,14 +255,17 @@ void	ConfigServer::ParseErrorCodes(vector<std::string>& tokens, unsigned const &
 
 void	ConfigServer::ParseErrorPage(pair<string, unsigned> & linepair){
 	//Defines the URI that will be shown for the specified errors. A uri value can contain variables.
+	// regex 	error_pages_line("\\s*error_page\\s+(\\d{3}\\s+)+[^\\s;]+;\\s*");
 	string  line = linepair.first;
 
 	//cut the error_page of the line;
 	size_t start = line.find("error_page") + 11;
-	size_t end = line.back();
-	if (end != ';')
+	size_t end = line.find(";");
+	if (end && line.find_first_not_of(" \t", end + 1) != string::npos)
 		throw (runtime_error("Missing trailing ';' in the \"error_page\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 	string errorpages = line.substr(line.find_first_not_of(" \t", start), end);
+
+	//Cut the string in to tokens and checks if the error codes are valid
 	istringstream iss(errorpages);
 	vector<std::string> tokens;
 	string token;
@@ -272,6 +279,25 @@ void	ConfigServer::ParseErrorPage(pair<string, unsigned> & linepair){
 		_ErrorPages[stoi(*it)] = page;
 }
 
+void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
+	//Sets the maximum allowed size of the client request body. If the size in a request exceeds the configured value, the 413 (Request Entity Too Large) error is returned to the client. Setting size to 0 disables checking of client request body size.
+	regex 	auto_index_line("\\s*autoindex\\s*(on|off);\\s*");
+	string  line = linepair.first;
+
+	size_t start = line.find("autoindex") + 9;
+	start = line.find_first_not_of(" \t", start);
+	size_t end = line.find(";");
+	string autoindex = line.substr(start, end - start);
+
+	if (regex_match(line, auto_index_line)){
+		if 	(autoindex == "on")
+			_AutoIndex = 1;
+		if 	(autoindex == "off")
+			_AutoIndex = 0;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + autoindex + "\" in the \"autoindex\" directive, it must be \"on\" or \"off\" in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
@@ -306,6 +332,10 @@ string	ConfigServer::getErrorPage(short const & errorcode) const{
 
 const map<short, string>&	ConfigServer::getErrorPageMap() const{
 	return (this->_ErrorPages);
+}
+
+bool	ConfigServer::getAutoIndex() const{
+	return (this->_AutoIndex);
 }
 
 /* ************************************************************************** */

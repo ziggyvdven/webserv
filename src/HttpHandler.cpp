@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/08 15:35:24 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/11 19:23:17 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,8 +46,6 @@ std::string const	HttpHandler::handleRequest(std::string request)
 	_target = _request.substr(i, f - i);
 	if (_target == "/")
 		_target = "/index.html";
-	else if (_target == "/cgi-bin/upload.py")
-		_execCgiScript();
 
 	i = f + 1;
 	f = _request.find('\n', i);
@@ -58,6 +56,9 @@ std::string const	HttpHandler::handleRequest(std::string request)
 	// if (_request[i])
 	// 	_body = &_request[i];
 
+	if (_target == "/cgi-bin/upload.py")
+		_execCgiScript();
+
 	_buildResponse();
 	return (_response);
 }
@@ -67,25 +68,25 @@ std::string const	HttpHandler::handleRequest(std::string request)
 */
 size_t	HttpHandler::_parseHeaderFields(size_t i, size_t f)
 {
-	std::string	key;
-	std::string	value;
-	size_t 		count = 0;
+	// std::string	key;
+	// std::string	value;
+	// size_t 		count = 0;
 
-	while (count < FIELD_COUNT)
-	{
-		i = _request.find('\n', i) + 1;
-		f = _request.find(':', i);
-		key = _request.substr(i, f - i);
-		if (_findField(key) >= 0)
-		{
-			i = f + 1;
-			i = _request.find_first_not_of(' ', i);
-			f = _request.find('\n', i);
-			value = _request.substr(i, f - i);
-			_fields.insert(std::pair<std::string, std::string>(key, value));
-			count++;
-		}
-	}
+	// while (count < FIELD_COUNT)
+	// {
+	// 	i = _request.find('\n', i) + 1;
+	// 	f = _request.find(':', i);
+	// 	key = _request.substr(i, f - i);
+	// 	if (_findField(key) >= 0)
+	// 	{
+	// 		i = f + 1;
+	// 		i = _request.find_first_not_of(' ', i);
+	// 		f = _request.find('\n', i);
+	// 		value = _request.substr(i, f - i);
+	// 		_fields.insert(std::pair<std::string, std::string>(key, value));
+	// 		count++;
+	// 	}
+	// }
 	while (i + 1 != f)	// Skip all other header fields
 	{
 		i = _request.find('\n', i) + 1;
@@ -132,6 +133,7 @@ void	HttpHandler::_buildResponse()
 void	HttpHandler::_execCgiScript(void) const
 {
 	std::vector<char const *>	argv;
+	std::vector<char const *>	envp;
 	const char					*python_path = "/usr/bin/python";
 	pid_t						process_id;
 

@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/10 15:10:02 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/11 21:14:55 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,10 +43,10 @@ int	WebServer::init(void)
 int	WebServer::run(void)
 {
 	HttpHandler	http;
-	char		buffer[8000 + 1];
+	// char		buffer[200000 + 1];
 	int			current_fds_size = 0;
-	ssize_t		read_size = 0;
-	std::string	response;
+	// ssize_t		read_size = 0;
+	// std::string	response;
 
 	while (true)
 	{
@@ -71,15 +71,16 @@ int	WebServer::run(void)
 				else
 				{
 					// This is an accepting socket. Do recv/send loop
-					memset(buffer, 0, sizeof(buffer));
-					read_size = recv(_fds[i].fd, buffer, 8000, 0);
-					if (read_size > 0)
+					// memset(buffer, 0, sizeof(buffer));
+					// read_size = recv(_fds[i].fd, buffer, 200000, 0);
+					// if (read_size > 0)
+					if (_readData(_fds[i].fd))
 					{
-						// std::cout << "Request length: " << read_size << std::endl;
-						std::cout << buffer << std::endl;
+						std::cout << _request << std::endl;
 						// Send HTTP Response
-						response = http.handleRequest(buffer);
-						_sendData(_fds[i].fd, response.c_str(), response.size() + 1);
+						_response = http.handleRequest(_request);
+						// response = "HTTP/1.1 100 Continue\r\n\r\n";
+						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
 					// Close Accepting Socket
@@ -108,8 +109,8 @@ void	WebServer::_acceptConnections(int fd)
 {
 	int	new_fd = 0;
 
-	while (true)
-	{
+	// while (true)
+	// {
 		new_fd = accept(fd, NULL, NULL);
 		if (new_fd < 0)
 		{
@@ -123,7 +124,29 @@ void	WebServer::_acceptConnections(int fd)
 		_fds[_nfds].fd = new_fd;
 		_fds[_nfds].events = POLLIN;
 		_nfds++;
+	// }
+}
+
+bool	WebServer::_readData(int socket)
+{
+	char		buffer[256 + 1];
+	std::string	buffer_str;
+	std::string	request;
+	ssize_t		rtn = 0;
+	
+	memset(buffer, 0, sizeof (buffer));
+	while ((rtn = recv(socket, buffer, 256, 0)) > 0)
+	{
+		buffer_str = buffer;
+		request += buffer_str.substr(0, rtn);
+		memset(buffer, 0, rtn);
 	}
+	_request = request;
+	if (rtn == 0)
+	{
+		return (false);
+	}
+	return (true);
 }
 
 void	WebServer::_sendData(int socket, const char* str, size_t len) const

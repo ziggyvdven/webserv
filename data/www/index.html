@@ -1,26 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Most stylish web server</title>
-	<link rel="stylesheet" href="styles/styles.css">
+	<meta charset="utf-8"/>
+	<title>upload</title>
 </head>
 <body>
-	<div id="main-container">
-		<h1>Hello, world!</h1>
-		<ul>
-			<li>This</li>
-			<li>is</li>
-			<li>a</li>
-			<li>list</li>
-		</ul>
-		<p><img src="images/smash.avif" alt="Super smash" width="2400" height="1350"></p>
-		<video src="video/video2.mp4" controls>
-			Your browser does not support the video tag.
-		</video>
-		<iframe src="foo.html"></iframe>
-	</div>
+	<form action="http://c1r4p3.42quebec.com:8080" method="post" enctype="multipart/form-data">
+		<p><input type="text" name="text1" value="text default"></p>
+		<p><input type="text" name="text2" value="a&#x03C9;b"></p>
+		<p><input type="file" name="file1"></p>
+		<p><input type="file" name="file2"></p>
+		<p><input type="file" name="file3"></p>
+		<p><button type="submit">Submit</button></p>
+	</form>
 </body>
 </html>

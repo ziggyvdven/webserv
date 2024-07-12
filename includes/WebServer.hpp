@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/10 15:06:25 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/11 20:29:34 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,10 +34,14 @@ private:
 	std::vector<Socket>	_socketList;
 	size_t const		_socketListSize;
 
+	std::string			_request;
+	std::string			_response;
+
 	bool				_findInSocketList(int fd) const;
 	void				_acceptConnections(int fd);
 	void				_cleanUpSockets(void) const;
 	void				_compressFdsArray(void);
+	bool				_readData(int socket);
 	void				_sendData(int socket, const char* str, size_t len) const;
 
 public:

@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/13 16:51:46 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/13 17:14:36 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ int	WebServer::run(void)
 					if (_readData(_fds[i].fd))
 					{
 						// _printRequest();	// For testing purposes
+						std::cout << _request << std::endl;
 						// Send HTTP Response
 						_response = http.handleRequest(_request);
 						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);

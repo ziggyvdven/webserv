@@ -42,8 +42,6 @@ std::string const	HttpHandler::handleRequest(std::string request)
 	_target = req.target();
 	_version = req.version();
 
-	req.print_request();
-
 	if (_target == "/cgi-bin/upload.py")
 		_execCgiScript();
 

@@ -11,6 +11,8 @@ HttpRequest::HttpRequest(std::string const &raw_string)
 // ========== ========== Validation ========== ========== 
 void HttpRequest::_parse_http_request()
 {
+	std::string line;
+
 	_parse_request_line();
 	_parse_headers();
 }
@@ -70,10 +72,12 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 	std::regex re_request_line(
 		"^(GET|POST|DELETE)"
 		" \\/[^\\s]* "
-		"HTTP\\/1.[1,3]$");
+		"HTTP\\/1.[1,3]\\r$");
 
 	if (!std::regex_match(request_line, re_request_line))
 	{
+		std::cout << "Regex match failed: " << std::endl;
+		printStringWithNonPrintables(request_line);
 		throw std::exception();
 	}
 }
@@ -84,11 +88,13 @@ void HttpRequest::_parse_headers()
 	std::string header_line;
 
 	std::getline(_http_stream, header_line);
-	while (!header_line.empty() && header_line != "\n")
+	while (!header_line.empty() && header_line != "\r")
 	{
 		// Skip invalid headers
+		printStringWithNonPrintables(header_line);
 		if (!_valid_header(header_line))
 		{
+			std::cout << "[DEBUG] skipping header " << std::endl;
 			std::getline(_http_stream, header_line);
 			continue;
 		}
@@ -99,6 +105,7 @@ void HttpRequest::_parse_headers()
 		std::string value = header_line.substr(pos + 1, header_line.size());
 		value = trim(value);
 
+		std::cout << "[DEBUG] Adding header " << std::endl;
 		_headers[key] = value;
 
 		std::getline(_http_stream, header_line);
@@ -109,7 +116,7 @@ void HttpRequest::_parse_headers()
 
 bool HttpRequest::_valid_header(std::string const &line) const
 {
-	std::regex const re("^\\w+:[ ]?\\w+[ ]?$");
+	std::regex const re("^\\S+:[ ]?.*[ ]?\\r$");
 
 	return std::regex_match(line, re);
 }
@@ -127,7 +134,7 @@ void HttpRequest::print_request() const
 	std::cout << "Target: " << _target << std::endl;
 	std::cout << "Version: " << _version << std::endl;
 
-	std::cout << "\nHeaders: \n" << _version << std::endl;
+	std::cout << "\nHeaders: \n" << std::endl;
 	print_headers();
 }
 
@@ -135,6 +142,8 @@ void HttpRequest::print_headers() const
 {
 	std::map<std::string, std::string>::const_iterator cit;
 
+	std::cout << "[DEBUG] Headers start" << std::endl;
 	for(cit = _headers.begin(); cit != _headers.end(); ++cit)
 		std::cout << cit->first << ": " << cit->second << std::endl;
+	std::cout << "[DEBUG] Headers end" << std::endl;
 }

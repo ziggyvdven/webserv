@@ -38,9 +38,11 @@ std::string const	HttpHandler::handleRequest(std::string request)
 
 	HttpRequest req(_request);
 
-	_method = req.method(); 
+	_method = req.method();
 	_target = req.target();
 	_version = req.version();
+
+	req.print_request();
 
 	if (_target == "/cgi-bin/upload.py")
 		_execCgiScript();

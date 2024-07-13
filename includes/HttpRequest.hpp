@@ -1,11 +1,10 @@
-#include <iostream>
+#pragma once 
+
 #include <sstream>
 #include <string>
-#include <vector>
 #include <map>
-#include <regex>
-#include <stdexcept>
 #include "utils.hpp"
+#include <algorithm>
 
 class HttpRequest
 {
@@ -22,14 +21,12 @@ private:
 
 public:
 	HttpRequest(std::string const &raw_str);
-
-	std::string const &raw() const { return _raw; }
-	std::string method() const;
-	std::string const &target() const;
-	std::string const &version() const;
+	std::string const raw() const { return _raw; }
+	std::string const method() const;
+	std::string const target() const;
+	std::string const version() const;
 	std::map<std::string, std::string> const &headers() const;
-	std::string const &body() const;
-
+	std::string const body() const;
 
 private:
 	void _parse_http_request();
@@ -38,6 +35,8 @@ private:
 
 	void _parse_headers();
 	bool _valid_header(std::string const &line) const;
+
+
 
 // Debug
 public:

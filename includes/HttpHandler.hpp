@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/13 15:44:33 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/13 18:49:18 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,41 +20,30 @@
 # include <string>
 # include <vector>
 # include <map>
+#include "../includes/HttpRequest.hpp"
 
 # define FIELD_COUNT	1
 
 class HttpHandler
 {
 private:
-
-	std::string							_request;
 	std::string							_response;
-
-	std::string							_method;
-	std::string							_target;
-	std::string							_version;
 
 	std::map<std::string, std::string>	_fields;
 	std::string							_body;
 
-	static std::string const			_fieldList[FIELD_COUNT];
+	// void								_execCgiScript(void) const;
+	// char const							*_getScriptName(void) const;
 
-	void								_execCgiScript(void) const;
-	char const							*_getScriptName(void) const;
-
-	size_t								_findField(std::string const key) const;
-	void								_buildResponse();
-	size_t								_parseHeaderFields(size_t i, size_t f);
-
-	void								_printHeaderFields(void) const;
-
+	
 public:
 
 	HttpHandler(void);
 	~HttpHandler();
 
 	// std::string const					getResponse(void) const;
-	std::string const					handleRequest(std::string request);
+	// std::string const					handleRequest(HttpRequest const &request);
+	std::string const &						buildResponse(HttpRequest const &request);
 };
 
 #endif

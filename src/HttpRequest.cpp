@@ -1,12 +1,13 @@
 #include "../includes/HttpRequest.hpp"
 
+#include <iostream>
+#include <regex>
 // ========== ========== Constructor ========== ========== 
 HttpRequest::HttpRequest(std::string const &raw_string)
 	: _raw(raw_string), _valid(true), _http_stream(_raw)
 {
 	_parse_http_request();
 }
-
 
 // ========== ========== Validation ========== ========== 
 void HttpRequest::_parse_http_request()
@@ -18,19 +19,19 @@ void HttpRequest::_parse_http_request()
 }
 
 // ========== ========== Getters ========== ========== 
-std::string HttpRequest::method() const
+std::string const HttpRequest::method() const
 {
 	if (_valid)
 		return _method;
 	return "Invalid";
 }
 
-std::string const &HttpRequest::target() const
+std::string const HttpRequest::target() const
 {
 	return _target;
 }
 
-std::string const &HttpRequest::version() const
+std::string const HttpRequest::version() const
 {
 	return _version;
 }
@@ -40,7 +41,7 @@ std::map<std::string, std::string> const &HttpRequest::headers() const
 	return _headers;
 }
 
-std::string const &HttpRequest::body() const
+std::string const HttpRequest::body() const
 {
 	return _body;
 }
@@ -62,8 +63,8 @@ void HttpRequest::_parse_request_line()
 	catch (std::exception const &e)
 	{
 		_valid = false;
-		std::cerr << "[Parsing Error] Invalid Request line : " << e.what() << std::endl;
-		std::cerr << start_line;
+		// std::cerr << "[Parsing Error] Invalid Request line : " << e.what() << std::endl;
+		// std::cerr << start_line;
 	}
 }
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/12 16:46:39 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/13 18:51:59 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # include <csignal>
 # include <vector>
 # include "HttpHandler.hpp"
+# include "HttpRequest.hpp"
 # include "Socket.hpp"
 
 class WebServer

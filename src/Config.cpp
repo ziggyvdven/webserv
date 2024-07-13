@@ -106,8 +106,9 @@ void Config::init_directives( void ){
 	_Directives.insert("autoindex");
 	_Directives.insert("index");
 	_Directives.insert("root");
-	_Directives.insert("cgi_path");
+	_Directives.insert("cgi_bin");
 	_Directives.insert("cgi_ext");
+	_Directives.insert("return");
 }
 
 /*

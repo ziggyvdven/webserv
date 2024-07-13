@@ -10,7 +10,7 @@
 # include <utility>
 # include <cstdlib>
 
-# define NUM_DIRECTIVES 12
+# define NUM_DIRECTIVES 13
 
 const string CONFIG_FOLDER = "config";
 

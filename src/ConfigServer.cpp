@@ -3,10 +3,13 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-ConfigServer::ConfigServer(vector<pair<string, unsigned> > const & conf, Config & config): _Block(conf), _Config(config), 
-_Port(0), _ClientMaxBodySize(0), _AutoIndex(false){
+ConfigServer::ConfigServer(vector<pair<string, unsigned> > const & conf, Config & config): _Block(conf), _Config(config), _Port(80), _Host("127.0.0.1"),
+ _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/data"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
+ _Return(0, ""){
 	// cout << G << "ConfigServer constructor by param called" << END << std::endl;
 	// cout << endl << "SERVER CONFIGURATION" << endl;
+	for (int i = 0; i < 3; i++)
+		_Methods[i] = true;
 	string 			whitespace = " \t";
 	string			line;
 
@@ -28,9 +31,34 @@ _Port(0), _ClientMaxBodySize(0), _AutoIndex(false){
 	}
 }
 
+// void	ConfigServer::Init(vector<pair<string, unsigned> > const & conf){
+// 	string 			whitespace = " \t";
+// 	string			line;
+
+// 	for (vector<pair<string, unsigned> >::iterator it = _Block.begin(); it != _Block.end(); ++it){
+// 		line = it->first;
+// 		// cut the first word from the string
+// 		if (!line.empty() && line.find_first_not_of(whitespace) != string::npos){
+// 			size_t start = line.find_first_not_of(whitespace);
+// 			size_t end = line.find_first_of(whitespace, start) - 1;
+// 			line = line.substr(start, end);
+// 		}
+// 		// cout << line << endl;
+// 		unordered_set<string>		directives = _Config.getDirectives();
+// 		if (directives.find(line) == directives.end()){
+// 			throw (runtime_error("unknown directive \"" + line + "\" in " + _Config.getFilename() + ":" + to_string(it->second)));
+// 		}
+// 		else
+// 			Parseline(*it, line);
+// 	}
+// }
+
 ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
-_ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex){
+_ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex), _Root(src._Root),
+_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return){
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
+	for (int i = 0; i < 3; i++)
+		_Methods[i] = src._Methods[i];
 	*this = src;
 }
 
@@ -59,6 +87,13 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 		_ClientMaxBodySize = rhs._ClientMaxBodySize;
 		_ErrorPages = rhs._ErrorPages;
 		_AutoIndex = rhs._AutoIndex;
+		_Root = rhs._Root;
+		for (int i = 0; i < 3; i++)
+			_Methods[i] = rhs._Methods[i];
+		_Index = rhs._Index;
+		_CGIbin = rhs._CGIbin;
+		_CGIext = rhs._CGIext;
+		_Return = rhs._Return;
 	}
 	return *this;
 }
@@ -70,6 +105,16 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 	o << "      HOST| " << i.getHost() << endl;
 	o << "      PORT| " << i.getPort() << endl;
 	o << "AUTO-INDEX| " << i.getAutoIndex() << endl;
+	o << "      ROOT| " << i.getRoot() << endl;
+	o << "     INDEX| " << i.getIndex() << endl;
+	o << "   METHODS| " ;
+	if (i.getMethod("GET"))
+		o << "GET ";
+	if (i.getMethod("POST"))
+		o << "POST ";
+	if (i.getMethod("DELETE"))
+		o << "DELETE ";
+	o << endl;
 	if (i.getClientMaxBodySize() >= 1048576){
 		long long max = i.getClientMaxBodySize() >> 20;
 		o << "MAX C.BODY| " << max << " MegaBytes" << endl;
@@ -81,6 +126,9 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
         o << it->first << ": " << it->second << " ";
     }
 	o << endl;
+	o << "   CGI_BIN| " << i.getCGIbin() << endl;
+	o << "   CGI_EXT| " << i.getCGIext() << endl;
+	o << "  REDIRECT| " << i.getRedirect().first << " " << i.getRedirect().second << endl;
 	return o;
 }
 
@@ -91,8 +139,8 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
     string	Directives[NUM_DIRECTIVES] = {
         "listen", "host", "server_name", "client_max_body_size", 
-        "error_page", "autoindex", "location", "allow_methods",  
-        "index", "root", "cgi_path", "cgi_ext"
+        "error_page", "autoindex", "root", "allow_methods",  
+        "index", "cgi_bin", "cgi_ext", "return", "location"
     };
 	for (int i = 0; i <= NUM_DIRECTIVES; i++){
 		if (line == Directives[i])
@@ -116,6 +164,24 @@ void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
 				case 5:
 					ParseAutoIndex(linepair);
 					break;
+				case 6:
+					ParseRoot(linepair);
+					break;
+				case 7:
+					ParseMethods(linepair);
+					break;
+				case 8:
+					ParseIndex(linepair);
+					break;
+				case 9:
+					ParseCGIbin(linepair);
+					break;
+				case 10:
+					ParseCGIext(linepair);
+					break;
+				case 11:
+					ParseReturn(linepair);
+					break;
 				break;
 			}
 			return ;
@@ -138,8 +204,8 @@ bool	ConfigServer::ValidatePort(string& line, string N)const{
 }		
 
 void	ConfigServer::ParseListen(pair<string, unsigned> & linepair){
-	regex 	port_line("[[:space:]]*listen[[:space:]]*[0-9]+;[[:space:]]*");
-	regex 	host_line("[[:space:]]*listen[[:space:]]*[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]+;[[:space:]]*");
+	regex 	port_line("\\s*listen\\s*[0-9]+;\\s*");
+	regex 	host_line("\\s*listen\\s*[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]+;\\s*");
 	string  line = linepair.first;
 
 	if (regex_match(line, port_line)){
@@ -170,7 +236,7 @@ void	ConfigServer::ParseListen(pair<string, unsigned> & linepair){
 
 void	ConfigServer::ParseHost(pair<string, unsigned> & linepair){
 	//Parses the host directive and uses the function inet_pton to check if the adressis valid. inet_pton returns
-	regex 	host_line("[[:space:]]*host[[:space:]]*[0-9]+.[0-9]+.[0-9]+.[0-9]+;[[:space:]]*");
+	regex 	host_line("\\s*host\\s*[0-9]+.[0-9]+.[0-9]+.[0-9]+;\\s*");
 	string  line = linepair.first;
 
 	if (regex_match(line, host_line)){
@@ -189,7 +255,7 @@ void	ConfigServer::ParseHost(pair<string, unsigned> & linepair){
 
 void	ConfigServer::ParseServerName(pair<string, unsigned> & linepair){
 	//Parses the servername only takes alphanumeric characters and upper and lower case
-	regex 	servername_line("[[:space:]]*server_name[[:space:]]*[A-Za-z0-9-_]+;[[:space:]]*");
+	regex 	servername_line("\\s*server_name\\s*[A-Za-z0-9-_.]+;\\s*");
 	string  line = linepair.first;
 
 	size_t start = line.find("server_name") + 11;
@@ -203,7 +269,7 @@ void	ConfigServer::ParseServerName(pair<string, unsigned> & linepair){
 
 void	ConfigServer::ParseClientMaxBodySize(pair<string, unsigned> & linepair){
 	//Sets the maximum allowed size of the client request body. If the size in a request exceeds the configured value, the 413 (Request Entity Too Large) error is returned to the client. Setting size to 0 disables checking of client request body size.
-	regex 	client_max_body_size_line("[[:space:]]*client_max_body_size[[:space:]]*[0-9]+[m]*;[[:space:]]*");
+	regex 	client_max_body_size_line("\\s*client_max_body_size\\s*[0-9]+[m]*;\\s*");
 	string  line = linepair.first;
 	long 	clientmaxbodysize = 0;
 
@@ -299,6 +365,113 @@ void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
 		throw (runtime_error("Invalid value \"" + autoindex + "\" in the \"autoindex\" directive, it must be \"on\" or \"off\" in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 }
 
+void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	root_line("\\s*root\\s*[A-Za-z0-9-_.]+/*;\\s*");
+	string  line = linepair.first;
+
+	string root = line.substr(line.find("root") + 4, line.find(";"));
+	root = trim(root);
+	root.pop_back();
+
+	if (regex_match(line, root_line)){
+		for (int i = count(line.begin(), line.end(), '/'); i > 1; i--)
+			root.pop_back();
+		_Root = root;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + root + "\" in the \"root\" directive, it must be \"foo/\", in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
+void	ConfigServer::ParseMethods(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	methods_line("\\s*allow_methods\\s*(GET|POST|DELETE)(?:\\s+(GET|POST|DELETE))*\\s*;\\s*");
+	string  line = linepair.first;
+
+	string methods = line.substr(line.find("allow_methods") + 13, line.find(";"));
+	methods = trim(methods);
+	methods.pop_back();
+
+	if (regex_match(line, methods_line)){
+		for (int i = 0; i < 3; i++)
+			_Methods[i] = false;
+		if (methods.find("GET") != string::npos)
+			_Methods[0] = true;
+		if (methods.find("POST") != string::npos)
+			_Methods[1] = true;
+		if (methods.find("DELETE") != string::npos)
+			_Methods[2] = true;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + methods + "\" in the \"allow_methods\" directive, it must be GET|POST|DELETE, in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
+void	ConfigServer::ParseIndex(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	index_line("\\s*index\\s*[A-Za-z0-9-_.]+\\s*;\\s*");
+	string  line = linepair.first;
+
+	string index = line.substr(line.find("index") + 5, line.find(";"));
+	index = trim(index);
+	index.pop_back();
+
+	if (regex_match(line, index_line)){
+		_Index = index;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + index + "\" in the \"index\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
+void	ConfigServer::ParseCGIbin(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	cgi_bin_line("\\s*cgi_bin\\s*/[A-Za-z0-9-_./]+\\s*;\\s*");
+	string  line = linepair.first;
+
+	string cgi_bin = line.substr(line.find("cgi_bin") + 7, line.find(";"));
+	cgi_bin = trim(cgi_bin);
+	cgi_bin.pop_back();
+
+	if (regex_match(line, cgi_bin_line)){
+		_CGIbin = cgi_bin;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + cgi_bin + "\" in the \"cgi_bin\" directive, must be \"/PATH_INFO\" in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
+void	ConfigServer::ParseCGIext(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	cgi_ext_line("\\s*cgi_ext\\s*\\.[A-Za-z0-9]+\\s*;\\s*");
+	string  line = linepair.first;
+
+	string cgi_ext = line.substr(line.find("cgi_ext") + 7, line.find(";"));
+	cgi_ext = trim(cgi_ext);
+	cgi_ext.pop_back();
+
+	if (regex_match(line, cgi_ext_line)){
+		_CGIext = cgi_ext;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + cgi_ext + "\" in the \"cgi_ext\" directive, must be \".FOO\" in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
+void	ConfigServer::ParseReturn(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	return_line("\\s*return\\s+\\d{3}\\s+[^\\s;]+\\s*;\\s*");
+	string  line = linepair.first;
+
+	string redirect = line.substr(line.find("redirect") + 8, line.find(";"));
+	redirect = trim(redirect);
+	redirect.pop_back();
+	if (regex_match(line, return_line)){
+		istringstream iss(redirect);
+		iss >> _Return.first;
+		iss >> _Return.second;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + redirect + "\" in the \"return\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
+
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
 */
@@ -336,6 +509,36 @@ const map<short, string>&	ConfigServer::getErrorPageMap() const{
 
 bool	ConfigServer::getAutoIndex() const{
 	return (this->_AutoIndex);
+}
+
+string	ConfigServer::getRoot() const{
+	return (this->_Root);
+}
+
+string	ConfigServer::getIndex() const{
+	return (this->_Index);
+}
+
+bool	ConfigServer::getMethod(string method) const{
+	if (method == "GET" && _Methods[0])
+		return true;
+	if (method == "POST" && _Methods[1])
+		return true;
+	if (method == "DELETE" && _Methods[2])
+		return true;
+	return false;
+}
+
+string	ConfigServer::getCGIbin() const{
+	return (this->_CGIbin);
+}
+
+string	ConfigServer::getCGIext() const{
+	return (this->_CGIext);
+}
+
+pair<short, string>	ConfigServer::getRedirect() const{
+	return (this->_Return);
 }
 
 /* ************************************************************************** */

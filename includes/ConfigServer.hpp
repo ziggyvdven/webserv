@@ -28,6 +28,7 @@ public:
 	~ConfigServer( void );
 
 	ConfigServer &		operator=( ConfigServer const & rhs );
+	void				Init(vector<pair<string, unsigned> > const & conf);
 
 
 	unsigned short				getPort() const;
@@ -37,8 +38,12 @@ public:
 	string						getErrorPage(short const & errorcode) const;
 	const map<short, string>&	getErrorPageMap() const;
 	bool						getAutoIndex() const;
-
-
+	string						getRoot() const;
+	string						getIndex() const;
+	bool						getMethod(string method) const;
+	string						getCGIbin() const;
+	string						getCGIext() const;
+	pair<short, string>			getRedirect() const;
 
 private:
 	vector<pair<string, unsigned> > 	_Block;
@@ -46,9 +51,16 @@ private:
 	unsigned short						_Port;
 	string								_Host;
 	string								_ServerName;
-	long long							_ClientMaxBodySize;
+	long long							_ClientMaxBodySize; // in bytes
 	map<short, string>					_ErrorPages;
 	bool								_AutoIndex;
+	string								_Root;
+	bool								_Methods[3]; // GET[0], POST[1], and DELETE[2]
+	string								_Index;
+	string								_CGIbin;
+	string								_CGIext;
+	pair<short, string>					_Return;
+	map<string, ConfigServer>			_Routes;
 
 	bool				ValidatePort(string& line, string N) const;
 	string 				trim(const std::string& str);
@@ -61,6 +73,12 @@ private:
 	void				ParseErrorPage(pair<string, unsigned> & linepair);
 	void				ParseErrorCodes(std::vector<std::string> &tokens, unsigned const & linenumber) const;
 	void 				ParseAutoIndex(pair<string, unsigned> & linepair);
+	void				ParseRoot(pair<string, unsigned> & linepair);
+	void				ParseMethods(pair<string, unsigned> & linepair);
+	void				ParseIndex(pair<string, unsigned> & linepair);
+	void				ParseCGIbin(pair<string, unsigned> & linepair);
+	void				ParseCGIext(pair<string, unsigned> & linepair);
+	void				ParseReturn(pair<string, unsigned> & linepair);
 
 };
 

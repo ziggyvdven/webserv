@@ -51,3 +51,10 @@ void dump_stream(std::istream is)
 	} while (!line.empty());
 	exit(0);
 }
+
+void toLowerCase(std::string & str)
+{
+	for (std::size_t i = 0; i < str.size(); ++i) {
+		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
+	}
+}

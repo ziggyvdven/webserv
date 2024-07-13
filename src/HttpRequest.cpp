@@ -19,32 +19,22 @@ void HttpRequest::_parse_http_request()
 }
 
 // ========== ========== Getters ========== ========== 
-std::string const HttpRequest::method() const
+std::string const HttpRequest::getHeader(std::string key) const
 {
-	if (_valid)
-		return _method;
-	return "Invalid";
+	toLowerCase(key);
+	if (_headers.find(key) != _headers.end())
+		return _headers.at(key);
+	return "";
 }
 
-std::string const HttpRequest::target() const
+void HttpRequest::_add_header(std::string key, std::string value)
 {
-	return _target;
+	value = trim(value);
+	toLowerCase(key);
+
+	_headers[key] = value;
 }
 
-std::string const HttpRequest::version() const
-{
-	return _version;
-}
-
-std::map<std::string, std::string> const &HttpRequest::headers() const
-{
-	return _headers;
-}
-
-std::string const HttpRequest::body() const
-{
-	return _body;
-}
 
 void HttpRequest::_parse_request_line()
 {
@@ -53,18 +43,12 @@ void HttpRequest::_parse_request_line()
 
 	try {
 		std::istringstream iss(start_line);
-
 		_validate_request_line(start_line);
 		iss >> _method >> _target >> _version;
-		
-		// DEBUG
-		// print_request();
 	}
 	catch (std::exception const &e)
 	{
 		_valid = false;
-		// std::cerr << "[Parsing Error] Invalid Request line : " << e.what() << std::endl;
-		// std::cerr << start_line;
 	}
 }
 
@@ -101,7 +85,7 @@ void HttpRequest::_parse_headers()
 		int const pos = header_line.find(":");
 		std::string key = header_line.substr(0, pos);
 		std::string value = header_line.substr(pos + 1, header_line.size());
-		value = trim(value);
+		_add_header(key, value);
 
 		_headers[key] = value;
 

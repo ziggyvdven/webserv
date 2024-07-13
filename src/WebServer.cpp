@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/13 18:52:05 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/13 19:35:36 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,6 +74,7 @@ int	WebServer::run(void)
 						std::cout << _request << std::endl;
 						// Send HTTP Response
 						HttpRequest request(_request);
+
 						_response = http.buildResponse(request);
 						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);
 						std::cout << "\n------------------ Message sent -------------------\n\n";

@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/12 13:23:43 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/13 15:43:42y kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
+#include "../includes/HttpRequest.hpp"
 
 HttpHandler::HttpHandler(void)
 {
@@ -33,29 +34,13 @@ std::string const	HttpHandler::_fieldList[FIELD_COUNT] = \
 
 std::string const	HttpHandler::handleRequest(std::string request)
 {
-	size_t	i = 0;
-	size_t	f = 0;
-
 	_request = request;
 
-	f = _request.find(' ', i);
-	_method = _request.substr(i, f - i);
-	// std::cout << "METHOD = " << _method << std::endl;
+	HttpRequest req(_request);
 
-	i = f + 1;
-	f = _request.find(' ', i);
-	_target = _request.substr(i, f - i);
-	if (_target == "/")
-		_target = "/index.html";
-
-	i = f + 1;
-	f = _request.find('\n', i);
-	_version = _request.substr(i, f - i);
-
-	// i = _parseHeaderFields(i, f);
-	
-	// if (_request[i])
-	// 	_body = &_request[i];
+	_method = req.method(); 
+	_target = req.target();
+	_version = req.version();
 
 	if (_target == "/cgi-bin/upload.py")
 		_execCgiScript();

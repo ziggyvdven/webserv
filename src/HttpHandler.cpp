@@ -36,8 +36,19 @@ HttpHandler::~HttpHandler()
 
 std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 {
-	std::ifstream		f("./data/www" + request.target(), std::ios::binary);
-	std::ostringstream	oss;
+	// 1 - Check if the request is valid
+	// if (!_req.isValid)
+	// {
+	// 	_statusCode = 400;
+	// 	_target = config.getErrorPage();	// 40x.html
+	// }
+
+	// 2 - Make sure the target doesn't try to go to a higher directory  
+	_target = request.target();
+	_parseTarget();
+
+	// std::ifstream		f(config.getRoot() + _target, std::ios::binary);
+	std::ifstream		f("./data/www" + _target, std::ios::binary);
 	std::string			content = request.raw();
 	int					errorCode = 404;
 
@@ -49,6 +60,8 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	}
 	f.close();
 
+	std::ostringstream	oss;
+
 	oss << "HTTP/1.1 " << errorCode << " OK\r\n";
 	oss << "Cache-Control: no-cache, private\r\n";
 	// oss << "Content-Type: " << contentType << "\r\n";
@@ -58,6 +71,17 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 
 	_response = oss.str();
 	return _response;
+}
+
+void	HttpHandler::_parseTarget(void)
+{
+	std::string	needle = "../";
+	size_t		found = 0;
+
+	while ((found = _target.find(needle, found)) != std::string::npos)
+	{
+		_target.erase(found, needle.size());
+	}
 }
 
 // void	HttpHandler::_execCgiScript(void) const

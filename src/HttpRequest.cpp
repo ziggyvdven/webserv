@@ -72,7 +72,7 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 
 	std::regex re_request_line(
 		"^(GET|POST|DELETE)"
-		" \\/[^\\s]* "
+		" \\/\\S* "
 		"HTTP\\/1.[1,3]\\r$");
 
 	if (!std::regex_match(request_line, re_request_line))

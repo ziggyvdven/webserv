@@ -61,7 +61,7 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 
 	if (!std::regex_match(request_line, re_request_line))
 	{
-		std::cout << "Regex match failed: " << std::endl;
+		std::cout << "regex failed" << std::endl;
 		throw std::exception();
 	}
 }
@@ -86,8 +86,6 @@ void HttpRequest::_parse_headers()
 		std::string key = header_line.substr(0, pos);
 		std::string value = header_line.substr(pos + 1, header_line.size());
 		_add_header(key, value);
-
-		_headers[key] = value;
 
 		std::getline(_http_stream, header_line);
 	}

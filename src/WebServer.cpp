@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/13 19:35:36 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/13 23:44:40 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,8 +70,6 @@ int	WebServer::run(void)
 					// This is an accepting socket. Do recv/send loop
 					if (_readData(_fds[i].fd))
 					{
-						// _printRequest();	// For testing purposes
-						std::cout << _request << std::endl;
 						// Send HTTP Response
 						HttpRequest request(_request);
 

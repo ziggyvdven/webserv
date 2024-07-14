@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/13 18:51:59 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/13 23:44:51 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,22 +30,20 @@ class WebServer
 {
 private:
 
-	struct pollfd		_fds[FD_SETSIZE];
-	int					_nfds;
-	std::vector<Socket>	_socketList;
-	size_t const		_socketListSize;
+	struct pollfd				_fds[FD_SETSIZE];
+	int							_nfds;
+	std::vector<Socket>			_socketList;
+	size_t const				_socketListSize;
 
-	std::string			_request;
-	std::string			_response;
+	std::string					_request;
+	std::string					_response;
 
-	bool				_isListeningSocket(int fd) const;
-	void				_acceptConnection(int fd);
-	void				_cleanUpSockets(void) const;
-	void				_compressFdsArray(void);
-	bool				_readData(int socket);
-	void				_sendData(int socket, const char* str, size_t len) const;
-
-	void				_printRequest(void);
+	bool						_isListeningSocket(int fd) const;
+	void						_acceptConnection(int fd);
+	void						_cleanUpSockets(void) const;
+	void						_compressFdsArray(void);
+	bool						_readData(int socket);
+	void						_sendData(int socket, const char* str, size_t len) const;
 
 public:
 

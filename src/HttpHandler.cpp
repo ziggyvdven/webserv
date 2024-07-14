@@ -3,19 +3,41 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/13 15:43:42y kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/14 00:09:24 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
-#include "../includes/HttpRequest.hpp"
 
 HttpHandler::HttpHandler(void)
 {
-
+	_mimeTypes[".txt"] = "text/plain";
+	_mimeTypes[".css"] = "text/css";
+	_mimeTypes[".htm"] = "text/html";
+	_mimeTypes[".html"] = "text/html";
+	_mimeTypes[".js"] = "text/javascript";
+	_mimeTypes[".apng"] = "image/apng";
+	_mimeTypes[".avif"] = "image/avif";
+	_mimeTypes[".gif"] = "image/gif";
+	_mimeTypes[".jpg"] = "image/jpeg";
+	_mimeTypes[".jpeg"] = "image/jpeg";
+	_mimeTypes[".png"] = "image/png";
+	_mimeTypes[".svg"] = "image/svg+xml";
+	_mimeTypes[".webp"] = "image/webp";
+	// 
+	_statusCodeList[100] = "Continue";
+	_statusCodeList[200] = "OK";
+	_statusCodeList[201] = "Created";
+	_statusCodeList[204] = "No Content";
+	_statusCodeList[302] = "Found";
+	_statusCodeList[400] = "Bad Request";
+	_statusCodeList[403] = "Forbidden";
+	_statusCodeList[404] = "Not Found";
+	_statusCodeList[405] = "Method Not Allowed";
+	_statusCodeList[500] = "Internal Server error";
 }
 
 HttpHandler::~HttpHandler()
@@ -36,36 +58,49 @@ HttpHandler::~HttpHandler()
 
 std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 {
-	// 1 - Check if the request is valid
-	// if (!_req.isValid)
-	// {
-	// 	_statusCode = 400;
-	// 	_target = config.getErrorPage();	// 40x.html
-	// }
+	std::string	content = "<h1>404 Not Found</h1>";
+	int			statusCode = 404;
 
-	// 2 - Make sure the target doesn't try to go to a higher directory  
-	_target = request.target();
-	_parseTarget();
+	request.print_request();
 
-	// std::ifstream		f(config.getRoot() + _target, std::ios::binary);
-	std::ifstream		f("./data/www" + _target, std::ios::binary);
-	std::string			content = request.raw();
-	int					errorCode = 404;
-
-	if (f.good())
+	_htmlFile = _parseTarget(request.target());
+	if (!request.isValid())
 	{
-		std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-		content = str;
-		errorCode = 200;
+		statusCode = 400;
+		// _htmlFile = config.getErrorPage();	// 40x.html
+		content = "<h1>Invalid Request</h1>";
 	}
-	f.close();
+	else if (_htmlFile.find("../") != std::string::npos)
+	{
+		statusCode = 403;
+		// _htmlFile = config.getErrorPage();	// 40x.html
+		content = "<h1>Forbidden</h1>";
+	}
+	else
+	{
+		if (_htmlFile == "/")
+		{
+			// _htmlFile = config.getRootFile();
+			_htmlFile = "/index.html";
+		}
+		// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
+		std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
+
+		if (f.good())
+		{
+			std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+			content = str;
+			statusCode = 200;
+		}
+		f.close();
+	}
 
 	std::ostringstream	oss;
 
-	oss << "HTTP/1.1 " << errorCode << " OK\r\n";
-	oss << "Cache-Control: no-cache, private\r\n";
-	// oss << "Content-Type: " << contentType << "\r\n";
+	oss << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
+	oss << "Cache-Control: no-cache, private" << "\r\n";
 	oss << "Content-Length: " << content.size() << "\r\n";
+	oss << "Content-Type: " << _getContentType(_htmlFile) << "\r\n";
 	oss << "\r\n";
 	oss << content;
 
@@ -73,16 +108,44 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	return _response;
 }
 
-void	HttpHandler::_parseTarget(void)
+std::string const	HttpHandler::_getContentType(std::string const &path)
 {
-	std::string	needle = "../";
-	size_t		found = 0;
+	size_t		dotPos = path.rfind('.');
+	std::string	ext;
 
-	while ((found = _target.find(needle, found)) != std::string::npos)
+	if (dotPos != std::string::npos)
 	{
-		_target.erase(found, needle.size());
+		ext = path.substr(dotPos);
+		std::map<std::string, std::string>::const_iterator it = _mimeTypes.find(ext);
+		if (it != _mimeTypes.end())
+		{
+			return it->second;
+		}
 	}
+	return ("text/html");
 }
+
+std::string	HttpHandler::_parseTarget(std::string const &target)
+{
+	size_t	queryPos = target.find('?');
+
+	if (queryPos != std::string::npos)
+	{
+		return (target.substr(0, queryPos));
+	}
+	return (target);
+}
+
+// void	HttpHandler::_parseTarget(void)
+// {
+// 	std::string	needle = "../";
+// 	size_t		found = 0;
+
+// 	while ((found = _htmlFile.find(needle, found)) != std::string::npos)
+// 	{
+// 		_htmlFile.erase(found, needle.size());
+// 	}
+// }
 
 // void	HttpHandler::_execCgiScript(void) const
 // {
@@ -112,8 +175,8 @@ void	HttpHandler::_parseTarget(void)
 // {
 // 	size_t	i;
 	
-// 	i = _target.find('/');
-// 	i = _target.find('/', i);
+// 	i = _htmlFile.find('/');
+// 	i = _htmlFile.find('/', i);
 
-// 	return (&_target[i + 1]);
+// 	return (&_htmlFile[i + 1]);
 // }

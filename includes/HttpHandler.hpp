@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/13 19:48:17 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/14 00:08:50 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,25 +20,29 @@
 # include <string>
 # include <vector>
 # include <map>
-#include "../includes/HttpRequest.hpp"
+# include "HttpRequest.hpp"
 
 # define FIELD_COUNT	1
 
 class HttpHandler
 {
 private:
+
+	std::map<std::string, std::string>	_mimeTypes;
+	std::map<int, std::string>			_statusCodeList;
+
 	std::string							_response;
 
 	std::map<std::string, std::string>	_fields;
 	std::string							_body;
 
-	// int									_statusCode;
-	std::string							_target;
+	std::string							_htmlFile;
 
 	// void								_execCgiScript(void) const;
 	// char const						*_getScriptName(void) const;
 
-	void								_parseTarget(void);
+	std::string const					_getContentType(std::string const &path);
+	std::string							_parseTarget(std::string const &target);
 
 	
 public:

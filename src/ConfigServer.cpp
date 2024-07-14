@@ -3,63 +3,56 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-ConfigServer::ConfigServer(vector<pair<string, unsigned> > const & conf, Config & config): _Block(conf), _Config(config), _Port(80), _Host("127.0.0.1"),
+ConfigServer::ConfigServer(Config & config): _Config(config), _Port(80), _Host("127.0.0.1"),
  _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/data"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
- _Return(0, ""){
-	// cout << G << "ConfigServer constructor by param called" << END << std::endl;
-	// cout << endl << "SERVER CONFIGURATION" << endl;
+ _Return(0, ""), _Routes(){
+	// std::cout << G << "ConfigServer constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = true;
-	string 			whitespace = " \t";
-	string			line;
+	// _Routes["NULL"] = NULL;
+}
 
+void	ConfigServer::Init(vector<pair<string, unsigned> > const & conf){
+	string 								whitespace = " \t";
+	string								line;
+	vector<pair<string, unsigned> > 	block;
+	pair<string, unsigned> 				new_pair;
+
+	_Block = conf;
 	for (vector<pair<string, unsigned> >::iterator it = _Block.begin(); it != _Block.end(); ++it){
-		line = it->first;
 		// cut the first word from the string
-		if (!line.empty() && line.find_first_not_of(whitespace) != string::npos){
-			size_t start = line.find_first_not_of(whitespace);
-			size_t end = line.find_first_of(whitespace, start) - 1;
-			line = line.substr(start, end);
-		}
-		// cout << line << endl;
+		block.clear();
 		unordered_set<string>		directives = _Config.getDirectives();
-		if (directives.find(line) == directives.end()){
+		istringstream iss(it->first);
+		string line; 
+		iss >> line;
+
+		if (line == "location")
+		{	
+			while (it->first.find("}") == string::npos){
+				new_pair.first = it->first;
+				new_pair.second = it->second;
+				block.push_back(new_pair);
+				++it;
+			}
+			_Location_blocks.push_back(block);
+		}
+		else if (directives.find(line) == directives.end()){
 			throw (runtime_error("unknown directive \"" + line + "\" in " + _Config.getFilename() + ":" + to_string(it->second)));
 		}
 		else
 			Parseline(*it, line);
 	}
+	if (!_Location_blocks.empty())
+		CreateRoutes();
 }
-
-// void	ConfigServer::Init(vector<pair<string, unsigned> > const & conf){
-// 	string 			whitespace = " \t";
-// 	string			line;
-
-// 	for (vector<pair<string, unsigned> >::iterator it = _Block.begin(); it != _Block.end(); ++it){
-// 		line = it->first;
-// 		// cut the first word from the string
-// 		if (!line.empty() && line.find_first_not_of(whitespace) != string::npos){
-// 			size_t start = line.find_first_not_of(whitespace);
-// 			size_t end = line.find_first_of(whitespace, start) - 1;
-// 			line = line.substr(start, end);
-// 		}
-// 		// cout << line << endl;
-// 		unordered_set<string>		directives = _Config.getDirectives();
-// 		if (directives.find(line) == directives.end()){
-// 			throw (runtime_error("unknown directive \"" + line + "\" in " + _Config.getFilename() + ":" + to_string(it->second)));
-// 		}
-// 		else
-// 			Parseline(*it, line);
-// 	}
-// }
 
 ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
 _ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex), _Root(src._Root),
-_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return){
+_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return), _Routes(src._Routes){
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = src._Methods[i];
-	*this = src;
 }
 
 /*
@@ -94,6 +87,8 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 		_CGIbin = rhs._CGIbin;
 		_CGIext = rhs._CGIext;
 		_Return = rhs._Return;
+		_Routes = rhs._Routes;
+		// _Location_blocks = rhs._Location_blocks;
 	}
 	return *this;
 }
@@ -129,6 +124,7 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 	o << "   CGI_BIN| " << i.getCGIbin() << endl;
 	o << "   CGI_EXT| " << i.getCGIext() << endl;
 	o << "  REDIRECT| " << i.getRedirect().first << " " << i.getRedirect().second << endl;
+
 	return o;
 }
 
@@ -471,6 +467,22 @@ void	ConfigServer::ParseReturn(pair<string, unsigned> & linepair){
 		throw (runtime_error("Invalid value \"" + redirect + "\" in the \"return\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 }
 
+void	ConfigServer::CreateRoutes(){
+	
+	for(vector<vector<pair<string, unsigned> > >::iterator it = _Location_blocks.begin(); it != _Location_blocks.end(); ++it){
+		string line;
+		istringstream iss(it->begin()->first);
+		iss >> line;
+		iss >> line;
+		it->erase(it->begin());
+		it->pop_back();
+		ConfigServer* location = new ConfigServer(*this);
+		location->Init(*it);
+		_Routes[line] = location;
+		location->setHost(line);
+	}
+}
+
 
 /*
 ** --------------------------------- ACCESSOR ---------------------------------
@@ -539,6 +551,14 @@ string	ConfigServer::getCGIext() const{
 
 pair<short, string>	ConfigServer::getRedirect() const{
 	return (this->_Return);
+}
+
+map<string, ConfigServer*>	ConfigServer::getRoutes() const{
+	return (this->_Routes);
+}
+
+void	ConfigServer::setHost(string const & route){
+	_Host = _Host + route;
 }
 
 /* ************************************************************************** */

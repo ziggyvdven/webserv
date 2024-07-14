@@ -18,8 +18,11 @@ int main(int argc, char **argv)
 			vector<ConfigServer>		_ConfigServers = config.GetConfigServers();
 			// cout << _ConfigServers[0].getErrorPage(300) << endl;
 			cout << config.GetServer(0) << endl;
+			map<string, ConfigServer*> map = config.GetServer(0).getRoutes();
+			cout << *map["/"] << endl;
+			cout << *map["/images"] << endl;  
 			cout << config.GetServer(1) << endl;
-			
+
 		}
 		catch (exception &e)
 		{

@@ -38,6 +38,13 @@ Config::Config( const Config & src ){
 
 Config::~Config(){
 	// std::cout << R << "Config Destructor called" << END << std::endl;
+	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it) {
+		map<string, ConfigServer*>	routes = it->getRoutes();
+		for (map<string, ConfigServer*>::iterator it = routes.begin(); it != routes.end(); ++it)
+		{
+			delete it->second;
+		}
+	}
 }
 
 /*
@@ -88,7 +95,9 @@ int	Config::CreateConfigServer( ){
 	}
 	throw (runtime_error(_Filename + " missing closing bracket for server configuration"));	
 	match:
-	_ConfigServers.push_back(ConfigServer(block, *this));
+	ConfigServer server(*this);
+	_ConfigServers.push_back(server);
+	_ConfigServers.back().Init(block);
 	_NServers++;
 	return (0);
 
@@ -136,7 +145,8 @@ vector<ConfigServer>&		Config::GetConfigServers(){
 }
 
 ConfigServer&				Config::GetServer(size_t index){
-	if (index < 0 || index > _NServers)
+
+	if (index < 0 || index > _NServers - 1)
 		throw (runtime_error("GetServer index out of bounds"));
 	return (_ConfigServers[index]);
 }

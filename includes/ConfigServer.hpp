@@ -23,7 +23,7 @@ class Config;
 
 class ConfigServer {
 public:
-	ConfigServer(vector<pair<string, unsigned> > const & conf, Config & config);
+	ConfigServer(Config & config);
 	ConfigServer ( ConfigServer const & src);
 	~ConfigServer( void );
 
@@ -44,6 +44,9 @@ public:
 	string						getCGIbin() const;
 	string						getCGIext() const;
 	pair<short, string>			getRedirect() const;
+	map<string, ConfigServer*>	getRoutes() const;
+
+	void						setHost(string const & route);
 
 private:
 	vector<pair<string, unsigned> > 	_Block;
@@ -60,10 +63,12 @@ private:
 	string								_CGIbin;
 	string								_CGIext;
 	pair<short, string>					_Return;
-	map<string, ConfigServer>			_Routes;
+	map<string, ConfigServer*>			_Routes;
+	vector<vector<pair<string, unsigned> > > _Location_blocks;
 
 	bool				ValidatePort(string& line, string N) const;
 	string 				trim(const std::string& str);
+	void				CreateRoutes( void );
 
 	void				Parseline(pair<string, unsigned> & linepair, string& line);
 	void				ParseListen(pair<string, unsigned> & linepair);

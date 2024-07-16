@@ -6,7 +6,7 @@ import os
 
 # print (os.getcwd())
 
-if os.getenv('METHOD') == 'POST':
+if os.getenv('METHOD') == 'DELETE':
 
 	file_path = os.getenv('FILENAME')
 

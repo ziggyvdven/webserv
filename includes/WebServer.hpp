@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/13 23:44:51 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/15 19:29:29 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@
 # include "HttpRequest.hpp"
 # include "Socket.hpp"
 
+class HttpHandler;
+
 class WebServer
 {
 private:
@@ -40,7 +42,6 @@ private:
 
 	bool						_isListeningSocket(int fd) const;
 	void						_acceptConnection(int fd);
-	void						_cleanUpSockets(void) const;
 	void						_compressFdsArray(void);
 	bool						_readData(int socket);
 	void						_sendData(int socket, const char* str, size_t len) const;
@@ -53,6 +54,9 @@ public:
 	int	init(void);
 	int	run(void);
 
+	void						cleanUpSockets(void) const;
+	int							getNFds(void) const;
+	
 };
 
 #endif

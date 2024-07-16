@@ -108,7 +108,6 @@ void HttpRequest::print_request() const
 		return;
 	}
 
-
 	std::cout << "method: " << _method << std::endl;
 	std::cout << "Target: " << _target << std::endl;
 	std::cout << "Version: " << _version << std::endl;

@@ -6,13 +6,13 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/14 00:09:24 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/15 21:38:25 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 
-HttpHandler::HttpHandler(void)
+HttpHandler::HttpHandler(WebServer const &webServer) : _webServer(webServer)
 {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
@@ -38,6 +38,8 @@ HttpHandler::HttpHandler(void)
 	_statusCodeList[404] = "Not Found";
 	_statusCodeList[405] = "Method Not Allowed";
 	_statusCodeList[500] = "Internal Server error";
+	//
+	_cgiScripts["/upload.py"] = "/upload.html";
 }
 
 HttpHandler::~HttpHandler()
@@ -64,17 +66,11 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	request.print_request();
 
 	_htmlFile = _parseTarget(request.target());
-	if (!request.isValid())
+	if (!request.isValid() || _htmlFile.find("../") != std::string::npos)
 	{
 		statusCode = 400;
 		// _htmlFile = config.getErrorPage();	// 40x.html
-		content = "<h1>Invalid Request</h1>";
-	}
-	else if (_htmlFile.find("../") != std::string::npos)
-	{
-		statusCode = 403;
-		// _htmlFile = config.getErrorPage();	// 40x.html
-		content = "<h1>Forbidden</h1>";
+		content = "<h1>Bad Request</h1>";
 	}
 	else
 	{
@@ -83,16 +79,33 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 			// _htmlFile = config.getRootFile();
 			_htmlFile = "/index.html";
 		}
-		// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
-		std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
-
-		if (f.good())
+		else if (_isCGIScript())
 		{
-			std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-			content = str;
-			statusCode = 200;
+			if (_execCGIScript(request))
+			{
+				_htmlFile = _cgiScripts.at(_htmlFile);
+				std::cout << _htmlFile << std::endl;
+			}
+			else
+			{
+				content = "<h1>500 Internal Server Error</h1>";
+				statusCode = 500;
+			}
 		}
-		f.close();
+		
+		if (statusCode != 500)
+		{
+			// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
+			std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
+
+			if (f.good())
+			{
+				std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+				content = str;
+				statusCode = 200;
+			}
+			f.close();
+		}
 	}
 
 	std::ostringstream	oss;
@@ -100,22 +113,20 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	oss << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
 	oss << "Cache-Control: no-cache, private" << "\r\n";
 	oss << "Content-Length: " << content.size() << "\r\n";
-	oss << "Content-Type: " << _getContentType(_htmlFile) << "\r\n";
+	oss << "Content-Type: " << _getContentType() << "\r\n";
 	oss << "\r\n";
 	oss << content;
 
 	_response = oss.str();
-	return _response;
+	return (_response);
 }
 
-std::string const	HttpHandler::_getContentType(std::string const &path)
+std::string const	HttpHandler::_getContentType(void)
 {
-	size_t		dotPos = path.rfind('.');
-	std::string	ext;
+	std::string	ext = _getExtension();
 
-	if (dotPos != std::string::npos)
+	if (!ext.empty())
 	{
-		ext = path.substr(dotPos);
 		std::map<std::string, std::string>::const_iterator it = _mimeTypes.find(ext);
 		if (it != _mimeTypes.end())
 		{
@@ -123,6 +134,17 @@ std::string const	HttpHandler::_getContentType(std::string const &path)
 		}
 	}
 	return ("text/html");
+}
+
+std::string const	HttpHandler::_getExtension(void)
+{
+	size_t	dotPos = _htmlFile.rfind('.');
+
+	if (dotPos != std::string::npos)
+	{
+		return (_htmlFile.substr(dotPos));
+	}
+	return ("");
 }
 
 std::string	HttpHandler::_parseTarget(std::string const &target)
@@ -147,27 +169,61 @@ std::string	HttpHandler::_parseTarget(std::string const &target)
 // 	}
 // }
 
-// void	HttpHandler::_execCgiScript(void) const
-// {
-// 	std::vector<char const *>	argv;
-// 	std::vector<char const *>	envp;
-// 	const char					*python_path = "/usr/bin/python";
-// 	pid_t						process_id;
+bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
+{
+	std::string					script_path = "/Users/oroy/Documents/cursus42/webserv/cgi-bin" + _htmlFile;
+	const char *				language_path = "/usr/bin/python";
+	std::vector<char const *>	argv;
+	std::vector<char const *>	envp;
+	pid_t						process_id;
 
-// 	argv.push_back(python_path);
-// 	argv.push_back("/Users/oroy/Documents/cursus42/webserv/cgi-bin/upload.py");
-// 	argv.push_back(NULL);
+	std::string	const			version = "HTTP_VERSION=" + request.version();
+	std::string	const			method = "METHOD=" + request.method();
+	std::string const			filename = "FILENAME=/Users/oroy/Documents/cursus42/webserv/upload/test.txt";
+	std::string	const			content = "CONTENT=This is a test";
 
-// 	process_id = fork();
-// 	if (process_id < 0)
-// 		perror ("fork() failed");
-// 	else if (process_id == 0)
-// 	{
-// 		execve (python_path, const_cast<char * const *>(argv.data()), NULL);
-// 		perror ("execve() failed");
-// 		exit (EXIT_FAILURE);
-// 	}
-// }
+	int							wstatus;
+
+	process_id = fork();
+	if (process_id < 0)
+		perror ("fork() failed");
+	else if (process_id == 0)
+	{
+		_webServer.cleanUpSockets();
+
+		argv.push_back(language_path);
+		argv.push_back(script_path.c_str());
+		argv.push_back(NULL);
+
+		envp.push_back(version.c_str());
+		envp.push_back(method.c_str());
+		envp.push_back(filename.c_str());
+		envp.push_back(content.c_str());
+		envp.push_back(NULL);
+
+		execve (language_path, const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
+		exit (EXIT_FAILURE);
+	}
+	waitpid (process_id, &wstatus, 0);
+	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
+	{
+		return (false);
+	}
+	return (true);
+}
+
+bool	HttpHandler::_isCGIScript(void)
+{
+	try
+	{
+		_cgiScripts.at(_htmlFile);
+	}
+	catch (std::out_of_range const &e)
+	{
+		return (false);
+	}
+	return (true);
+}
 
 /*	Utils	***************************************************************** */
 

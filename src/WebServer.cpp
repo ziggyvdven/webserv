@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/13 23:44:40 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/15 21:34:38 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ int	WebServer::init(void)
 	{
 		if (_socketList[i].createSocket() < 0)
 		{
-			_cleanUpSockets();
+			cleanUpSockets();
 			return (-1);
 		}
 		// Add the listening socket in our fd set
@@ -42,7 +42,7 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	HttpHandler	http;
+	HttpHandler	http(*this);
 	int			current_fds_size;
 
 	while (true)
@@ -85,7 +85,7 @@ int	WebServer::run(void)
 			}
 		}
 	}
-	_cleanUpSockets();
+	cleanUpSockets();
 	return (0);
 }
 
@@ -168,7 +168,7 @@ void	WebServer::_compressFdsArray(void)
 	}
 }
 
-void	WebServer::_cleanUpSockets(void) const
+void	WebServer::cleanUpSockets(void) const
 {
 	for (int i = 0; i < _nfds; i++)
 	{

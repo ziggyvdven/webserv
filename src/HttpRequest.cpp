@@ -61,11 +61,9 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 
 	if (!std::regex_match(request_line, re_request_line))
 	{
-		std::cout << "regex failed" << std::endl;
 		throw std::exception();
 	}
 }
-
 
 void HttpRequest::_parse_headers()
 {
@@ -89,7 +87,6 @@ void HttpRequest::_parse_headers()
 
 		std::getline(_http_stream, header_line);
 	}
-	// _http_stream now should be stopped after \n
 }
 
 
@@ -98,6 +95,20 @@ bool HttpRequest::_valid_header(std::string const &line) const
 	std::regex const re("^\\S+:[ ]?.*[ ]?\\r$");
 
 	return std::regex_match(line, re);
+}
+
+std::string const HttpRequest::body()
+{
+	std::string line = "";
+
+	// _http_stream now should be stopped after \r\n
+	while(std::getline(_http_stream, line))
+	{
+		_body += line + "\n";
+	}
+	std::cout << "[DEBUG] request body: " << _body\
+	<< std::endl;
+	return _body;
 }
 
 void HttpRequest::print_request() const

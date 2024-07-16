@@ -25,7 +25,7 @@ public:
 	std::string const method() const { return _method; };
 	std::string const target() const { return _target; };
 	std::string const version() const { return _version; };
-	std::string const body() const {return _body;};
+	std::string const body();
 	std::string const getHeader(std::string const key) const;
 	bool				isValid() const {return _valid;}
 
@@ -38,6 +38,7 @@ private:
 	void _add_header(std::string const key, std::string const value);
 	bool _valid_header(std::string const &line) const;
 
+	void _parse_body();
 
 
 // Debug

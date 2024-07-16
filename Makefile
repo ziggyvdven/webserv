@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+         #
+#    By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/06/07 15:49:57 by zvan-de-         ###   ########.fr        #
+#    Updated: 2024/07/16 18:38:02 by kmehour          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,6 +34,12 @@ MAKE			= make
 # Objects 
 OBJS_PATH		= objs/
 OBJS			= $(patsubst $(SRCS_PATH)%.cpp, $(OBJS_PATH)%.o, $(SRCS_FILES))
+
+# Test Objects
+TEST_PATH		= unit_tests/
+TEST_SRC		= $(wildcard $(TEST_PATH)*.cpp)
+TEST_OBJ		= $(patsubst $(TEST_PATH)%.cpp, $(TEST_PATH)%.cpp, $(TEST_SRC))
+TEST_EXEC		= tests
 
 # Sources
 SRCS_PATH		= src/
@@ -83,6 +89,10 @@ $(NAME): $(OBJS_PATH) $(OBJS)
 	@$(CC)  $(CFLAGS) -o $@ $(OBJS) $(HEADERS)
 	@echo "$(G)\n -- $(NAME) made 👾 --$(RT)"
 
+test: fclean $(OBJS_PATH) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ) 
+	$(CC)  $(CFLAGS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
+	@./$(TEST_EXEC)
+
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp $(HEADERS_FILES)
 	@$(CC) $(CFLAGS) -o $@ -c $< 
 	$(call update_progress)
@@ -94,11 +104,11 @@ run: all
 	@./$(NAME) input.txt
 
 clean:
-	@rm -rf $(OBJS) $(OBJS_PATH)
+	@rm -rf $(OBJS) $(OBJS_PATH) $(TEST_EXEC).dSYM/
 	@echo "$(R)Files succesfully cleaned 🗑$(RT)"
 
 fclean: clean
-	@$(RM) $(NAME) $(NAME_EXPLAIN)
+	@$(RM) $(NAME) $(NAME_EXPLAIN) $(TEST_EXEC)
 
 re: fclean all
 

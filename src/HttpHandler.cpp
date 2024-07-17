@@ -6,13 +6,13 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/15 21:38:25 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/16 20:37:58 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 
-HttpHandler::HttpHandler(WebServer const &webServer) : _webServer(webServer)
+HttpHandler::HttpHandler(WebServer const &webServer) : _webServer(webServer), _htmlRoot("./data/www")
 {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
@@ -65,8 +65,9 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 
 	request.print_request();
 
-	_htmlFile = _parseTarget(request.target());
-	if (!request.isValid() || _htmlFile.find("../") != std::string::npos)
+	_htmlFile = request.target();
+	// _htmlFile = _parseTarget(request.target());
+	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
 	{
 		statusCode = 400;
 		// _htmlFile = config.getErrorPage();	// 40x.html
@@ -79,7 +80,7 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 			// _htmlFile = config.getRootFile();
 			_htmlFile = "/index.html";
 		}
-		else if (_isCGIScript())
+		else if (_isCGIScript(_htmlFile))
 		{
 			if (_execCGIScript(request))
 			{
@@ -121,6 +122,42 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	return (_response);
 }
 
+bool	HttpHandler::_isCGIScript(std::string const &target)
+{
+	std::string const	cgi_bin = "/cgi-bin/";
+	size_t				it = target.find(cgi_bin);
+	
+	_scriptName = "SCRIPT_NAME=";
+	_pathInfo = "PATH_INFO=";
+	_queryString = "QUERY_STRING=";
+
+	if (it == 0)
+	{
+		it = target.find_first_of("/?", cgi_bin.size());
+		std::string const	script_name = target.substr(0, it);
+		std::string const	script_path = _htmlRoot + script_name;
+		if (access(script_path.c_str(), X_OK) == 0)
+		{
+			_scriptName += script_name;
+			if (target[it] == '/')
+			{
+				size_t	it_query = target.find_first_of('?', it);
+				_pathInfo += target.substr(it, it_query - it);
+				it = it_query;
+			}
+			if (target[it] == '?')
+			{
+				_queryString += target.substr(it + 1);
+			}
+			std::cout << _scriptName << std::endl;
+			std::cout << _pathInfo << std::endl;
+			std::cout << _queryString << std::endl;
+			return (true);
+		}
+	}
+	return (false);
+}
+
 std::string const	HttpHandler::_getContentType(void)
 {
 	std::string	ext = _getExtension();
@@ -147,16 +184,16 @@ std::string const	HttpHandler::_getExtension(void)
 	return ("");
 }
 
-std::string	HttpHandler::_parseTarget(std::string const &target)
-{
-	size_t	queryPos = target.find('?');
+// std::string	HttpHandler::_parseTarget(std::string const &target)
+// {
+// 	size_t	queryPos = target.find('?');
 
-	if (queryPos != std::string::npos)
-	{
-		return (target.substr(0, queryPos));
-	}
-	return (target);
-}
+// 	if (queryPos != std::string::npos)
+// 	{
+// 		return (target.substr(0, queryPos));
+// 	}
+// 	return (target);
+// }
 
 // void	HttpHandler::_parseTarget(void)
 // {
@@ -206,19 +243,6 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 	}
 	waitpid (process_id, &wstatus, 0);
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
-	{
-		return (false);
-	}
-	return (true);
-}
-
-bool	HttpHandler::_isCGIScript(void)
-{
-	try
-	{
-		_cgiScripts.at(_htmlFile);
-	}
-	catch (std::out_of_range const &e)
 	{
 		return (false);
 	}

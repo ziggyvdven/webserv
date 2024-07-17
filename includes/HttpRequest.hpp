@@ -21,13 +21,13 @@ private:
 
 public:
 	HttpRequest(std::string const &raw_str);
-	std::string const raw() const { return _raw; }
-	std::string const method() const { return _method; };
-	std::string const target() const { return _target; };
-	std::string const version() const { return _version; };
-	std::string const body();
-	std::string const getHeader(std::string const key) const;
-	bool				isValid() const {return _valid;}
+	std::string const	raw() const		{ return _raw; }
+	std::string const	method() const	{ return _method; };
+	std::string const	target() const	{ return _target; };
+	std::string const	version() const	{ return _version; };
+	std::string const	body() const	{ return _body; };
+	bool				isValid() const	{ return _valid; };
+	std::string const	getHeader(std::string const key) const;
 
 private:
 	void _parse_http_request();

@@ -12,6 +12,10 @@ if os.getenv('METHOD') == 'POST':
 	file_path = os.getenv('FILENAME')
 	content_length = int(os.getenv('CONTENT_LENGTH'))
 
+	dir = os.path.dirname(file_path)
+	if (not os.path.isdir(dir)):
+		os.makedirs(dir)
+
 	s = sys.stdin.buffer.read(content_length)
 
 	# print ("Before open")
@@ -21,6 +25,3 @@ if os.getenv('METHOD') == 'POST':
 	# print ("End")
 
 exit (0)
-
-# print ("Hello World !")
-# exit (0)

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 14:32:55 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 18:57:31 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,11 +30,6 @@ class HttpHandler
 private:
 
 	WebServer const &					_webServer;
-	std::string	const					_htmlRoot;
-
-	std::string							_scriptName;
-	std::string							_pathInfo;
-	std::string							_queryString;
 
 	std::map<std::string, std::string>	_mimeTypes;
 	std::map<int, std::string>			_statusCodeList;
@@ -46,8 +41,6 @@ private:
 
 	std::string							_htmlFile;
 
-	bool								_execCGIScript(HttpRequest const &request) const;
-	bool								_isCGIScript(std::string const &target);
 	// char const						*_getScriptName(void) const;
 
 	std::string const					_getContentType(void);

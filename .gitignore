@@ -2,3 +2,5 @@ tests
 tests.dSYM/
 objs/
 *.dSYM/
+webserv
+data/www/upload/*

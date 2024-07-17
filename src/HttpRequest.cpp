@@ -12,10 +12,10 @@ HttpRequest::HttpRequest(std::string const &raw_string)
 // ========== ========== Validation ========== ========== 
 void HttpRequest::_parse_http_request()
 {
-	std::string line;
-
 	_parse_request_line();
 	_parse_headers();
+	_parse_body();
+
 }
 
 // ========== ========== Getters ========== ========== 
@@ -97,7 +97,7 @@ bool HttpRequest::_valid_header(std::string const &line) const
 	return std::regex_match(line, re);
 }
 
-std::string const HttpRequest::body()
+void HttpRequest::_parse_body()
 {
 	std::string line = "";
 
@@ -106,9 +106,6 @@ std::string const HttpRequest::body()
 	{
 		_body += line + "\n";
 	}
-	std::cout << "[DEBUG] request body: " << _body\
-	<< std::endl;
-	return _body;
 }
 
 void HttpRequest::print_request() const

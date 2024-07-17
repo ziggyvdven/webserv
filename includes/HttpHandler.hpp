@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/16 18:37:49 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 14:32:55 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,6 @@ private:
 	std::string							_pathInfo;
 	std::string							_queryString;
 
-	std::map<std::string, std::string>	_cgiScripts;
 	std::map<std::string, std::string>	_mimeTypes;
 	std::map<int, std::string>			_statusCodeList;
 

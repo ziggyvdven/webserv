@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/15 21:34:38 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 18:08:35 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,6 +70,7 @@ int	WebServer::run(void)
 					// This is an accepting socket. Do recv/send loop
 					if (_readData(_fds[i].fd))
 					{
+						// std::cout << _request << std::endl;
 						// Send HTTP Response
 						HttpRequest request(_request);
 

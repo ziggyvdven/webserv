@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/16 20:37:58 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 18:11:52 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,8 +38,6 @@ HttpHandler::HttpHandler(WebServer const &webServer) : _webServer(webServer), _h
 	_statusCodeList[404] = "Not Found";
 	_statusCodeList[405] = "Method Not Allowed";
 	_statusCodeList[500] = "Internal Server error";
-	//
-	_cgiScripts["/upload.py"] = "/upload.html";
 }
 
 HttpHandler::~HttpHandler()
@@ -49,24 +47,17 @@ HttpHandler::~HttpHandler()
 
 /*	Functions	************************************************************* */
 
-// std::string const	HttpHandler::handleRequest(HttpRequest const &request)
-// {
-// 	if (request.target() == "/cgi-bin/upload.py")
-// 		_execCgiScript();
-
-// 	_buildResponse();
-// 	return (_response);
-// }
-
 std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 {
 	std::string	content = "<h1>404 Not Found</h1>";
 	int			statusCode = 404;
 
 	request.print_request();
+	std::cout << "[]" << std::endl;
+	std::cout << request.body() << std::endl;
+	std::cout << "[]" << std::endl;
 
-	_htmlFile = request.target();
-	// _htmlFile = _parseTarget(request.target());
+	_htmlFile = _parseTarget(request.target());
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
 	{
 		statusCode = 400;
@@ -75,27 +66,20 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	}
 	else
 	{
-		if (_htmlFile == "/")
+		if (_isCGIScript(request.target()))
 		{
-			// _htmlFile = config.getRootFile();
-			_htmlFile = "/index.html";
+			_execCGIScript(request);
+			statusCode = 200;
+			content = "<h1>CGI Script Executed</h1>";
 		}
-		else if (_isCGIScript(_htmlFile))
+		else
 		{
-			if (_execCGIScript(request))
+			if (_htmlFile == "/")
 			{
-				_htmlFile = _cgiScripts.at(_htmlFile);
-				std::cout << _htmlFile << std::endl;
+				// _htmlFile = config.getRootFile();
+				_htmlFile = "/index.html";
 			}
-			else
-			{
-				content = "<h1>500 Internal Server Error</h1>";
-				statusCode = 500;
-			}
-		}
-		
-		if (statusCode != 500)
-		{
+			
 			// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
 			std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
 
@@ -184,16 +168,16 @@ std::string const	HttpHandler::_getExtension(void)
 	return ("");
 }
 
-// std::string	HttpHandler::_parseTarget(std::string const &target)
-// {
-// 	size_t	queryPos = target.find('?');
+std::string	HttpHandler::_parseTarget(std::string const &target)
+{
+	size_t	queryPos = target.find('?');
 
-// 	if (queryPos != std::string::npos)
-// 	{
-// 		return (target.substr(0, queryPos));
-// 	}
-// 	return (target);
-// }
+	if (queryPos != std::string::npos)
+	{
+		return (target.substr(0, queryPos));
+	}
+	return (target);
+}
 
 // void	HttpHandler::_parseTarget(void)
 // {
@@ -208,8 +192,7 @@ std::string const	HttpHandler::_getExtension(void)
 
 bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 {
-	std::string					script_path = "/Users/oroy/Documents/cursus42/webserv/cgi-bin" + _htmlFile;
-	const char *				language_path = "/usr/bin/python";
+	std::string const			script_path = _htmlRoot + "/cgi-bin/upload.py";
 	std::vector<char const *>	argv;
 	std::vector<char const *>	envp;
 	pid_t						process_id;
@@ -217,28 +200,42 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 	std::string	const			version = "HTTP_VERSION=" + request.version();
 	std::string	const			method = "METHOD=" + request.method();
 	std::string const			filename = "FILENAME=/Users/oroy/Documents/cursus42/webserv/upload/test.txt";
-	std::string	const			content = "CONTENT=This is a test";
+	std::string	const			content = "This is a test";
 
+	std::string	const			length = "CONTENT_LENGTH=14";
+	
 	int							wstatus;
+	int							pipe_fd[2];
+
+	pipe(pipe_fd);
+
+	(void) _webServer;
 
 	process_id = fork();
 	if (process_id < 0)
 		perror ("fork() failed");
 	else if (process_id == 0)
 	{
-		_webServer.cleanUpSockets();
+		// _webServer.cleanUpSockets();
 
-		argv.push_back(language_path);
+		dup2 (pipe_fd[0], STDIN_FILENO);
+		dup2 (pipe_fd[1], STDOUT_FILENO);
+
+		close (pipe_fd[0]);
+		close (pipe_fd[1]);
+		
+		std::cout << content << std::endl;
+
 		argv.push_back(script_path.c_str());
 		argv.push_back(NULL);
 
 		envp.push_back(version.c_str());
 		envp.push_back(method.c_str());
 		envp.push_back(filename.c_str());
-		envp.push_back(content.c_str());
+		envp.push_back(length.c_str());
 		envp.push_back(NULL);
 
-		execve (language_path, const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
+		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
 		exit (EXIT_FAILURE);
 	}
 	waitpid (process_id, &wstatus, 0);
@@ -246,6 +243,12 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 	{
 		return (false);
 	}
+	// read (pipe_fd[0], buffer, 255);
+	close (pipe_fd[0]);
+	close (pipe_fd[1]);
+	// std::cout << "[] " << std::endl;
+	// std::cout << buffer << std::endl;
+	// std::cout << "[] " << std::endl;
 	return (true);
 }
 

@@ -5,23 +5,26 @@
 import os
 import sys
 
-# print (os.getcwd())
+if os.getenv('METHOD') != 'POST':
+	exit(0)
 
-if os.getenv('METHOD') == 'POST':
+# Gen env variables
+file_path = os.getenv('FILENAME')
+content_length = int(os.getenv('CONTENT_LENGTH'))
 
-	file_path = os.getenv('FILENAME')
-	content_length = int(os.getenv('CONTENT_LENGTH'))
+print("Hello World")
 
-	dir = os.path.dirname(file_path)
-	if (not os.path.isdir(dir)):
-		os.makedirs(dir)
+exit(0)
 
-	s = sys.stdin.buffer.read(content_length)
+# Create folder if it does not exit
+dir = os.path.dirname(file_path)
+if (not os.path.isdir(dir)):
+	os.makedirs(dir)
 
-	# print ("Before open")
-	f = open(file_path, "wb")
+s = sys.stdin.buffer.read(content_length)
+
+# Write to file
+with open(file_path, "wb") as f:
 	f.write(s)
-	f.close()
-	# print ("End")
 
 exit (0)

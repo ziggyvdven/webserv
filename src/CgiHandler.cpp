@@ -70,7 +70,6 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 	return (false);
 }
 
-
 bool	CgiHandler::execCgiScript()
 {
 	std::string const			script_path = _htmlRoot + "/cgi-bin/upload.py";
@@ -83,7 +82,8 @@ bool	CgiHandler::execCgiScript()
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
 	std::string	const			content = "This is a test";
 
-	std::string	const			length = "CONTENT_LENGTH=14";
+	std::stringstream			content_length;
+	content_length << "CONTENT_LENGTH=" << _request.body().size();
 	
 	int							wstatus;
 	int							pipe_fd[2];
@@ -103,7 +103,7 @@ bool	CgiHandler::execCgiScript()
 		close (pipe_fd[0]);
 		close (pipe_fd[1]);
 		
-		std::cout << content << std::endl;
+		std::cout << _request.body() << std::endl;
 
 		argv.push_back(script_path.c_str());
 		argv.push_back(NULL);
@@ -111,7 +111,7 @@ bool	CgiHandler::execCgiScript()
 		envp.push_back(version.c_str());
 		envp.push_back(method.c_str());
 		envp.push_back(filename.c_str());
-		envp.push_back(length.c_str());
+		envp.push_back(content_length.str().c_str());
 		envp.push_back(NULL);
 
 		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));

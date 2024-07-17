@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 18:11:52 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 19:38:00 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,13 +49,11 @@ HttpHandler::~HttpHandler()
 
 std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 {
-	std::string	content = "<h1>404 Not Found</h1>";
-	int			statusCode = 404;
+	std::string const	allowedMethods = "GET_POST_DELETE";
+	std::string			content = "<h1>404 Not Found</h1>";
+	int					statusCode = 404;
 
 	request.print_request();
-	std::cout << "[]" << std::endl;
-	std::cout << request.body() << std::endl;
-	std::cout << "[]" << std::endl;
 
 	_htmlFile = _parseTarget(request.target());
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
@@ -69,27 +67,43 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 		if (_isCGIScript(request.target()))
 		{
 			_execCGIScript(request);
-			statusCode = 200;
 			content = "<h1>CGI Script Executed</h1>";
+			statusCode = 200;
 		}
 		else
 		{
-			if (_htmlFile == "/")
+			if (allowedMethods.find(request.method()) != std::string::npos)
 			{
-				// _htmlFile = config.getRootFile();
-				_htmlFile = "/index.html";
-			}
-			
-			// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
-			std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
+				if (_htmlFile == "/")
+				{
+					// _htmlFile = config.getRootFile();
+					_htmlFile = "/index.html";
+				}
+				if (request.method() == "GET" || request.method() == "POST")
+				{
+					// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
+					std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
 
-			if (f.good())
-			{
-				std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-				content = str;
-				statusCode = 200;
+					if (f.good())
+					{
+						std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+						content = str;
+						statusCode = 200;
+					}
+					f.close();
+				}
+				else if (request.method() == "DELETE" && access(_htmlFile.c_str(), F_OK) == 0)
+				{
+					std::remove(_htmlFile.c_str());
+					content = "<h1>File successfully deleted</h1>";
+					statusCode = 200;
+				}
 			}
-			f.close();
+			else
+			{
+				content = "<h1>Method Not Allowed</h1>";
+				statusCode = 405;
+			}
 		}
 	}
 
@@ -179,17 +193,6 @@ std::string	HttpHandler::_parseTarget(std::string const &target)
 	return (target);
 }
 
-// void	HttpHandler::_parseTarget(void)
-// {
-// 	std::string	needle = "../";
-// 	size_t		found = 0;
-
-// 	while ((found = _htmlFile.find(needle, found)) != std::string::npos)
-// 	{
-// 		_htmlFile.erase(found, needle.size());
-// 	}
-// }
-
 bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 {
 	std::string const			script_path = _htmlRoot + "/cgi-bin/upload.py";
@@ -199,7 +202,7 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 
 	std::string	const			version = "HTTP_VERSION=" + request.version();
 	std::string	const			method = "METHOD=" + request.method();
-	std::string const			filename = "FILENAME=/Users/oroy/Documents/cursus42/webserv/upload/test.txt";
+	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
 	std::string	const			content = "This is a test";
 
 	std::string	const			length = "CONTENT_LENGTH=14";
@@ -251,15 +254,3 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 	// std::cout << "[] " << std::endl;
 	return (true);
 }
-
-/*	Utils	***************************************************************** */
-
-// char const	*HttpHandler::_getScriptName(void) const
-// {
-// 	size_t	i;
-	
-// 	i = _htmlFile.find('/');
-// 	i = _htmlFile.find('/', i);
-
-// 	return (&_htmlFile[i + 1]);
-// }

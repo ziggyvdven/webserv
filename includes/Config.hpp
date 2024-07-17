@@ -24,19 +24,19 @@ public:
 
 	Config &					operator=( Config const & rhs );
 
-	int							CreateConfigServer( );
-	void 						init_directives( void );
-
-
-	unordered_set<string>&		getDirectives();
-	unsigned					getLinenumber() const;
-	string						getFilename() const;
-	void						incrementLinenumber();
-
-	vector<ConfigServer>&		GetConfigServers();
-	ConfigServer&				GetServer(size_t index);
+	unordered_set<string>&		getDirectives( void );
+	unsigned					getLinenumber( void ) const;
+	string						getFilename( void ) const;
+	unsigned					getNServers( void ) const;
+	vector<ConfigServer>&		getConfigServers( void );
+	ConfigServer&				getServer(size_t index);
+	ConfigServer&				getServerConfig(unsigned const & port, string const & host);
 
 private:
+	void						incrementLinenumber( void );
+	int							CreateConfigServer( void );
+	void 						init_directives( void );
+
 	unsigned					_Linenumber;
 	unsigned					_NServers;
 	ifstream					_ConfigFile;
@@ -46,4 +46,4 @@ private:
 	
 };
 
-#endif /* ************************************************ BITCOINEXCHANGE_H */	
+#endif /* ********************************************************* CONFIG_HPP*/	

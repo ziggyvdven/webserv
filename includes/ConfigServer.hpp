@@ -65,9 +65,11 @@ private:
 	pair<short, string>					_Return;
 	map<string, ConfigServer*>			_Routes;
 	vector<vector<pair<string, unsigned> > > _Location_blocks;
+	vector<string>						_SetDirectives;
 
 	bool				ValidatePort(string& line, string N) const;
 	string 				trim(const std::string& str);
+	vector<pair<string, unsigned> >::iterator		CreateLocationBlocks(vector<pair<string, unsigned> >::iterator it);
 	void				CreateRoutes( void );
 
 	void				Parseline(pair<string, unsigned> & linepair, string& line);

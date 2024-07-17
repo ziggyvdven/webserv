@@ -124,31 +124,65 @@ void Config::init_directives( void ){
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
-unordered_set<string>&		Config::getDirectives(){
+unordered_set<string>&	Config::getDirectives(){
 	return (_Directives);
 }
 
-string						Config::getFilename() const{
+string	Config::getFilename() const{
 	return (this->_Filename);
 }
 
-unsigned					Config::getLinenumber() const{
+unsigned	Config::getLinenumber() const{
 	return (_Linenumber);
 }
 
-void						Config::incrementLinenumber(){
+unsigned	Config::getNServers() const{
+	return (_NServers);
+}
+
+void	Config::incrementLinenumber(){
 	_Linenumber++;
 }
 
-vector<ConfigServer>&		Config::GetConfigServers(){
+vector<ConfigServer>&	Config::getConfigServers(){
 	return(_ConfigServers);
 }
 
-ConfigServer&				Config::GetServer(size_t index){
+ConfigServer&	Config::getServer(size_t index){
 
-	if (index < 0 || index > _NServers - 1)
-		throw (runtime_error("GetServer index out of bounds"));
-	return (_ConfigServers[index]);
+	try{
+		return (_ConfigServers.at(index));
+	}
+	catch (exception &e){
+		cerr << "GetServer: index out of bounds" << endl;
+		exit (1);
+	}
+}
+
+ConfigServer&	Config::getServerConfig(unsigned const & port, string const & host){
+
+	string mhost = host;
+
+	if (mhost.find("localhost")){
+		size_t pos = mhost.find("localhost");
+		if (pos != string::npos)
+			mhost.replace(pos, 10, "127.0.0.1");
+	}
+	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it){
+		if (it->getPort() == port && host.find(it->getHost()) != string::npos){
+			if (it->getRedirect().first != 0)
+				return (*it);
+			try {
+	
+				return (*it->getRoutes().at(mhost));
+			}
+			catch(exception &e){
+				cout << "getServerConfig: route not found returning default settings for server." << endl;
+				return (*it);
+			}
+		}
+	}
+	throw (runtime_error("getServerConfig: Port/Host not found in " + _Filename));
 }
 
 

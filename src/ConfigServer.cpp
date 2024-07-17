@@ -5,46 +5,57 @@
 */
 ConfigServer::ConfigServer(Config & config): _Config(config), _Port(80), _Host("127.0.0.1"),
  _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/data"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
- _Return(0, ""), _Routes(){
+ _Return(0, ""), _Routes(), _SetDirectives(){
 	// std::cout << G << "ConfigServer constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = true;
-	// _Routes["NULL"] = NULL;
 }
 
 void	ConfigServer::Init(vector<pair<string, unsigned> > const & conf){
 	string 								whitespace = " \t";
 	string								line;
-	vector<pair<string, unsigned> > 	block;
-	pair<string, unsigned> 				new_pair;
+	unordered_set<string>				directives = _Config.getDirectives();
 
 	_Block = conf;
 	for (vector<pair<string, unsigned> >::iterator it = _Block.begin(); it != _Block.end(); ++it){
 		// cut the first word from the string
-		block.clear();
-		unordered_set<string>		directives = _Config.getDirectives();
 		istringstream iss(it->first);
 		string line; 
 		iss >> line;
 
 		if (line == "location")
-		{	
-			while (it->first.find("}") == string::npos){
-				new_pair.first = it->first;
-				new_pair.second = it->second;
-				block.push_back(new_pair);
-				++it;
-			}
-			_Location_blocks.push_back(block);
-		}
+			it = CreateLocationBlocks(it);
 		else if (directives.find(line) == directives.end()){
 			throw (runtime_error("unknown directive \"" + line + "\" in " + _Config.getFilename() + ":" + to_string(it->second)));
 		}
-		else
+		else{
 			Parseline(*it, line);
+			_SetDirectives.push_back(it->first);
+		}
 	}
 	if (!_Location_blocks.empty())
 		CreateRoutes();
+}
+
+vector<pair<string, unsigned> >::iterator	ConfigServer::CreateLocationBlocks(vector<pair<string, unsigned> >::iterator it){
+	vector<pair<string, unsigned> > 	block;
+	pair<string, unsigned> 				new_pair;
+
+	if (it->first.find("{") == string::npos)
+		throw (runtime_error("Missing opening bracket in directive \"location\" in " + _Config.getFilename() + ":" + to_string(it->second)));
+	while (it->first.find("}") == string::npos){
+		istringstream iss(it->first);
+		string line; 
+		iss >> line;
+		if (line == "listen" || line == "host" || line == "server_name")
+			throw (runtime_error("\"" + line + "\" directive is not allowed here in " + _Config.getFilename() + ":" + to_string(it->second)));
+		new_pair.first = it->first;
+		new_pair.second = it->second;
+		block.push_back(new_pair);
+		++it;
+	}
+	_Location_blocks.push_back(block);
+	return (it);
 }
 
 ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
@@ -88,7 +99,6 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 		_CGIext = rhs._CGIext;
 		_Return = rhs._Return;
 		_Routes = rhs._Routes;
-		// _Location_blocks = rhs._Location_blocks;
 	}
 	return *this;
 }
@@ -202,14 +212,18 @@ bool	ConfigServer::ValidatePort(string& line, string N)const{
 void	ConfigServer::ParseListen(pair<string, unsigned> & linepair){
 	regex 	port_line("\\s*listen\\s*[0-9]+;\\s*");
 	regex 	host_line("\\s*listen\\s*[0-9]+.[0-9]+.[0-9]+.[0-9]+:[0-9]+;\\s*");
+	regex	localhost_line("\\s*listen\\s*localhost;\\s*");
+	regex	port_localhost_line("\\s*listen\\s*localhost:[0-9]+;\\s*");
 	string  line = linepair.first;
 
+	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
+		throw (runtime_error("\"listen\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
 	if (regex_match(line, port_line)){
 		size_t start = line.find_first_of("0123456789");
 		size_t end = line.find_first_not_of("0123456789", start);
 		line = line.substr(start, end - start);
 		if (ValidatePort(line, to_string(linepair.second)))
-			_Port = stoi(line);;
+			_Port = stoi(line);
 	}
 	else if (regex_match(line, host_line)){
 		size_t start = line.find_first_of("0123456789");
@@ -226,6 +240,14 @@ void	ConfigServer::ParseListen(pair<string, unsigned> & linepair){
 			_Port = stoi(line);
 		_Host = host;
 	}
+	else if(regex_match(line, localhost_line) || regex_match(line, port_localhost_line)){
+		size_t start = line.find_first_of(":") + 1;
+		size_t end = line.find_first_of(";");
+		line = line.substr(start, end - start);
+		if (ValidatePort(line, to_string(linepair.second)))
+			_Port = stoi(line);
+		_Host = "127.0.0.1";
+	}
 	else 
 		throw (runtime_error("Port or host not found in the \"listen\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 }
@@ -233,8 +255,11 @@ void	ConfigServer::ParseListen(pair<string, unsigned> & linepair){
 void	ConfigServer::ParseHost(pair<string, unsigned> & linepair){
 	//Parses the host directive and uses the function inet_pton to check if the adressis valid. inet_pton returns
 	regex 	host_line("\\s*host\\s*[0-9]+.[0-9]+.[0-9]+.[0-9]+;\\s*");
+	regex	localhost_line("\\s*host\\s*localhost;\\s*");
 	string  line = linepair.first;
 
+	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
+		throw (runtime_error("\"host\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
 	if (regex_match(line, host_line)){
 		size_t start = line.find_first_of("0123456789");
 		size_t end = line.find_first_of(";");
@@ -244,6 +269,9 @@ void	ConfigServer::ParseHost(pair<string, unsigned> & linepair){
 		if (!result)
 			throw (runtime_error("invalid host in \"" + host + "\" of the \"host\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 		_Host = host;
+	}
+	else if(regex_match(line, localhost_line)){
+		_Host = "127.0.0.1";
 	}
 	else 
 		throw (runtime_error("Host not found in the \"host\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
@@ -269,6 +297,8 @@ void	ConfigServer::ParseClientMaxBodySize(pair<string, unsigned> & linepair){
 	string  line = linepair.first;
 	long 	clientmaxbodysize = 0;
 
+	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
+		throw (runtime_error("\"client_max_body_size\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
 	size_t start = line.find("client_max_body_size") + 20;
 	size_t end = line.find(";") - 1;
 	string client_max_body_size = line.substr(line.find_first_not_of(" \t", start), end - start);
@@ -346,11 +376,13 @@ void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
 	regex 	auto_index_line("\\s*autoindex\\s*(on|off);\\s*");
 	string  line = linepair.first;
 
+	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
+		throw (runtime_error("\"root\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
+	
 	size_t start = line.find("autoindex") + 9;
 	start = line.find_first_not_of(" \t", start);
 	size_t end = line.find(";");
 	string autoindex = line.substr(start, end - start);
-
 	if (regex_match(line, auto_index_line)){
 		if 	(autoindex == "on")
 			_AutoIndex = 1;
@@ -365,11 +397,12 @@ void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
 	//Sets the root folder if not set then the default folder will be /data
 	regex 	root_line("\\s*root\\s*[A-Za-z0-9-_.]+/*;\\s*");
 	string  line = linepair.first;
-
 	string root = line.substr(line.find("root") + 4, line.find(";"));
+
+	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
+		throw (runtime_error("\"root\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
 	root = trim(root);
 	root.pop_back();
-
 	if (regex_match(line, root_line)){
 		for (int i = count(line.begin(), line.end(), '/'); i > 1; i--)
 			root.pop_back();
@@ -383,11 +416,11 @@ void	ConfigServer::ParseMethods(pair<string, unsigned> & linepair){
 	//Sets the root folder if not set then the default folder will be /data
 	regex 	methods_line("\\s*allow_methods\\s*(GET|POST|DELETE)(?:\\s+(GET|POST|DELETE))*\\s*;\\s*");
 	string  line = linepair.first;
-
 	string methods = line.substr(line.find("allow_methods") + 13, line.find(";"));
+	
+
 	methods = trim(methods);
 	methods.pop_back();
-
 	if (regex_match(line, methods_line)){
 		for (int i = 0; i < 3; i++)
 			_Methods[i] = false;
@@ -475,11 +508,10 @@ void	ConfigServer::CreateRoutes(){
 		iss >> line;
 		iss >> line;
 		it->erase(it->begin());
-		it->pop_back();
 		ConfigServer* location = new ConfigServer(*this);
 		location->Init(*it);
-		_Routes[line] = location;
 		location->setHost(line);
+		_Routes[location->getHost()] = location;
 	}
 }
 

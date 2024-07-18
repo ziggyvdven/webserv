@@ -1,0 +1,12 @@
+/* styles.css */
+
+body {
+	background-color: lightpink;
+}
+
+#main-container {
+	margin: auto;
+	width: 50%;
+	background-color: blueviolet;
+	padding: 20px;
+}

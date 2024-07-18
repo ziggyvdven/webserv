@@ -15,6 +15,24 @@ int main(int argc, char **argv)
 			Config  config(input);
 			// cout << config.getServerConfig(80, "127.0.0.1/examplej") << endl;
 			config.printConfig();
+			Socket				socket0("localhost", 8080);
+			Socket				socket1("127.0.0.1", 4242);
+			std::vector<Socket>	socketList;
+
+			socketList.push_back(socket0);
+			socketList.push_back(socket1);
+
+			WebServer			webServer(socketList);
+
+			(void) argc;
+			(void) argv;
+			(void) envp;
+
+			if (webServer.init() < 0)
+			{	
+				return (-1);
+			}
+			webServer.run();
 
 		}
 		catch (exception &e)

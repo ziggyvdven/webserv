@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/15 19:29:29 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 21:36:17 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 # include "HttpHandler.hpp"
 # include "HttpRequest.hpp"
 # include "Socket.hpp"
+# include "Config.hpp"
 
 class HttpHandler;
 
@@ -36,6 +37,7 @@ private:
 	int							_nfds;
 	std::vector<Socket>			_socketList;
 	size_t const				_socketListSize;
+	Config						_Config;
 
 	std::string					_request;
 	std::string					_response;
@@ -48,7 +50,7 @@ private:
 
 public:
 
-	WebServer(std::vector<Socket> socketList);
+	WebServer(std::vector<Socket> socketList, Config &config);
 	~WebServer();
 
 	int	init(void);

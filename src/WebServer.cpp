@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/17 18:08:35 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 21:33:08 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/WebServer.hpp"
 
-WebServer::WebServer(std::vector<Socket> socketList) : _nfds(0), \
-_socketList(socketList), _socketListSize(socketList.size())
+WebServer::WebServer(std::vector<Socket> socketList, Config &conf) : _nfds(0), \
+_socketList(socketList), _socketListSize(socketList.size()), _Config(conf)
 {
 	memset(_fds, 0, sizeof(_fds));
 }
@@ -73,7 +73,6 @@ int	WebServer::run(void)
 						// std::cout << _request << std::endl;
 						// Send HTTP Response
 						HttpRequest request(_request);
-
 						_response = http.buildResponse(request);
 						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);
 						std::cout << "\n------------------ Message sent -------------------\n\n";

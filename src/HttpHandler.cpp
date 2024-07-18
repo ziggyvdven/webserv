@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 20:31:16 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 21:57:56 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,19 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	request.print_request();
 
 	_htmlFile = _parseTarget(request.target());
+	
+	size_t  i = request.getHeader("host").find(':');
+    _host = request.getHeader("host").substr(0, i);
+    if (i != _host.size())
+        _port = request.getHeader("host").substr(i);
+	else
+		_port = 80;
+
+    std::cout << "Host - " << _host << std::endl;
+    std::cout << "Port - " << _port << std::endl;
+
+	
+	
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
 	{
 		statusCode = 400;

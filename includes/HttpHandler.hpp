@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 19:23:49 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 21:55:15 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,10 @@ private:
 	std::string							_scriptName;
 	std::string							_pathInfo;
 	std::string							_queryString;
+
+	std::string							_host;
+	std::string							_port;
+	
 
 	std::map<std::string, std::string>	_mimeTypes;
 	std::map<int, std::string>			_statusCodeList;

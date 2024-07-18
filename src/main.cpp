@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 				socketList.push_back(socket);
 			}
 
-			WebServer			webServer(socketList);
+			WebServer			webServer(socketList, config);
 
 			(void) argc;
 			(void) argv;

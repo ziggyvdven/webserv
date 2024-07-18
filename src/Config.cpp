@@ -169,8 +169,10 @@ ConfigServer&	Config::getServerConfig(unsigned const & port, string const & host
 		if (pos != string::npos)
 			mhost.replace(pos, 10, "127.0.0.1");
 	}
-	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it){
-		if (it->getPort() == port && host.find(it->getHost()) != string::npos){
+	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it)
+	{
+		if (it->getPort() == port && host.find(it->getHost()) != string::npos)
+		{
 			if (it->getRedirect().first != 0)
 				return (*it);
 			try {
@@ -187,7 +189,8 @@ ConfigServer&	Config::getServerConfig(unsigned const & port, string const & host
 
 void	Config::printConfig(){
 
-	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it){
+	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it)
+	{
 		cout << *it << endl;
 		if (!it->getRoutes().empty())
 		{

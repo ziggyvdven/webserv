@@ -15,14 +15,13 @@ int main(int argc, char **argv)
 		}
 		try {
 			Config  config(input);
-			cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
-			// config.printConfig();
-			Socket				socket0("localhost", 8080);
-			Socket				socket1("127.0.0.1", 4242);
+			// cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
+			config.printConfig();
 			std::vector<Socket>	socketList;
-
-			socketList.push_back(socket0);
-			socketList.push_back(socket1);
+			for (unsigned i = 0; i < config.getNServers(); i++){
+				Socket				socket(config.getServer(i).getHost(), config.getServer(i).getPort());
+				socketList.push_back(socket);
+			}
 
 			WebServer			webServer(socketList);
 

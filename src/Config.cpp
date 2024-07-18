@@ -7,6 +7,7 @@ Config::Config(string const & input) : _Linenumber(0), _NServers(0){
 	regex 			config_filename(CONFIG_FOLDER + "\\/[a-zA-Z_0-9]+\\.conf");
 	regex			server_reg("^server\\s*\\{");
 	string			line;
+	string 			whitespace = " \t";
 	
 	// check the input extension .conf
 	if (!regex_match(input, config_filename))
@@ -22,7 +23,7 @@ Config::Config(string const & input) : _Linenumber(0), _NServers(0){
 		_Linenumber++;
 		if (regex_match(line, server_reg))
 			CreateConfigServer( );
-		else if (!line.empty())
+		else if (!line.empty() && line[line.find_first_not_of(whitespace)] != '#' && line.find_first_not_of(whitespace) != string::npos)
 			throw (runtime_error("unknown directive \"" + line + "\" in " + _Filename + ":" + to_string(_Linenumber)));
 	}
 }

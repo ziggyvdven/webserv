@@ -1,5 +1,7 @@
 # include "../includes/Common.hpp"
 # include "../includes/Config.hpp"
+# include "../includes/Socket.hpp"
+# include "../includes/WebServer.hpp"
 
 using namespace std;
 
@@ -13,8 +15,8 @@ int main(int argc, char **argv)
 		}
 		try {
 			Config  config(input);
-			// cout << config.getServerConfig(80, "127.0.0.1/examplej") << endl;
-			config.printConfig();
+			cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
+			// config.printConfig();
 			Socket				socket0("localhost", 8080);
 			Socket				socket1("127.0.0.1", 4242);
 			std::vector<Socket>	socketList;
@@ -26,7 +28,6 @@ int main(int argc, char **argv)
 
 			(void) argc;
 			(void) argv;
-			(void) envp;
 
 			if (webServer.init() < 0)
 			{	

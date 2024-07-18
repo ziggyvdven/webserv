@@ -14,11 +14,9 @@ if os.getenv('METHOD') == 'POST':
 
 	s = sys.stdin.buffer.read(content_length)
 
-	# print ("Before open")
 	f = open(file_path, "wb")
 	f.write(s)
 	f.close()
-	# print ("End")
 
 exit (0)
 

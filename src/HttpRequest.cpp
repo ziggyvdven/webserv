@@ -61,6 +61,7 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 
 	if (!std::regex_match(request_line, re_request_line))
 	{
+		std::cout << request_line << std::endl;
 		std::cout << "regex failed" << std::endl;
 		throw std::exception();
 	}

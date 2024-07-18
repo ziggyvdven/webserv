@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 19:38:00 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/17 20:31:16 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,8 +79,10 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 					// _htmlFile = config.getRootFile();
 					_htmlFile = "/index.html";
 				}
+				std::string const	file_path = _htmlRoot + _htmlFile;
 				if (request.method() == "GET" || request.method() == "POST")
 				{
+					
 					// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
 					std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
 
@@ -92,11 +94,19 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 					}
 					f.close();
 				}
-				else if (request.method() == "DELETE" && access(_htmlFile.c_str(), F_OK) == 0)
+				else if (request.method() == "DELETE" && access(file_path.c_str(), F_OK) == 0)
 				{
-					std::remove(_htmlFile.c_str());
-					content = "<h1>File successfully deleted</h1>";
-					statusCode = 200;
+					int result = std::remove(file_path.c_str());
+					if (result != 0)
+					{
+						content = "<h1>Permission denied</h1>";
+						statusCode = 403;
+					}
+					else
+					{
+						content = "<h1>File successfully deleted</h1>";
+						statusCode = 200;
+					}					
 				}
 			}
 			else

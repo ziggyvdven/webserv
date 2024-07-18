@@ -377,7 +377,7 @@ void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
 	string  line = linepair.first;
 
 	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
-		throw (runtime_error("\"root\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
+		throw (runtime_error("\"autoindex\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
 	
 	size_t start = line.find("autoindex") + 9;
 	start = line.find_first_not_of(" \t", start);

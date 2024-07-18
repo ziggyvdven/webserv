@@ -13,7 +13,8 @@ int main(int argc, char **argv)
 		}
 		try {
 			Config  config(input);
-			cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
+			// cout << config.getServerConfig(80, "127.0.0.1/examplej") << endl;
+			config.printConfig();
 
 		}
 		catch (exception &e)

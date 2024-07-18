@@ -31,6 +31,7 @@ public:
 	vector<ConfigServer>&		getConfigServers( void );
 	ConfigServer&				getServer(size_t index);
 	ConfigServer&				getServerConfig(unsigned const & port, string const & host);
+	void						printConfig();
 
 private:
 	void						incrementLinenumber( void );

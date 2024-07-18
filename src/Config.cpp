@@ -173,7 +173,6 @@ ConfigServer&	Config::getServerConfig(unsigned const & port, string const & host
 			if (it->getRedirect().first != 0)
 				return (*it);
 			try {
-	
 				return (*it->getRoutes().at(mhost));
 			}
 			catch(exception &e){
@@ -183,6 +182,20 @@ ConfigServer&	Config::getServerConfig(unsigned const & port, string const & host
 		}
 	}
 	throw (runtime_error("getServerConfig: Port/Host not found in " + _Filename));
+}
+
+void	Config::printConfig(){
+
+	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it){
+		cout << *it << endl;
+		if (!it->getRoutes().empty())
+		{
+			map<string, ConfigServer*>	Routes = it->getRoutes();
+			for (map<string, ConfigServer*>::iterator it2 = Routes.begin(); it2 != Routes.end(); ++it2){
+				cout << *it2->second << endl;
+			}
+		}
+	}
 }
 
 

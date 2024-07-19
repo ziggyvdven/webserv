@@ -160,28 +160,46 @@ ConfigServer&	Config::getServer(size_t index){
 	}
 }
 
-ConfigServer&	Config::getServerConfig(unsigned const & port, string const & host){
+ConfigServer&	Config::getServerConfig(string const & host, string const & target){
 
-	string mhost = host;
+	string   mhost = host;
+	unsigned short port;
 
-	if (mhost.find("localhost")){
+	(void)target;
+	if (mhost.find("localhost") != string::npos || host == "localhost")
+	{
 		size_t pos = mhost.find("localhost");
 		if (pos != string::npos)
-			mhost.replace(pos, 10, "127.0.0.1");
+			mhost.replace(pos, 9, "127.0.0.1");
+	}
+	if (mhost.find(":") != string::npos)
+	{
+		port = stoi(mhost.substr(mhost.find(":") + 1));
+		mhost = mhost.substr(0, mhost.find(":"));
+	}
+	else
+	{
+		port = 80;
 	}
 	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it)
 	{
-		if (it->getPort() == port && host.find(it->getHost()) != string::npos)
+		if (it->getPort() == port && it->getHost() == mhost)
 		{
 			if (it->getRedirect().first != 0)
 				return (*it);
 			try {
-				return (*it->getRoutes().at(mhost));
+				return (*it->getRoutes().at(target));
 			}
 			catch(exception &e){
-				cout << "getServerConfig: route not found returning default settings for server." << endl;
-				return (*it);
+				cout << "[getServerConfig]: target: \"" << target << "\" not found returning default settings for server." << endl;
 			}
+			try {
+				return (*it->getRoutes().at("/"));
+			}
+			catch(exception &e){
+				cout << "[getServerConfig] target: \"/\" not found returning default settings for server." << endl;
+			}
+			return (*it);
 		}
 	}
 	throw (runtime_error("getServerConfig: Port/Host not found in " + _Filename));

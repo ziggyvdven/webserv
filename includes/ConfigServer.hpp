@@ -45,8 +45,9 @@ public:
 	string						getCGIext() const;
 	pair<short, string>			getRedirect() const;
 	map<string, ConfigServer*>	getRoutes() const;
+	string						getTarget() const;
 
-	void						setHost(string const & route);
+	void						setTarget(string const & route);
 
 private:
 	vector<pair<string, unsigned> > 	_Block;
@@ -66,6 +67,7 @@ private:
 	map<string, ConfigServer*>			_Routes;
 	vector<vector<pair<string, unsigned> > > _Location_blocks;
 	vector<string>						_SetDirectives;
+	string								_Target;
 
 	bool				ValidatePort(string& line, string N) const;
 	string 				trim(const std::string& str);

@@ -6,13 +6,13 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 21:57:56 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/19 15:50:51 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 
-HttpHandler::HttpHandler(WebServer const &webServer) : _webServer(webServer), _htmlRoot("./data/www")
+HttpHandler::HttpHandler(WebServer const &webServer, Config& conf) : _webServer(webServer), _config(conf), _htmlRoot("./data/www")
 {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
@@ -56,24 +56,15 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	request.print_request();
 
 	_htmlFile = _parseTarget(request.target());
-	
-	size_t  i = request.getHeader("host").find(':');
-    _host = request.getHeader("host").substr(0, i);
-    if (i != _host.size())
-        _port = request.getHeader("host").substr(i);
-	else
-		_port = 80;
-
-    std::cout << "Host - " << _host << std::endl;
-    std::cout << "Port - " << _port << std::endl;
-
-	
+	ConfigServer settings = _config.getServerConfig(request.getHeader("host"), request.target());
+	cout << settings << endl;
 	
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
 	{
 		statusCode = 400;
-		// _htmlFile = config.getErrorPage();	// 40x.html
-		content = "<h1>Bad Request</h1>";
+		_htmlFile = settings.getErrorPage(400);
+		if (_htmlFile.empty())
+			
 	}
 	else
 	{

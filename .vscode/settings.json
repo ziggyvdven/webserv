@@ -68,7 +68,8 @@
     "system_error": "cpp",
     "tuple": "cpp",
     "type_traits": "cpp",
-    "typeinfo": "cpp"
+    "typeinfo": "cpp",
+    "csignal": "cpp"
   },
   "C_Cpp_Runner.cCompilerPath": "clang",
   "C_Cpp_Runner.cppCompilerPath": "clang++",

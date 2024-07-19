@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/17 21:36:17 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/18 17:57:30 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ private:
 	int							_nfds;
 	std::vector<Socket>			_socketList;
 	size_t const				_socketListSize;
-	Config						_Config;
+	Config&						_config;
 
 	std::string					_request;
 	std::string					_response;
@@ -58,6 +58,7 @@ public:
 
 	void						cleanUpSockets(void) const;
 	int							getNFds(void) const;
+	Config&						getConfig(void);
 	
 };
 

@@ -5,7 +5,7 @@
 */
 ConfigServer::ConfigServer(Config & config): _Config(config), _Port(80), _Host("127.0.0.1"),
  _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/www"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
- _Return(0, ""), _Routes(), _SetDirectives(){
+ _Return(0, ""), _Routes(), _SetDirectives(), _Target(""){
 	// std::cout << G << "ConfigServer constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = true;
@@ -60,7 +60,7 @@ vector<pair<string, unsigned> >::iterator	ConfigServer::CreateLocationBlocks(vec
 
 ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
 _ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex), _Root(src._Root),
-_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return), _Routes(src._Routes){
+_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return), _Routes(src._Routes), _Target(src._Target){
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = src._Methods[i];
@@ -99,6 +99,7 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 		_CGIext = rhs._CGIext;
 		_Return = rhs._Return;
 		_Routes = rhs._Routes;
+		_Target = rhs._Target;
 	}
 	return *this;
 }
@@ -134,6 +135,7 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 	o << "   CGI_BIN| " << i.getCGIbin() << endl;
 	o << "   CGI_EXT| " << i.getCGIext() << endl;
 	o << "  REDIRECT| " << i.getRedirect().first << " " << i.getRedirect().second << endl;
+	o << "    TARGET| " << i.getTarget() << endl;
 
 	return o;
 }
@@ -510,8 +512,8 @@ void	ConfigServer::CreateRoutes(){
 		it->erase(it->begin());
 		ConfigServer* location = new ConfigServer(*this);
 		location->Init(*it);
-		location->setHost(line);
-		_Routes[location->getHost()] = location;
+		location->setTarget(line);
+		_Routes[location->getTarget()] = location;
 	}
 }
 
@@ -589,8 +591,12 @@ map<string, ConfigServer*>	ConfigServer::getRoutes() const{
 	return (this->_Routes);
 }
 
-void	ConfigServer::setHost(string const & route){
-	_Host = _Host + route;
+void	ConfigServer::setTarget(string const & route){
+	_Target = route;
+}
+
+string	ConfigServer::getTarget() const{
+	return (this->_Target);
 }
 
 /* ************************************************************************** */

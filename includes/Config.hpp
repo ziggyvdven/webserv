@@ -30,7 +30,7 @@ public:
 	unsigned					getNServers( void ) const;
 	vector<ConfigServer>&		getConfigServers( void );
 	ConfigServer&				getServer(size_t index);
-	ConfigServer&				getServerConfig(unsigned const & port, string const & host);
+	ConfigServer&				getServerConfig(string const & host, string const & target);
 	void						printConfig();
 
 private:

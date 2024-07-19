@@ -6,14 +6,14 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/17 21:33:08 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/18 17:29:26 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/WebServer.hpp"
 
 WebServer::WebServer(std::vector<Socket> socketList, Config &conf) : _nfds(0), \
-_socketList(socketList), _socketListSize(socketList.size()), _Config(conf)
+_socketList(socketList), _socketListSize(socketList.size()), _config(conf)
 {
 	memset(_fds, 0, sizeof(_fds));
 }
@@ -42,7 +42,7 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	HttpHandler	http(*this);
+	HttpHandler	http(*this, _config);
 	int			current_fds_size;
 
 	while (true)
@@ -175,4 +175,8 @@ void	WebServer::cleanUpSockets(void) const
 		if(_fds[i].fd >= 0)
 			close(_fds[i].fd);
 	}
+}
+
+Config& WebServer::getConfig(void){
+	return (_config);
 }

@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 21:55:15 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/18 17:28:53 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 # include <map>
 # include "HttpRequest.hpp"
 # include "WebServer.hpp"
+# include "Config.hpp"
 
 class WebServer;
 
@@ -30,6 +31,7 @@ class HttpHandler
 private:
 
 	WebServer const &					_webServer;
+	Config&								_config;
 	std::string	const					_htmlRoot;
 
 	std::string							_scriptName;
@@ -61,7 +63,7 @@ private:
 	
 public:
 
-	HttpHandler(WebServer const &webServer);
+	HttpHandler(WebServer const &webServer, Config & conf);
 	~HttpHandler();
 
 	// std::string const				getResponse(void) const;

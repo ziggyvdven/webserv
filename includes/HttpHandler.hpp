@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/18 17:28:53 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/19 16:45:17 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # include "HttpRequest.hpp"
 # include "WebServer.hpp"
 # include "Config.hpp"
+# include "ConfigServer.hpp"
 
 class WebServer;
 
@@ -59,6 +60,8 @@ private:
 	std::string const					_getContentType(void);
 	std::string const					_getExtension(void);
 	std::string							_parseTarget(std::string const &target);
+
+	std::string							_getPage(ConfigServer const &config, short const & errorcode) const;
 
 	
 public:

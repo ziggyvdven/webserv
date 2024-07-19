@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/19 15:50:51 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/19 17:12:45 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,92 +47,153 @@ HttpHandler::~HttpHandler()
 
 /*	Functions	************************************************************* */
 
-std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
+std::string	HttpHandler::_getPage(ConfigServer const &config, short const & errorcode) const
 {
-	std::string const	allowedMethods = "GET_POST_DELETE";
-	std::string			content = "<h1>404 Not Found</h1>";
-	int					statusCode = 404;
+	std::string	htmlFile = settings.getErrorPage(errorcode);
 
-	request.print_request();
+	if (htmlFile.empty())
+	{
+		if (errorCode >= 400 && errorCode <= 499)
+			return ("/default_errors/40x.html");
+		if (errorCode >= 500 && errorCode <= 599)
+			return ("/default_errors/50x.html");
+	}
+	return (htmlFile);
+}
 
-	_htmlFile = _parseTarget(request.target());
-	ConfigServer settings = _config.getServerConfig(request.getHeader("host"), request.target());
-	cout << settings << endl;
-	
+std::string const	&HttpHandler::buildResponse(HttpRequest const &request)
+{
+	ConfigServer	config = _config.getServerConfig(request.getHeader("host"), request.target());
+	int				status_code = 404;
+	std::string		file_name = _getPage(config, status_code);
+	std::string		content = ;
+
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
 	{
-		statusCode = 400;
-		_htmlFile = settings.getErrorPage(400);
-		if (_htmlFile.empty())
-			
+		status_code = 400;
+		file_name = _getPage(config, 400);
+	}
+
+	// Open the file to put in the response body
+	std::ifstream	file("/data" + config.getRoot() + file_name, std::ios::binary);
+	if (file.is_open())
+	{
+		content = std::string((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 	}
 	else
 	{
-		if (_isCGIScript(request.target()))
-		{
-			_execCGIScript(request);
-			content = "<h1>CGI Script Executed</h1>";
-			statusCode = 200;
-		}
-		else
-		{
-			if (allowedMethods.find(request.method()) != std::string::npos)
-			{
-				if (_htmlFile == "/")
-				{
-					// _htmlFile = config.getRootFile();
-					_htmlFile = "/index.html";
-				}
-				std::string const	file_path = _htmlRoot + _htmlFile;
-				if (request.method() == "GET" || request.method() == "POST")
-				{
-					
-					// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
-					std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
-
-					if (f.good())
-					{
-						std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-						content = str;
-						statusCode = 200;
-					}
-					f.close();
-				}
-				else if (request.method() == "DELETE" && access(file_path.c_str(), F_OK) == 0)
-				{
-					int result = std::remove(file_path.c_str());
-					if (result != 0)
-					{
-						content = "<h1>Permission denied</h1>";
-						statusCode = 403;
-					}
-					else
-					{
-						content = "<h1>File successfully deleted</h1>";
-						statusCode = 200;
-					}					
-				}
-			}
-			else
-			{
-				content = "<h1>Method Not Allowed</h1>";
-				statusCode = 405;
-			}
-		}
+		content = "<h1>500 Internal Server Error</h1>";
 	}
+	file.close();
+	
+	// Create the response
+	std::ostringstream	response;
 
-	std::ostringstream	oss;
-
-	oss << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
-	oss << "Cache-Control: no-cache, private" << "\r\n";
-	oss << "Content-Length: " << content.size() << "\r\n";
-	oss << "Content-Type: " << _getContentType() << "\r\n";
-	oss << "\r\n";
-	oss << content;
-
-	_response = oss.str();
-	return (_response);
+	response << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
+	response << "Cache-Control: no-cache, private" << "\r\n";
+	response << "Content-Length: " << content.size() << "\r\n";
+	response << "Content-Type: " << _getContentType() << "\r\n";
+	response << "\r\n";
+	response << content;
+	return (response);
 }
+
+// std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
+// {
+// 	std::string const	allowedMethods = "GET_POST_DELETE";
+// 	std::string			content = "<h1>404 Not Found</h1>";
+// 	int					statusCode = 404;
+
+// 	request.print_request();
+
+// 	_htmlFile = _parseTarget(request.target());
+// 	ConfigServer settings = _config.getServerConfig(request.getHeader("host"), request.target());
+// 	cout << settings << endl;
+	
+// 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
+// 	{
+// 		statusCode = 400;
+// 		_htmlFile = settings.getErrorPage(400);
+// 		if (_htmlFile.empty())
+// 			_htmlFile = "/default_errors/40x.html";
+// 	}
+// 	else
+// 	{
+// 		if (_isCGIScript(request.target()))
+// 		{
+// 			_execCGIScript(request);
+// 			content = "<h1>CGI Script Executed</h1>";
+// 			statusCode = 200;
+// 		}
+// 		else
+// 		{
+// 			if (allowedMethods.find(request.method()) != std::string::npos)
+// 			{
+// 				if (_htmlFile == "/")
+// 				{
+// 					// _htmlFile = config.getRootFile();
+// 					_htmlFile = "/index.html";
+// 				}
+// 				std::string const	file_path = _htmlRoot + _htmlFile;
+// 				if (request.method() == "GET" || request.method() == "POST")
+// 				{
+					
+// 					// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
+// 					// std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
+
+// 					// if (f.good())
+// 					// {
+// 					// 	std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+// 					// 	content = str;
+// 					// 	statusCode = 200;
+// 					// }
+// 					// f.close();
+// 				}
+// 				else if (request.method() == "DELETE" && access(file_path.c_str(), F_OK) == 0)
+// 				{
+// 					int result = std::remove(file_path.c_str());
+// 					if (result != 0)
+// 					{
+// 						content = "<h1>Permission denied</h1>";
+// 						statusCode = 403;
+// 					}
+// 					else
+// 					{
+// 						content = "<h1>File successfully deleted</h1>";
+// 						statusCode = 200;
+// 					}					
+// 				}
+// 			}
+// 			else
+// 			{
+// 				content = "<h1>Method Not Allowed</h1>";
+// 				statusCode = 405;
+// 			}
+// 		}
+// 	}
+	
+// 	std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
+
+// 	if (f.good())
+// 	{
+// 		std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+// 		content = str;
+// 		statusCode = 200;
+// 	}
+// 	f.close();
+
+// 	std::ostringstream	oss;
+
+// 	oss << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
+// 	oss << "Cache-Control: no-cache, private" << "\r\n";
+// 	oss << "Content-Length: " << content.size() << "\r\n";
+// 	oss << "Content-Type: " << _getContentType() << "\r\n";
+// 	oss << "\r\n";
+// 	oss << content;
+
+// 	_response = oss.str();
+// 	return (_response);
+// }
 
 bool	HttpHandler::_isCGIScript(std::string const &target)
 {

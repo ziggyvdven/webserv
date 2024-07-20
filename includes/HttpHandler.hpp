@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/19 16:45:17 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/20 17:00:56 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,20 +31,29 @@ class HttpHandler
 {
 private:
 
-	WebServer const &					_webServer;
 	Config&								_config;
+	WebServer const &					_webServer;
 	std::string	const					_htmlRoot;
+
+	// std::map<std::string const, void (HttpHandler::*)(Request &, RequestConfig &)>	_method;
+
+	HttpRequest const &					_request;
+
+	std::map<std::string, std::string>	_headers;
+	std::map<std::string, std::string>	_mimeTypes;
+	std::map<int, std::string const>	_defaultPages;
+	std::map<int, std::string const>	_reasonPhrase;
+
+	std::string							_allowedMethods;
+	std::string							_content;
+	std::string							_statusCode;
+
+	std::string							_host;
+	std::string							_port;
 
 	std::string							_scriptName;
 	std::string							_pathInfo;
 	std::string							_queryString;
-
-	std::string							_host;
-	std::string							_port;
-	
-
-	std::map<std::string, std::string>	_mimeTypes;
-	std::map<int, std::string>			_statusCodeList;
 
 	std::string							_response;
 
@@ -53,9 +62,11 @@ private:
 
 	std::string							_htmlFile;
 
+	std::string const					_getHeaderFieldValue(std::string const &field) const;
+	std::string const					_setAllow(ConfigServer const &config);				
+
 	bool								_execCGIScript(HttpRequest const &request) const;
 	bool								_isCGIScript(std::string const &target);
-	// char const						*_getScriptName(void) const;
 
 	std::string const					_getContentType(void);
 	std::string const					_getExtension(void);
@@ -63,15 +74,19 @@ private:
 
 	std::string							_getPage(ConfigServer const &config, short const & errorcode) const;
 
+	void								_get(HttpRequest const &request, ConfigServer const &config) const;
+	void								_post(HttpRequest const &request, ConfigServer const &config) const;
+	void								_delete(HttpRequest const &request, ConfigServer const &config) const;
+
+	void								_openFile(ConfigServer const &config) const;			
+
 	
 public:
 
 	HttpHandler(WebServer const &webServer, Config & conf);
 	~HttpHandler();
 
-	// std::string const				getResponse(void) const;
-	// std::string const				handleRequest(HttpRequest const &request);
-	std::string const &					buildResponse(HttpRequest const &request);
+	std::string const &						buildResponse(HttpRequest const &request);
 };
 
 #endif

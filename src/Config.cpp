@@ -3,7 +3,7 @@
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
-Config::Config(string const & input) : _Linenumber(0), _NServers(0){
+Config::Config(string const & input) :_Linenumber(0), _NServers(0){
 	regex 			config_filename(CONFIG_FOLDER + "\\/[a-zA-Z_0-9]+\\.conf");
 	regex			server_reg("^server\\s*\\{");
 	string			line;
@@ -162,10 +162,11 @@ ConfigServer&	Config::getServer(size_t index){
 
 ConfigServer&	Config::getServerConfig(string const & host, string const & target){
 
-	string   mhost = host;
-	unsigned short port;
+	string  			mhost = host;
+	unsigned short 		port;
+	size_t				match = 0;
+	ConfigServer* 		ptr = NULL;
 
-	(void)target;
 	if (mhost.find("localhost") != string::npos || host == "localhost")
 	{
 		size_t pos = mhost.find("localhost");
@@ -187,18 +188,16 @@ ConfigServer&	Config::getServerConfig(string const & host, string const & target
 		{
 			if (it->getRedirect().first != 0)
 				return (*it);
-			try {
-				return (*it->getRoutes().at(target));
+			map<string, ConfigServer*> routes = it->getRoutes();
+			for (map<string, ConfigServer*>::iterator it2 = routes.begin(); it2 != routes.end(); ++it2)
+			{	
+				if(!target.compare(0, it2->first.size(), it2->first) && it2->first.size() > match){
+					ptr = it2->second;
+				}
 			}
-			catch(exception &e){
-				cout << "[getServerConfig]: target: \"" << target << "\" not found returning default settings for server." << endl;
-			}
-			try {
-				return (*it->getRoutes().at("/"));
-			}
-			catch(exception &e){
-				cout << "[getServerConfig] target: \"/\" not found returning default settings for server." << endl;
-			}
+			if (ptr)
+				return (*ptr);
+			cout << "[getServerConfig]: target: \"" << target << "\" not found returning default settings for server." << endl;
 			return (*it);
 		}
 	}

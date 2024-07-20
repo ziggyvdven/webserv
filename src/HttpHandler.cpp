@@ -6,13 +6,13 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/19 15:50:51 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/20 18:33:37 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 
-HttpHandler::HttpHandler(WebServer const &webServer, Config& conf) : _webServer(webServer), _config(conf), _htmlRoot("./data/www")
+HttpHandler::HttpHandler(WebServer const &webServer, Config& conf) : _webServer(webServer), _config(conf), _htmlRoot("./data/www"), _autoindex(false)
 {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
@@ -55,16 +55,17 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 
 	request.print_request();
 
+	_autoindex = false;
 	_htmlFile = _parseTarget(request.target());
-	ConfigServer settings = _config.getServerConfig(request.getHeader("host"), request.target());
-	cout << settings << endl;
-	
+	ConfigServer config = _config.getServerConfig(request.getHeader("host"), request.target());
+	std::string path = _createPath(config);
+	cout << config << endl;
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)
 	{
 		statusCode = 400;
-		_htmlFile = settings.getErrorPage(400);
+		_htmlFile = config.getErrorPage(400);
 		if (_htmlFile.empty())
-			
+			_htmlFile = "/default_errors/40x.html";
 	}
 	else
 	{
@@ -78,19 +79,16 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 		{
 			if (allowedMethods.find(request.method()) != std::string::npos)
 			{
-				if (_htmlFile == "/")
-				{
-					// _htmlFile = config.getRootFile();
-					_htmlFile = "/index.html";
-				}
-				std::string const	file_path = _htmlRoot + _htmlFile;
 				if (request.method() == "GET" || request.method() == "POST")
 				{
-					
-					// std::ifstream	f(config.getRoot() + _htmlFile, std::ios::binary);
-					std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
-
-					if (f.good())
+					cout << path << endl;
+					std::ifstream	f(path, std::ios::binary);
+					if (_autoindex == true){
+						content = _autoIndexGeneator(path, request.target(), config);
+						statusCode = 200;
+						goto response;
+					}
+					else if (f.good())
 					{
 						std::string	str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
 						content = str;
@@ -98,9 +96,9 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 					}
 					f.close();
 				}
-				else if (request.method() == "DELETE" && access(file_path.c_str(), F_OK) == 0)
+				else if (request.method() == "DELETE" && access(path.c_str(), F_OK) == 0)
 				{
-					int result = std::remove(file_path.c_str());
+					int result = std::remove(path.c_str());
 					if (result != 0)
 					{
 						content = "<h1>Permission denied</h1>";
@@ -121,12 +119,15 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 		}
 	}
 
+	// std::ifstream	f("./data/www" + _htmlFile, std::ios::binary);
+	response:
 	std::ostringstream	oss;
 
 	oss << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
 	oss << "Cache-Control: no-cache, private" << "\r\n";
 	oss << "Content-Length: " << content.size() << "\r\n";
 	oss << "Content-Type: " << _getContentType() << "\r\n";
+	oss << "Location: " << "\r\n";
 	oss << "\r\n";
 	oss << content;
 
@@ -267,4 +268,73 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 	// std::cout << buffer << std::endl;
 	// std::cout << "[] " << std::endl;
 	return (true);
+}
+
+std::string const HttpHandler::_autoIndexGeneator(std::string & path, std::string const & target, ConfigServer& config){
+	DIR *dir;
+	struct dirent *dp;
+	const char* cpath = path.c_str();
+	if ((dir = opendir(cpath)) == NULL){
+		cerr << "Cannot open directory" << endl;
+		return "";
+	}
+	
+	std::string content =\
+	"<!DOCTYPE html>\n\
+    <html>\n\
+    <head>\n\
+            <title>" + path + "</title>\n\
+    </head>\n\
+    <body>\n\
+    <h1>Index of " + target + "</h1>\n\
+	<hr>\n\
+    <p>\n";
+	
+	dp = readdir (dir);
+	// cout << path << endl;
+	while((dp = readdir (dir)) != NULL){
+		// cout << dp->d_name << endl;
+		content += "\t\t<p><a href=\"http://" + config.getHost() + ":" + to_string(config.getPort()) + target;
+		if (target.back() != '/')
+			content += "/";
+		content += std::string(dp->d_name) + "\">" + dp->d_name + "</a></p>\n";
+	}
+	content +="\
+	<hr>\n\
+	</p>\n\
+    </body>\n\
+    </html>\n";
+	
+	return content;
+}
+
+std::string const HttpHandler::_createPath(ConfigServer& config){
+	
+	std::string	path;
+	
+	if (!_htmlFile.empty() && (_htmlFile == config.getTarget() || _htmlFile == config.getTarget() + "/"))
+	{
+		_htmlFile = "/" + config.getIndex();
+	}
+	if (!config.getTarget().empty())
+	{
+		size_t pos = _htmlFile.find(config.getTarget());
+		if (pos != std::string::npos)
+			_htmlFile.erase(pos, config.getTarget().length());
+		path = "./data" + config.getRoot() + _htmlFile;
+	}
+	else
+	{
+		path = "./data" + config.getRoot() + _htmlFile;
+	}
+	int fd = open(path.c_str(), O_RDONLY);
+	if (fd == -1)
+	{
+		path = "./data" + config.getRoot();
+		if (config.getAutoIndex() == true)
+			_autoindex = true;
+	}
+	close(fd);
+	
+	return path;
 }

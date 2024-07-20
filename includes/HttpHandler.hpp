@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/18 17:28:53 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/20 17:04:35 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,9 @@
 # include "HttpRequest.hpp"
 # include "WebServer.hpp"
 # include "Config.hpp"
+# include <sys/types.h>
+# include <dirent.h>
+# include <libgen.h>
 
 class WebServer;
 
@@ -52,6 +55,8 @@ private:
 
 	std::string							_htmlFile;
 
+	bool								_autoindex;
+
 	bool								_execCGIScript(HttpRequest const &request) const;
 	bool								_isCGIScript(std::string const &target);
 	// char const						*_getScriptName(void) const;
@@ -59,6 +64,8 @@ private:
 	std::string const					_getContentType(void);
 	std::string const					_getExtension(void);
 	std::string							_parseTarget(std::string const &target);
+	std::string const					_autoIndexGeneator(std::string& path, std::string const & target, ConfigServer& config);
+	std::string const 					_createPath( ConfigServer& config );
 
 	
 public:

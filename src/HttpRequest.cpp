@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <regex>
+#include <dirent.h>
 // ========== ========== Constructor ========== ========== 
 HttpRequest::HttpRequest(std::string const &raw_string)
 	: _raw(raw_string), _valid(true), _http_stream(_raw)

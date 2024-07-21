@@ -1,5 +1,5 @@
 #include "../includes/CgiHandler.hpp"
-
+#include <strings.h>
 CgiHandler::CgiHandler(HttpRequest const &request)
 	: _request(request), _htmlRoot("./data/www")
 {
@@ -80,7 +80,7 @@ bool	CgiHandler::execCgiScript()
 	std::string	const			version = "HTTP_VERSION=" + _request.version();
 	std::string	const			method = "METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
-	std::string	const			content = "This is a test";
+	std::string const			content_type = "CONTENT_TYPE=" + _request.getHeader("content-type");
 
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
@@ -112,6 +112,7 @@ bool	CgiHandler::execCgiScript()
 		envp.push_back(method.c_str());
 		envp.push_back(filename.c_str());
 		envp.push_back(content_length.str().c_str());
+		envp.push_back(content_type.c_str());
 		envp.push_back(NULL);
 
 		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
@@ -122,8 +123,15 @@ bool	CgiHandler::execCgiScript()
 	{
 		return (false);
 	}
-	// read (pipe_fd[0], buffer, 255);
-	close (pipe_fd[0]);
+
+	#define BUFFERSIZE 255
+	char buffer[BUFFERSIZE];
+	bzero(buffer, BUFFERSIZE);
+	if (read (pipe_fd[0], buffer, BUFFERSIZE) > 0)
+		std::cout << "[CGI]: " << buffer << std::endl;
+
 	close (pipe_fd[1]);
+	close (pipe_fd[0]);
+
 	return (true);
 }

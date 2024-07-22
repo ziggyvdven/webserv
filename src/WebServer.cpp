@@ -3,14 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/17 18:08:35 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/22 19:35:05 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/WebServer.hpp"
+#include <ios>
+#include <type_traits>
 
 WebServer::WebServer(std::vector<Socket> socketList) : _nfds(0), \
 _socketList(socketList), _socketListSize(socketList.size())
@@ -70,12 +72,15 @@ int	WebServer::run(void)
 					// This is an accepting socket. Do recv/send loop
 					if (_readData(_fds[i].fd))
 					{
-						// std::cout << _request << std::endl;
 						// Send HTTP Response
 						HttpRequest request(_request);
+						std::cout << "[DEBUG] " << request.getHeader("Content-Length") << "Vs. " << request.body().size() << std::endl;
+						std::cout << "[DEBUG] " << std::boolalpha << request.isValid() << std::endl;
+						std::cout << "[DEBUG] " << std::endl;
+						 request.print_headers();
 
 						_response = http.buildResponse(request);
-						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);
+						_sendData(_fds[i].fd, _response.c_str(), _response.size());
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
 					// Close Accepting Socket
@@ -143,14 +148,16 @@ bool	WebServer::_readData(int socket)
 
 void	WebServer::_sendData(int socket, const char* str, size_t len) const
 {
-	ssize_t	rtn = 0;
-	size_t	idx = 0;
+	// ssize_t	rtn = 0;
+	// size_t	idx = 0;
 
-	while (idx < len)
-	{
-		rtn = send(socket, str + idx, 256, 0);
-		idx += rtn;
-	}
+	// while (idx < len)
+	// {
+	// 	rtn = send(socket, str + idx, 1, 0);
+	// 	idx += rtn;
+	// }
+	send(socket, str, len, 0);
+
 }
 
 void	WebServer::_compressFdsArray(void)

@@ -6,14 +6,6 @@
 import os
 import sys
 
-def getenv(varname, vartype=str):
-	value = os.getenv(varname)
-	if value is not None:
-		try:
-			return vartype(value)
-		except:
-			raise ValueError(f"Cannot cast environment variable {value} to {vartype}")
-	return None
 
 def read_stdin():
 	content_length = getenv('CONTENT_LENGTH', int)
@@ -23,12 +15,6 @@ def read_stdin():
 		exit(0)
 	return s
 
-def get_boundary(content_type):
-	i = content_type.find("=")
-	return content_type[(i + 1)::]
-
-def is_multi_part(content_type):
-	return content_type.startswith("multipart/form-data;")
 
 def write_files():
 	pass
@@ -48,32 +34,40 @@ import cgi, cgitb
 
 cgitb.enable()
 
+def response_headers():
+	print("Content-Type: text/plain")
+	print()
+
+def upload_file(field_item, upload_dir="./data/www/upload/"):
+	file_name = os.path.basename(field_item.filename)
+	file_path = os.path.join(upload_dir, file_name)
+	with open(file_path, 'wb') as file:
+		while True:
+			print(f"Chunk Wrote to {file_path}</br>")
+			chunk = field_item.file.read(50000)
+			if not chunk:
+				break
+			file.write(chunk)
+	return file_path
+
 def main():
-	if os.getenv('METHOD') != 'POST':
-		stdout("<h1>[DEBUG] Upload Failed: Not POST request</h1>")
-		exit(0)
 
-	if not is_multi_part():
-		stdout("<h1>[DEBUG] Upload Failed: Not Multi Part</h1>")
-		exit(0)
+	response_headers()
 
+	# Populate form cgi data
 	form = cgi.FieldStorage()
 	
-	# Gen env variables
-	file_path = getenv('FILENAME')
-	content_type = getenv('CONTENT_TYPE', str)
+	if not form:
+		print("No files found!")
 
 	# Create folder if it does not exit
-	dir = os.path.dirname(file_path)
-	if (not os.path.isdir(dir)):
-		os.makedirs(dir)
-
-	request_body = read_stdin()
-
-	files_struct = parse_body(request_body)
-
-	print(f"{content_type=}")
-	print("")
+	for key in form.keys():
+		field_item = form[key]
+		if field_item.filename:
+			upload_file(field_item)
+		else:
+			print(f"Field: {key}, Value: {field_item.value}")
+		print("</br>")
 
 	exit (0)
 

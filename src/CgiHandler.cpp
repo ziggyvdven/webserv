@@ -125,7 +125,8 @@ std::string	CgiHandler::execCgiScript()
 	close(parent_to_child[0]);
 	close(child_to_parent[1]);
 
-	write(parent_to_child[1], _request.raw().c_str(), _request.raw().size());
+	// Send request body to CGI
+	write(parent_to_child[1], _request.body().c_str(), _request.body().size());
 	close(parent_to_child[1]);
 
 	waitpid (process_id, &wstatus, 0);
@@ -139,8 +140,7 @@ std::string	CgiHandler::execCgiScript()
 			<< std::endl;
 
 		// Add timout logic
-
-		return ("<h1>[DEBUG] Error in executing CGI script</h1>");
+		_cgiResponse = "Content-Type: text/html\r\n\r\n<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
 	}
 
 	#define BUFFERSIZE 255

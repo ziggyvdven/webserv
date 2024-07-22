@@ -66,20 +66,22 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 			std::cout << _scriptName << std::endl;
 			std::cout << _pathInfo << std::endl;
 			std::cout << _queryString << std::endl;
+			_envp.push_back(_scriptName.c_str());
+			_envp.push_back(_pathInfo.c_str());
+			_envp.push_back(_queryString.c_str());
 			return (true);
 		}
 	}
 	return (false);
 }
 
-bool	CgiHandler::execCgiScript()
+std::string	CgiHandler::execCgiScript()
 {
 	std::vector<char const *>	argv;
-	std::vector<char const *>	envp;
 	pid_t						process_id;
 
 	std::string	const			version = "HTTP_VERSION=" + _request.version();
-	std::string	const			method = "METHOD=" + _request.method();
+	std::string	const			method = "REQUEST_METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
 	std::string const			content_type = "CONTENT_TYPE=" + _request.getHeader("content-type");
 
@@ -109,14 +111,14 @@ bool	CgiHandler::execCgiScript()
 		argv.push_back(_scriptPath.c_str());
 		argv.push_back(NULL);
 
-		envp.push_back(version.c_str());
-		envp.push_back(method.c_str());
-		envp.push_back(filename.c_str());
-		envp.push_back(content_length.str().c_str());
-		envp.push_back(content_type.c_str());
-		envp.push_back(NULL);
+		_envp.push_back(version.c_str());
+		_envp.push_back(method.c_str());
+		_envp.push_back(filename.c_str());
+		_envp.push_back(content_length.str().c_str());
+		_envp.push_back(content_type.c_str());
+		_envp.push_back(NULL);
 
-		execve (_scriptPath.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
+		execve (_scriptPath.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));
 		exit (127);
 	}
 
@@ -138,7 +140,7 @@ bool	CgiHandler::execCgiScript()
 
 		// Add timout logic
 
-		return (false);
+		return ("<h1>[DEBUG] Error in executing CGI script</h1>");
 	}
 
 	#define BUFFERSIZE 255
@@ -149,8 +151,8 @@ bool	CgiHandler::execCgiScript()
 	while((bytes_read = read (child_to_parent[0], buffer, BUFFERSIZE)) > 0)
 	{
 		buffer[bytes_read] = '\0';
-		std::cout << "[CGI]: " << buffer << std::endl;
-	 }
+		_cgiResponse += buffer;
+	}
 
-	return (true);
+	return (_cgiResponse);
 }

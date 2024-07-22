@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/22 10:54:34 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/22 12:53:24 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,9 +67,8 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 		CgiHandler cgi_handler(request);
 		if (cgi_handler.isCgiScript(request.target()))
 		{
-			cgi_handler.execCgiScript();
+			content = cgi_handler.execCgiScript();
 			statusCode = 200;
-			content = "<h1>CGI Script Executed</h1>";
 		}
 		else
 		{

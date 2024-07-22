@@ -17,6 +17,9 @@ private:
 	std::string			_scriptPath;
 	std::string			_pathInfo;
 	std::string			_queryString;
+	std::string			_cgiResponse;
+	std::vector<char const *>	_envp;
+
 
 public:
 	CgiHandler(HttpRequest const &request);
@@ -24,5 +27,5 @@ public:
 
 	bool	isCgiRequest() const; 
 	bool	isCgiScript(std::string const &target);
-	bool	execCgiScript();
+	std::string	execCgiScript();
 };

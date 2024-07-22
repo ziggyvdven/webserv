@@ -44,6 +44,10 @@ def stdout(str):
 	# f.write(s)
 
 
+import cgi, cgitb
+
+cgitb.enable()
+
 def main():
 	if os.getenv('METHOD') != 'POST':
 		stdout("<h1>[DEBUG] Upload Failed: Not POST request</h1>")
@@ -53,6 +57,8 @@ def main():
 		stdout("<h1>[DEBUG] Upload Failed: Not Multi Part</h1>")
 		exit(0)
 
+	form = cgi.FieldStorage()
+	
 	# Gen env variables
 	file_path = getenv('FILENAME')
 	content_type = getenv('CONTENT_TYPE', str)

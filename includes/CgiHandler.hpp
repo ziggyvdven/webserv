@@ -2,6 +2,7 @@
 
 #include "../includes/HttpRequest.hpp"
 #include <iostream>
+#include <string>
 #include <unistd.h>
 
 
@@ -13,6 +14,7 @@ private:
 	std::string			_htmlRoot;
 	bool				_is_valid;
 	std::string			_scriptName;
+	std::string			_scriptPath;
 	std::string			_pathInfo;
 	std::string			_queryString;
 

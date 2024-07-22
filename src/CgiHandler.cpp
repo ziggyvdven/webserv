@@ -1,5 +1,6 @@
 #include "../includes/CgiHandler.hpp"
 #include <strings.h>
+#include <unistd.h>
 CgiHandler::CgiHandler(HttpRequest const &request)
 	: _request(request), _htmlRoot("./data/www")
 {
@@ -48,6 +49,7 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 		it = target.find_first_of("/?", cgi_bin.size());
 		std::string const	script_name = target.substr(0, it);
 		std::string const	script_path = _htmlRoot + script_name;
+		_scriptPath = _htmlRoot + script_name;
 		if (access(script_path.c_str(), X_OK) == 0)
 		{
 			_scriptName += script_name;
@@ -72,7 +74,6 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 
 bool	CgiHandler::execCgiScript()
 {
-	std::string const			script_path = _htmlRoot + "/cgi-bin/upload.py";
 	std::vector<char const *>	argv;
 	std::vector<char const *>	envp;
 	pid_t						process_id;
@@ -86,9 +87,10 @@ bool	CgiHandler::execCgiScript()
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
 	
 	int							wstatus;
-	int							pipe_fd[2];
+	int							child_to_parent[2], parent_to_child[2];
 
-	pipe(pipe_fd);
+	pipe(child_to_parent);
+	pipe(parent_to_child);
 
 	process_id = fork();
 	if (process_id < 0)
@@ -96,16 +98,15 @@ bool	CgiHandler::execCgiScript()
 	else if (process_id == 0)
 	{
 		// _webServer.cleanUpSockets();
-
-		dup2 (pipe_fd[0], STDIN_FILENO);
-		dup2 (pipe_fd[1], STDOUT_FILENO);
-
-		close (pipe_fd[0]);
-		close (pipe_fd[1]);
+		close(parent_to_child[1]);
+		dup2(parent_to_child[0], STDIN_FILENO);
+		close(parent_to_child[0]);
 		
-		std::cout << _request.body() << std::endl;
-
-		argv.push_back(script_path.c_str());
+		close(child_to_parent[0]);
+		dup2(child_to_parent[1], STDOUT_FILENO);
+		close(child_to_parent[1]);
+		
+		argv.push_back(_scriptPath.c_str());
 		argv.push_back(NULL);
 
 		envp.push_back(version.c_str());
@@ -115,23 +116,41 @@ bool	CgiHandler::execCgiScript()
 		envp.push_back(content_type.c_str());
 		envp.push_back(NULL);
 
-		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
-		exit (EXIT_FAILURE);
+		execve (_scriptPath.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
+		exit (127);
 	}
+
+	close(parent_to_child[0]);
+	close(child_to_parent[1]);
+
+	write(parent_to_child[1], _request.raw().c_str(), _request.raw().size());
+	close(parent_to_child[1]);
+
 	waitpid (process_id, &wstatus, 0);
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
 	{
+		// DEBUG
+		std::cout << "[CGI] Process exited with error code" << std::endl;
+		std::cout << std::boolalpha << "Exited: " << WIFEXITED(wstatus)\
+			<< "\nExit status: " << WEXITSTATUS(wstatus)\
+			<< "\nSignaled: " << WIFSIGNALED(wstatus)\
+			<< std::endl;
+
+		// Add timout logic
+
 		return (false);
 	}
 
 	#define BUFFERSIZE 255
 	char buffer[BUFFERSIZE];
 	bzero(buffer, BUFFERSIZE);
-	if (read (pipe_fd[0], buffer, BUFFERSIZE) > 0)
+	
+	int bytes_read;
+	while((bytes_read = read (child_to_parent[0], buffer, BUFFERSIZE)) > 0)
+	{
+		buffer[bytes_read] = '\0';
 		std::cout << "[CGI]: " << buffer << std::endl;
-
-	close (pipe_fd[1]);
-	close (pipe_fd[0]);
+	 }
 
 	return (true);
 }

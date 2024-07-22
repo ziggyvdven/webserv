@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/17 18:57:39 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/22 10:54:34 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,13 +54,6 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 {
 	std::string	content = "<h1>404 Not Found</h1>";
 	int			statusCode = 404;
-
-	request.print_request();
-	std::cout << "[]" << std::endl;
-	std::cout << request.body() << std::endl;
-	std::cout << "[]" << std::endl;
-	
-	
 
 	_htmlFile = _parseTarget(request.target());
 	if (!request.isValid() || _htmlFile.find("/../") != std::string::npos)

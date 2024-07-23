@@ -1,6 +1,10 @@
 #include "../includes/CgiHandler.hpp"
 #include <strings.h>
+#include <sys/fcntl.h>
 #include <unistd.h>
+#include <iostream>	
+#include <fstream>
+
 CgiHandler::CgiHandler(HttpRequest const &request)
 	: _request(request), _htmlRoot("./data/www")
 {
@@ -50,7 +54,7 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 		std::string const	script_name = target.substr(0, it);
 		std::string const	script_path = _htmlRoot + script_name;
 		_scriptPath = _htmlRoot + script_name;
-		if (access(script_path.c_str(), X_OK) == 0)
+		if (access(script_path.data(), X_OK) == 0)
 		{
 			_scriptName += script_name;
 			if (target[it] == '/')
@@ -66,9 +70,9 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 			std::cout << _scriptName << std::endl;
 			std::cout << _pathInfo << std::endl;
 			std::cout << _queryString << std::endl;
-			_envp.push_back(_scriptName.c_str());
-			_envp.push_back(_pathInfo.c_str());
-			_envp.push_back(_queryString.c_str());
+			_envp.push_back(_scriptName.data());
+			_envp.push_back(_pathInfo.data());
+			_envp.push_back(_queryString.data());
 			return (true);
 		}
 	}
@@ -108,17 +112,17 @@ std::string	CgiHandler::execCgiScript()
 		dup2(child_to_parent[1], STDOUT_FILENO);
 		close(child_to_parent[1]);
 		
-		argv.push_back(_scriptPath.c_str());
+		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
 
-		_envp.push_back(version.c_str());
-		_envp.push_back(method.c_str());
-		_envp.push_back(filename.c_str());
-		_envp.push_back(content_length.str().c_str());
-		_envp.push_back(content_type.c_str());
+		_envp.push_back(version.data());
+		_envp.push_back(method.data());
+		_envp.push_back(filename.data());
+		_envp.push_back(content_length.str().data());
+		_envp.push_back(content_type.data());
 		_envp.push_back(NULL);
 
-		execve (_scriptPath.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));
+		execve (_scriptPath.data(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));
 		exit (127);
 	}
 
@@ -126,7 +130,13 @@ std::string	CgiHandler::execCgiScript()
 	close(child_to_parent[1]);
 
 	// Send request body to CGI
-	write(parent_to_child[1], _request.body().c_str(), _request.body().size());
+	
+	// TODO: c'est un peu de la chnoute
+	for (unsigned long i = 0; i < _request.body().size(); i += 12000)
+	{
+		write(parent_to_child[1], _request.body().data() + i, 12000);
+	}
+
 	close(parent_to_child[1]);
 
 	waitpid (process_id, &wstatus, 0);

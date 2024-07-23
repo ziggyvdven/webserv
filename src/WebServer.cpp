@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/23 16:50:39 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/23 19:10:59 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,13 +75,14 @@ int	WebServer::run(void)
 					{
 						// Send HTTP Response
 						HttpRequest request(_request);
-						std::cout << "[DEBUG] " << request.getHeader("Content-Length") << "Vs. " << request.body().size() << std::endl;
-						std::cout << "[DEBUG] " << std::boolalpha << request.isValid() << std::endl;
-						std::cout << "[DEBUG] " << std::endl;
+						std::cout << "\n\n[DEBUG] " << "Content-Length: " << request.getHeader("Content-Length")\
+						 << "\nActual body size: " << request.body().size() << std::endl;
+						std::cout << "[DEBUG] Request is valid: " << std::boolalpha << request.isValid() << std::endl;
+						std::cout << "\n\n " << std::endl;
 						 request.print_headers();
 
 						_response = http.buildResponse(request);
-						_sendData(_fds[i].fd, _response.c_str(), _response.size());
+						_sendData(_fds[i].fd, _response.data(), _response.size());
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
 					// Close Accepting Socket
@@ -128,18 +129,14 @@ void	WebServer::_acceptConnection(int fd)
 bool	WebServer::_readData(int socket)
 {
 	char		buffer[255 + 1];
-	std::string	buffer_str;
-	std::string	request;
 	ssize_t		rtn = 0;
-	
+
 	memset(buffer, 0, sizeof (buffer));
-	while ((rtn = recv(socket, buffer, 255, 0)) > 0)
+ 	while ((rtn = recv(socket, buffer, 255, 0)) > 0)
 	{
-		buffer_str = buffer;
-		request += buffer_str.substr(0, rtn);
+		_request.insert(_request.end(), buffer, buffer + rtn);
 		memset(buffer, 0, rtn);
 	}
-	_request = request;
 	if (rtn == 0)
 	{
 		return (false);

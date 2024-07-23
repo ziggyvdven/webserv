@@ -2,9 +2,10 @@
 
 #include <iostream>
 #include <regex>
+#include <stdexcept>
 // ========== ========== Constructor ========== ========== 
-HttpRequest::HttpRequest(std::string const &raw_string)
-	: _raw(raw_string), _valid(true), _http_stream(_raw)
+HttpRequest::HttpRequest(std::vector<unsigned char> const &raw_string)
+	: _raw(raw_string), _valid(true), _http_stream(reinterpret_cast<char *>(_raw.data()))
 {
 	_parse_http_request();
 }
@@ -99,13 +100,32 @@ bool HttpRequest::_valid_header(std::string const &line) const
 
 void HttpRequest::_parse_body()
 {
-	std::string line = "";
+	std::vector<unsigned char>::iterator it;
 
-	// _http_stream now should be stopped after \r\n
-	while(std::getline(_http_stream, line))
+	_body = std::vector<unsigned char>();
+	if (this->getHeader("content-length").empty())
+		return;
+
+	try
 	{
-		_body += line + "\n";
+		// Fetch content lenght
+		int content_length = std::atoi(this->getHeader("content-length").data());
+
+		// Search for body start
+		std::string delimiter = "\r\n\r\n";
+		it = std::search(_raw.begin(), _raw.end(), delimiter.begin(), delimiter.end());
+		if (it != _raw.end())
+		{
+			it += delimiter.size();
+			_body = std::vector<unsigned char>(it, it + content_length);
+		}
+	} catch (std::invalid_argument)
+	{
+		return;
 	}
+
+	
+
 }
 
 void HttpRequest::print_request() const

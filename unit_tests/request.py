@@ -6,7 +6,7 @@ def make_request(url, headers=None):
     try:
         with urlopen(request, timeout=10) as response:
             print(response.status)
-            return response.read(), resposne
+            return response.read(), response
     except HTTPError as error:
         print(error.status, error.reason)
     except URLError as error:

@@ -6,13 +6,13 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/20 17:06:47 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/22 20:15:00 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 
-HttpHandler::HttpHandler(WebServer const &webServer, Config& conf) : _webServer(webServer), _config(conf), _htmlRoot("./data/www")
+HttpHandler::HttpHandler(WebServer const &webServer, Config& conf) : _webServer(webServer), _config(conf), _baseDir("./data")
 {
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
@@ -63,6 +63,11 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config& conf) : _webServer(
 	_headers["Date"] = "";
 	_headers["Location"] = "";
 	_headers["Server"] = "";
+	//
+	_env["CONTENT_LENGTH"] = "";
+	_env["PATH_INFO"] = "";
+	_env["QUERY_STRING"] = "";
+	_env["SCRIPT_NAME"] = "";
 }
 
 HttpHandler::~HttpHandler()
@@ -75,11 +80,11 @@ HttpHandler::~HttpHandler()
 std::string const	&HttpHandler::buildResponse(HttpRequest const &request)
 {
 	ConfigServer	config = _config.getServerConfig(request.getHeader("host"), request.target());
-	
-	// _content = _getPage(config, status_code);
-	// _statusCode = 404;
 
+	_autoindex = false;
 	_request = request;
+	_htmlFile = _parseTarget(request.target());
+	_path = _createPath(config);
 
 	if (config.getRedirect().first != 0)
 	{
@@ -95,8 +100,8 @@ std::string const	&HttpHandler::buildResponse(HttpRequest const &request)
 	}
 	else if (!config.getMethod(_request.method()))
 	{
-		_statusCode = 405;
 		_content = _getPage(config, 405);
+		_statusCode = 405;
 	}
 	else
 	{
@@ -134,44 +139,161 @@ std::string const	&HttpHandler::buildResponse(HttpRequest const &request)
 	return (response);
 }
 
+std::string	HttpHandler::_parseTarget(std::string const &target)
+{
+	size_t	queryPos = target.find('?');
+
+	if (queryPos != std::string::npos)
+	{
+		return (target.substr(0, queryPos));
+	}
+	return (target);
+}
+
+std::string const HttpHandler::_createPath(ConfigServer& config)
+{
+	std::string	path;
+
+	if (!_htmlFile.empty() && (_htmlFile == config.getTarget() || _htmlFile == config.getTarget() + "/"))
+	{
+		_htmlFile = "/" + config.getIndex();
+	}
+	if (!config.getTarget().empty())
+	{
+		size_t pos = _htmlFile.find(config.getTarget());
+		if (pos != std::string::npos)
+			_htmlFile.erase(pos, config.getTarget().length());
+		path = _baseDir + config.getRoot() + _htmlFile;
+	}
+	else
+	{
+		path = _baseDir + config.getRoot() + _htmlFile;
+	}
+	int fd = open(path.c_str(), O_RDONLY);
+	if (fd == -1)
+	{
+		path = _baseDir + config.getRoot();
+		if (config.getAutoIndex() == true)
+			_autoindex = true;
+	}
+	close(fd);
+	
+	return path;
+}
+
 std::string	HttpHandler::_getPage(ConfigServer const &config, short const & errorcode) const
 {
 	std::string	htmlFile = config.getErrorPage(errorcode);
 
 	if (htmlFile.empty())
 	{
-		return (_defaultPage[errorCode]);
+		return (_defaultPages[errorCode]);
 	}
 	return (htmlFile);
 }
 
 void	HttpHandler::_get(ConfigServer const &config) const
 {
-	if (_isCGIScript(_request.target()))
+	try
 	{
-		_execCGIScript(_request);
+		if (_pathIsDirectory(config))
+		{
+			if (_autoIndex)
+			{
+				_content = _autoIndexGenerator(_path, _request.target(), config);
+				_statusCode = 200;
+				// goto response;
+			}
+			else
+			{
+				_content = _getPage(config, 403);
+				_statusCode = 403;
+			}
+		}
+		else if (_isCGIScript(_request.target()))
+		{
+			_execCGIScript(_request);
+		}
+		else
+		{
+			_openFile(config);
+		}	
 	}
-	else
+	catch (std::exception const &e)
 	{
-		_openFile(config);
-	}	
+		std::cerr << "Something wrong with _get() function" << std::endl;
+	}
 }
 
 void	HttpHandler::_post(ConfigServer const &config) const
 {
-	if (_isCGIScript(_request.target()))
+	try
 	{
-		_execCGIScript(_request);
+		if (_pathIsDirectory(config))
+		{
+			if (_autoIndex)
+			{
+				_content = _autoIndexGenerator(_path, _request.target(), config);
+				_statusCode = 200;
+			}
+			else
+			{
+				_content = _getPage(config, 403);
+				_statusCode = 403;
+			}
+		}
+		else if (_isCGIScript(_request.target()))
+		{
+			_execCGIScript(_request);
+		}
+		else
+		{
+			_openFile(config);
+		}
 	}
-	else
+	catch (std::exception const &e)
 	{
-		_openFile(config);
+		std::cerr << "Something wrong with _post() function" << std::endl;
 	}
 }
 
 void	HttpHandler::_delete(ConfigServer const &config) const
 {
-	
+	int result;
+
+	if (access(file_path.c_str(), F_OK) == 0)
+	{
+		if (result != 0)
+		{
+			content = "<h1>Permission denied</h1>";
+			statusCode = 403;
+		}
+		else
+		{
+			content = "<h1>File successfully deleted</h1>";
+			statusCode = 200;
+		}
+	}
+}
+
+bool	HttpHandler::_pathIsDirectory(ConfigServer const &config) const
+{
+	struct stat s;
+
+	if (stat(_path, &s) == 0)
+	{
+		if(s.st_mode & S_IFDIR)
+		{
+			return (true);
+		}
+	}
+	else
+	{
+		_content = _getPage(config, 500);
+		_statusCode = 500;
+		throw std::exception();
+	}
+	return (false);
 }
 
 void	HttpHandler::_openFile(ConfigServer const &config) const
@@ -387,17 +509,6 @@ std::string const	HttpHandler::_getExtension(void)
 	return ("");
 }
 
-std::string	HttpHandler::_parseTarget(std::string const &target)
-{
-	size_t	queryPos = target.find('?');
-
-	if (queryPos != std::string::npos)
-	{
-		return (target.substr(0, queryPos));
-	}
-	return (target);
-}
-
 bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 {
 	std::string const			script_path = _htmlRoot + "/cgi-bin/upload.py";
@@ -446,7 +557,7 @@ bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
 		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
 		exit (EXIT_FAILURE);
 	}
-	waitpid (process_id, &wstatus, 0);
+	waitpid (process_id, &wstatus, WNOHANG);
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
 	{
 		return (false);

@@ -6,7 +6,7 @@
 #    By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/07/16 18:38:02 by kmehour          ###   ########.fr        #
+#    Updated: 2024/07/23 16:15:44 by kmehour          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -89,8 +89,8 @@ $(NAME): $(OBJS_PATH) $(OBJS)
 	@$(CC)  $(CFLAGS) -o $@ $(OBJS) $(HEADERS)
 	@echo "$(G)\n -- $(NAME) made 👾 --$(RT)"
 
-test: fclean $(OBJS_PATH) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ) 
-	$(CC)  $(CFLAGS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
+test: $(OBJS_PATH) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ) 
+	@$(CC)  $(CFLAGS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
 	@./$(TEST_EXEC)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp $(HEADERS_FILES)

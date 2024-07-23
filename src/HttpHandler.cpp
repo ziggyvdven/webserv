@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/22 17:58:55 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/23 13:27:52 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,10 +96,10 @@ std::string const &	HttpHandler::buildResponse(HttpRequest const &request)
 	oss << request.version() << " " << statusCode << " " << _statusCodeList.at(statusCode) << "\r\n";
 	oss << "Cache-Control: no-cache, private" << "\r\n";
 	oss << "Content-Length: " << content.size() << "\r\n";
-	// oss << "Content-Type: " << _getContentType() << "\r\n";
-	// oss << "\r\n";
+	oss << "Content-Type: " << _getContentType() << "\r\n";
+	oss << "\r\n";
 	oss << content;
-	// oss << "<h3>[Server] Done</h3>";
+	oss << "<h3>[Server] Done</h3>";
 
 	_response = oss.str();
 	return (_response);

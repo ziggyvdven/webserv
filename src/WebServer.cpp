@@ -6,11 +6,12 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/22 19:35:05 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/23 16:50:39 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/WebServer.hpp"
+#include <cstddef>
 #include <ios>
 #include <type_traits>
 
@@ -148,16 +149,17 @@ bool	WebServer::_readData(int socket)
 
 void	WebServer::_sendData(int socket, const char* str, size_t len) const
 {
-	// ssize_t	rtn = 0;
-	// size_t	idx = 0;
+	size_t	rtn = 0;
+	size_t	idx = 0;
+	size_t	chunk_size = 255;
+	size_t	send_size = 0;
 
-	// while (idx < len)
-	// {
-	// 	rtn = send(socket, str + idx, 1, 0);
-	// 	idx += rtn;
-	// }
-	send(socket, str, len, 0);
-
+	while (idx < len)
+	{
+		send_size = len - idx < chunk_size ? len - idx : chunk_size;
+		rtn = send(socket, str + idx, send_size, 0);
+		idx += rtn;
+	}
 }
 
 void	WebServer::_compressFdsArray(void)

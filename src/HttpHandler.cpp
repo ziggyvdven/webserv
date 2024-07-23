@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 13:51:39 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/23 18:22:29 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,6 +88,7 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 
 	request.print_request();
 	_setRequestParameters(config, request);
+	std::cout << _path << std::endl;
 	if (config.getRedirect().first != 0)
 	{
 		_statusCode = config.getRedirect().first;
@@ -104,6 +105,11 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 	{
 		_content = _getPage(config, 405);
 		_statusCode = 405;
+	}
+	else if (access(_path.c_str(), F_OK) != 0)
+	{
+		_content = _getPage(config, 404);
+		_statusCode = 404;
 	}
 	else
 	{
@@ -180,7 +186,6 @@ void	HttpHandler::_openFile(ConfigServer const &config)
 	}
 	else
 	{
-		std::cerr << "open failed()" << std::endl;
 		_content = _getPage(config, 500);
 		_statusCode = 500;
 	}
@@ -200,7 +205,6 @@ bool	HttpHandler::_pathIsDirectory(ConfigServer const &config)
 	}
 	else
 	{
-		std::cerr << "stat() failed" << std::endl;
 		_content = _getPage(config, 500);
 		_statusCode = 500;
 		throw std::exception();
@@ -221,7 +225,6 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	if (!config.getTarget().empty() && config.getTarget() != "/")	// Added config.getTarget() != "/" here
 	{
 		size_t pos = _htmlFile.find(config.getTarget());
-		std::cout << pos << std::endl;
 		if (pos != std::string::npos)
 			_htmlFile.erase(pos, config.getTarget().length());
 		path = _baseDir + config.getRoot() + _htmlFile;
@@ -234,7 +237,7 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	if (fd == -1)
 	{
 		path = _baseDir + config.getRoot();
-		if (config.getAutoIndex() == true)
+		if (config.getAutoIndex())
 			_autoIndex = true;
 	}
 	close(fd);

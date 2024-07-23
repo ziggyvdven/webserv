@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 13:28:18 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/23 13:51:39 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,10 +50,6 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_reasonPhrase[405] = "Method Not Allowed";
 	_reasonPhrase[500] = "Internal Server error";
 	// 
-	// _method["GET"] = methodGET();
-	// _method["POST"] = methodPOST();
-	// _method["DELETE"] = methodDELETE();
-	// 
 	_headers["Accept-Ranges"] = "bytes";
 	_headers["Allow"] = "GET, POST, DELETE";
 	_headers["Cache-Control"] = "no-cache, private";
@@ -92,7 +88,6 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 
 	request.print_request();
 	_setRequestParameters(config, request);
-	std::cout << _path << std::endl;
 	if (config.getRedirect().first != 0)
 	{
 		_statusCode = config.getRedirect().first;
@@ -243,7 +238,7 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 			_autoIndex = true;
 	}
 	close(fd);
-	
+
 	return path;
 }
 

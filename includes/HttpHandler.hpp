@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: olivierroy <olivierroy@student.42.fr>      +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 03:33:18 by olivierroy       ###   ########.fr       */
+/*   Updated: 2024/07/23 13:37:11 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,8 +44,6 @@ private:
 	std::map<std::string const, std::string>	_mimeTypes;
 	std::map<int, std::string>					_defaultPages;
 	std::map<int, std::string>					_reasonPhrase;
-
-	// std::map<std::string const, void (HttpHandler::*)(Request &, RequestConfig &)>	_method;
 
 	// Parameters at contruction -- End
 

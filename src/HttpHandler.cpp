@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: olivierroy <olivierroy@student.42.fr>      +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 03:40:44 by olivierroy       ###   ########.fr       */
+/*   Updated: 2024/07/23 13:28:18 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,7 +80,7 @@ HttpHandler::~HttpHandler()
 void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest const &request)
 {
 	_autoIndex = false;
-	_getContentFromFile = true;
+	_getContentFromFile = false;
 	_htmlFile = _parseTarget(request.target());
 	_path = _createPath(config);
 	_statusCode = 200;
@@ -90,7 +90,9 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 {
 	ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
 
+	request.print_request();
 	_setRequestParameters(config, request);
+	std::cout << _path << std::endl;
 	if (config.getRedirect().first != 0)
 	{
 		_statusCode = config.getRedirect().first;
@@ -123,16 +125,95 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 	return (_response(config, request));
 }
 
-std::string	HttpHandler::_parseTarget(std::string const &target)
+std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
 {
-	size_t	queryPos = target.find('?');
+	std::ostringstream	response;
 
-	if (queryPos != std::string::npos)
-	{
-		return (target.substr(0, queryPos));
-	}
-	return (target);
+	response << request.version() << " " << _statusCode << " " << _reasonPhrase.at(_statusCode) << "\r\n";
+	response << "Allow: " << _setAllow(config) << "\r\n";
+	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
+	response << "Content-Length: " << _content.size() << "\r\n";
+	response << "Content-Type: " << _getContentType() << "\r\n";
+	response << "Location: " << _getHeaderFieldValue(request, "Location") << "\r\n";
+	response << "\r\n";
+	response << _content;
+
+	return (response.str());
 }
+
+std::string	HttpHandler::_setDefaultContent(short const & errorCode)
+{
+	std::ostringstream	content;
+
+	content << "<!DOCTYPE html>" << "\n";
+	content << "<html>" << "\n";
+	content << "<style>" << "\n";
+	content << "h1 {text-align: center;}" << "\n";
+	content << "</style>" << "\n";
+	content << "<body>" << "\n";
+	content << "<h1>" << errorCode << " " << _reasonPhrase[errorCode] << "</h1>" << "\n";
+	content << "<hr>" << "\n";
+	content << "</body>" << "\n";
+	content << "</html>" << "\n";
+
+	return (content.str());
+}
+
+std::string	HttpHandler::_getPage(ConfigServer const &config, short const & errorCode)
+{
+	std::string	file = config.getErrorPage(errorCode);
+
+	if (file.empty())
+	{
+		_getContentFromFile = false;
+		// return (_defaultPages[errorCode]);
+		return (_setDefaultContent(errorCode));
+	}
+	_getContentFromFile = true;
+	return (file);
+}
+
+void	HttpHandler::_openFile(ConfigServer const &config)
+{
+	std::ifstream	file(_path, std::ios::binary);
+
+	if (file.is_open())
+	{
+		std::string	str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+		_content = str;
+		_getContentFromFile = false;
+	}
+	else
+	{
+		std::cerr << "open failed()" << std::endl;
+		_content = _getPage(config, 500);
+		_statusCode = 500;
+	}
+	file.close();
+}
+
+bool	HttpHandler::_pathIsDirectory(ConfigServer const &config)
+{
+	struct stat s;
+
+	if (stat(_path.c_str(), &s) == 0)
+	{
+		if(s.st_mode & S_IFDIR)
+		{
+			return (true);
+		}
+	}
+	else
+	{
+		std::cerr << "stat() failed" << std::endl;
+		_content = _getPage(config, 500);
+		_statusCode = 500;
+		throw std::exception();
+	}
+	return (false);
+}
+
+/*	Target Parsing	********************************************************* */
 
 std::string	HttpHandler::_createPath(ConfigServer const &config)
 {
@@ -142,9 +223,10 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	{
 		_htmlFile = "/" + config.getIndex();
 	}
-	if (!config.getTarget().empty())
+	if (!config.getTarget().empty() && config.getTarget() != "/")	// Added config.getTarget() != "/" here
 	{
 		size_t pos = _htmlFile.find(config.getTarget());
+		std::cout << pos << std::endl;
 		if (pos != std::string::npos)
 			_htmlFile.erase(pos, config.getTarget().length());
 		path = _baseDir + config.getRoot() + _htmlFile;
@@ -165,41 +247,18 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	return path;
 }
 
-std::string	HttpHandler::_getPage(ConfigServer const &config, short const & errorCode)
+std::string	HttpHandler::_parseTarget(std::string const &target)
 {
-	std::string	file = config.getErrorPage(errorCode);
+	size_t	queryPos = target.find('?');
 
-	if (file.empty())
+	if (queryPos != std::string::npos)
 	{
-		_getContentFromFile = false;
-		// return (_defaultPages[errorCode]);
-		return (_setDefaultContent(errorCode));
+		return (target.substr(0, queryPos));
 	}
-	_getContentFromFile = true;
-	return (file);
+	return (target);
 }
 
-std::string	HttpHandler::_setDefaultContent(short const & errorCode)
-{
-	std::string	htmlContent;
-
-	htmlContent += "<!DOCTYPE html>\n";
-	htmlContent += "<html>\n";
-	htmlContent += "<style>\n";
-	htmlContent += "h1 {text-align: center;}\n";
-	htmlContent += "</style>\n";
-	htmlContent += "<body>\n";
-	htmlContent += "<h1>";
-	htmlContent += errorCode;
-	htmlContent += " ";
-	htmlContent += _reasonPhrase[errorCode];
-	htmlContent += "</h1>\n";
-	htmlContent += "<hr>\n";
-	htmlContent += "</body>\n";
-	htmlContent += "</html>\n";
-
-	return (htmlContent);
-}
+/*	Methods		************************************************************* */
 
 void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 {
@@ -271,59 +330,7 @@ void	HttpHandler::_delete(ConfigServer const &config)
 	}
 }
 
-bool	HttpHandler::_pathIsDirectory(ConfigServer const &config)
-{
-	struct stat s;
-
-	if (stat(_path.c_str(), &s) == 0)
-	{
-		if(s.st_mode & S_IFDIR)
-		{
-			return (true);
-		}
-	}
-	else
-	{
-		_content = _getPage(config, 500);
-		_statusCode = 500;
-		throw std::exception();
-	}
-	return (false);
-}
-
-void	HttpHandler::_openFile(ConfigServer const &config)
-{
-	std::ifstream	file(_baseDir + config.getRoot() + _content, std::ios::binary);
-
-	if (file.is_open())
-	{
-		std::string	str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-		_content = str;
-		_getContentFromFile = false;
-	}
-	else
-	{
-		_content = _getPage(config, 500);
-		_statusCode = 500;
-	}
-	file.close();
-}
-
-std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
-{
-	std::ostringstream	response;
-
-	response << request.version() << " " << _statusCode << " " << _reasonPhrase.at(_statusCode) << "\r\n";
-	response << "Allow: " << _setAllow(config) << "\r\n";
-	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
-	response << "Content-Length: " << _content.size() << "\r\n";
-	response << "Content-Type: " << _getContentType() << "\r\n";
-	response << "Location: " << _getHeaderFieldValue(request, "Location") << "\r\n";
-	response << "\r\n";
-	response << _content;
-
-	return (response.str());
-}
+/*	Header Fields	********************************************************* */
 
 std::string const	HttpHandler::_setAllow(ConfigServer const &config)
 {
@@ -384,6 +391,8 @@ std::string const	HttpHandler::_getExtension(void)
 	}
 	return ("");
 }
+
+/*	AutoIndex	************************************************************* */
 
 std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::string const & target, ConfigServer const &config){
 	DIR *dir;
@@ -527,100 +536,100 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 // 	return (_response);
 // }
 
-// bool	HttpHandler::_isCGIScript(std::string const &target)
-// {
-// 	std::string const	cgi_bin = "/cgi-bin/";
-// 	size_t				it = target.find(cgi_bin);
+bool	HttpHandler::_isCGIScript(std::string const &target)
+{
+	std::string const	cgi_bin = "/cgi-bin/";
+	size_t				it = target.find(cgi_bin);
 	
-// 	_scriptName = "SCRIPT_NAME=";
-// 	_pathInfo = "PATH_INFO=";
-// 	_queryString = "QUERY_STRING=";
+	_scriptName = "SCRIPT_NAME=";
+	_pathInfo = "PATH_INFO=";
+	_queryString = "QUERY_STRING=";
 
-// 	if (it == 0)
-// 	{
-// 		it = target.find_first_of("/?", cgi_bin.size());
-// 		std::string const	script_name = target.substr(0, it);
-// 		std::string const	script_path = _baseDir + script_name;
-// 		if (access(script_path.c_str(), X_OK) == 0)
-// 		{
-// 			_scriptName += script_name;
-// 			if (target[it] == '/')
-// 			{
-// 				size_t	it_query = target.find_first_of('?', it);
-// 				_pathInfo += target.substr(it, it_query - it);
-// 				it = it_query;
-// 			}
-// 			if (target[it] == '?')
-// 			{
-// 				_queryString += target.substr(it + 1);
-// 			}
-// 			std::cout << _scriptName << std::endl;
-// 			std::cout << _pathInfo << std::endl;
-// 			std::cout << _queryString << std::endl;
-// 			return (true);
-// 		}
-// 	}
-// 	return (false);
-// }
+	if (it == 0)
+	{
+		it = target.find_first_of("/?", cgi_bin.size());
+		std::string const	script_name = target.substr(0, it);
+		std::string const	script_path = _baseDir + script_name;
+		if (access(script_path.c_str(), X_OK) == 0)
+		{
+			_scriptName += script_name;
+			if (target[it] == '/')
+			{
+				size_t	it_query = target.find_first_of('?', it);
+				_pathInfo += target.substr(it, it_query - it);
+				it = it_query;
+			}
+			if (target[it] == '?')
+			{
+				_queryString += target.substr(it + 1);
+			}
+			std::cout << _scriptName << std::endl;
+			std::cout << _pathInfo << std::endl;
+			std::cout << _queryString << std::endl;
+			return (true);
+		}
+	}
+	return (false);
+}
 
-// bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
-// {
-// 	std::string const			script_path = _baseDir + "/cgi-bin/upload.py";
-// 	std::vector<char const *>	argv;
-// 	std::vector<char const *>	envp;
-// 	pid_t						process_id;
+bool	HttpHandler::_execCGIScript(HttpRequest const &request) const
+{
+	std::string const			script_path = _baseDir + "/cgi-bin/upload.py";
+	std::vector<char const *>	argv;
+	std::vector<char const *>	envp;
+	pid_t						process_id;
 
-// 	std::string	const			version = "HTTP_VERSION=" + request.version();
-// 	std::string	const			method = "METHOD=" + request.method();
-// 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
-// 	std::string	const			content = "This is a test";
+	std::string	const			version = "HTTP_VERSION=" + request.version();
+	std::string	const			method = "METHOD=" + request.method();
+	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
+	std::string	const			content = "This is a test";
 
-// 	std::string	const			length = "CONTENT_LENGTH=14";
+	std::string	const			length = "CONTENT_LENGTH=14";
 	
-// 	int							wstatus;
-// 	int							pipe_fd[2];
+	int							wstatus;
+	int							pipe_fd[2];
 
-// 	pipe(pipe_fd);
+	pipe(pipe_fd);
 
-// 	(void) _webServer;
+	(void) _webServer;
 
-// 	process_id = fork();
-// 	if (process_id < 0)
-// 		perror ("fork() failed");
-// 	else if (process_id == 0)
-// 	{
-// 		// _webServer.cleanUpSockets();
+	process_id = fork();
+	if (process_id < 0)
+		perror ("fork() failed");
+	else if (process_id == 0)
+	{
+		// _webServer.cleanUpSockets();
 
-// 		dup2 (pipe_fd[0], STDIN_FILENO);
-// 		dup2 (pipe_fd[1], STDOUT_FILENO);
+		dup2 (pipe_fd[0], STDIN_FILENO);
+		dup2 (pipe_fd[1], STDOUT_FILENO);
 
-// 		close (pipe_fd[0]);
-// 		close (pipe_fd[1]);
+		close (pipe_fd[0]);
+		close (pipe_fd[1]);
 		
-// 		std::cout << content << std::endl;
+		std::cout << content << std::endl;
 
-// 		argv.push_back(script_path.c_str());
-// 		argv.push_back(NULL);
+		argv.push_back(script_path.c_str());
+		argv.push_back(NULL);
 
-// 		envp.push_back(version.c_str());
-// 		envp.push_back(method.c_str());
-// 		envp.push_back(filename.c_str());
-// 		envp.push_back(length.c_str());
-// 		envp.push_back(NULL);
+		envp.push_back(version.c_str());
+		envp.push_back(method.c_str());
+		envp.push_back(filename.c_str());
+		envp.push_back(length.c_str());
+		envp.push_back(NULL);
 
-// 		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
-// 		exit (EXIT_FAILURE);
-// 	}
-// 	waitpid (process_id, &wstatus, WNOHANG);
-// 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
-// 	{
-// 		return (false);
-// 	}
-// 	// read (pipe_fd[0], buffer, 255);
-// 	close (pipe_fd[0]);
-// 	close (pipe_fd[1]);
-// 	// std::cout << "[] " << std::endl;
-// 	// std::cout << buffer << std::endl;
-// 	// std::cout << "[] " << std::endl;
-// 	return (true);
-// }
+		execve (script_path.c_str(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(envp.data()));
+		exit (EXIT_FAILURE);
+	}
+	waitpid (process_id, &wstatus, WNOHANG);
+	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
+	{
+		return (false);
+	}
+	// read (pipe_fd[0], buffer, 255);
+	close (pipe_fd[0]);
+	close (pipe_fd[1]);
+	// std::cout << "[] " << std::endl;
+	// std::cout << buffer << std::endl;
+	// std::cout << "[] " << std::endl;
+	return (true);
+}

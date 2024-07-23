@@ -397,7 +397,7 @@ void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
 
 void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
 	//Sets the root folder if not set then the default folder will be /data
-	regex 	root_line("\\s*root\\s*[A-Za-z0-9-_.]+/*;\\s*");
+	regex 	root_line("\\s*root\\s*/[A-Za-z0-9-_.]+/*;\\s*");
 	string  line = linepair.first;
 	string root = line.substr(line.find("root") + 4, line.find(";"));
 
@@ -406,12 +406,12 @@ void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
 	root = trim(root);
 	root.pop_back();
 	if (regex_match(line, root_line)){
-		for (int i = count(line.begin(), line.end(), '/'); i > 1; i--)
+		while (root.back() == '/')
 			root.pop_back();
 		_Root = root;
 	}
 	else
-		throw (runtime_error("Invalid value \"" + root + "\" in the \"root\" directive, it must be \"foo/\", in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+		throw (runtime_error("Invalid value \"" + root + "\" in the \"root\" directive, it must be \"/foo\", in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 }
 
 void	ConfigServer::ParseMethods(pair<string, unsigned> & linepair){

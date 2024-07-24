@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 17:08:49 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/23 18:52:55 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ private:
 	std::string 						_createPath(ConfigServer const &config);
 	std::string							_getPage(ConfigServer const &config, short const & errorCode);
 	std::string							_setDefaultContent(short const & errorCode);
-	bool								_pathIsDirectory(ConfigServer const &config);
+	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
 	void								_openFile(ConfigServer const &config);	
 
 	void								_get(ConfigServer const &config, HttpRequest const &request);

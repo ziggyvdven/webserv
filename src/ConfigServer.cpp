@@ -397,7 +397,7 @@ void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
 
 void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
 	//Sets the root folder if not set then the default folder will be /data
-	regex 	root_line("\\s*root\\s*/[A-Za-z0-9-_.]+/*;\\s*");
+	regex 	root_line("\\s*root\\s*/([A-Za-z0-9-_.]+/)*[A-Za-z0-9-_.]+/*;\\s*");
 	string  line = linepair.first;
 	string root = line.substr(line.find("root") + 4, line.find(";"));
 

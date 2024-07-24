@@ -1,12 +1,9 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
-import os
-import sys
+import sys, cgi
+print("Hello from echo.py\n")
 
-print ("Start")
+form = cgi.FieldStorage()
+print(f"{form=}")
 
-str = sys.stdin.read(int(os.getenv('CONTENT_LENGTH')))
-
-print (str)
-
-print ("Finish!")
+print("Cgi OUT")

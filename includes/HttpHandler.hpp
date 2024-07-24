@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 20:06:23 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 18:34:44 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ private:
 	// Parameters at contruction -- Start
 
 	WebServer const &					_webServer;
+	ConfigServer*						_config;
 	Config &							_conf;
 	std::string const					_baseDir;
 
@@ -68,7 +69,7 @@ private:
 	std::string 						_createPath(ConfigServer const &config);
 	std::string							_getPage(ConfigServer const &config, short const & errorCode);
 	std::string							_setDefaultContent(short const & errorCode);
-	bool								_pathIsDirectory(ConfigServer const &config);
+	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
 	void								_openFile(ConfigServer const &config);	
 
 	void								_get(ConfigServer const &config, HttpRequest const &request);
@@ -85,6 +86,7 @@ private:
 
 	bool								_execCGIScript(HttpRequest const &request) const;
 	bool								_isCGIScript(std::string const &target);
+	// char const						*_getScriptName(void) const;
 
 public:
 

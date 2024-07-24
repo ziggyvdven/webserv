@@ -297,7 +297,7 @@ void	ConfigServer::ParseClientMaxBodySize(pair<string, unsigned> & linepair){
 	//Sets the maximum allowed size of the client request body. If the size in a request exceeds the configured value, the 413 (Request Entity Too Large) error is returned to the client. Setting size to 0 disables checking of client request body size.
 	regex 	client_max_body_size_line("\\s*client_max_body_size\\s*[0-9]+[m]*;\\s*");
 	string  line = linepair.first;
-	long 	clientmaxbodysize = 0;
+	size_t	clientmaxbodysize = 0;
 
 	if (find(_SetDirectives.begin(), _SetDirectives.end(), line) != _SetDirectives.end())
 		throw (runtime_error("\"client_max_body_size\" directive is duplicate in" + _Config.getFilename() + ":" + to_string(linepair.second)));
@@ -397,7 +397,7 @@ void 	ConfigServer::ParseAutoIndex(pair<string, unsigned> & linepair){
 
 void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
 	//Sets the root folder if not set then the default folder will be /data
-	regex 	root_line("\\s*root\\s*/[A-Za-z0-9-_.]+/*;\\s*");
+	regex 	root_line("\\s*root\\s*/([A-Za-z0-9-_.]+/)*[A-Za-z0-9-_.]+/*;\\s*");
 	string  line = linepair.first;
 	string root = line.substr(line.find("root") + 4, line.find(";"));
 
@@ -534,7 +534,7 @@ string	ConfigServer::getServerName() const{
 	return (this->_ServerName);
 }
 
-long long	ConfigServer::getClientMaxBodySize() const{
+size_t	ConfigServer::getClientMaxBodySize() const{
 	return (this->_ClientMaxBodySize);
 }
 

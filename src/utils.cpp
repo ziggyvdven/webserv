@@ -3,6 +3,7 @@
 
 #include <cctype>
 #include <iomanip>
+#include <iostream>
 
 // trim from end of string (right)
 std::string& rtrim(std::string& s, const char* t)
@@ -57,4 +58,26 @@ void toLowerCase(std::string & str)
 	for (std::size_t i = 0; i < str.size(); ++i) {
 		str[i] = std::tolower(static_cast<unsigned char>(str[i]));
 	}
+}
+
+std::vector<std::string> ft_split(std::string str, std::string const &delim)
+{
+	std::vector<std::string> list;
+	std::string token;
+
+	size_t pos = 0;
+		
+	while ((pos = str.find(delim)) != std::string::npos && !delim.empty() && !str.empty())
+	{
+		token = str.substr(0, pos);
+		str.erase(0, pos + delim.size());
+		if (pos != 0)
+			list.push_back(token);
+	}
+	if(!str.empty())
+	{
+		list.push_back(str);
+	}
+
+	return list;
 }

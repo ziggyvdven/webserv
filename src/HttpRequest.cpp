@@ -2,9 +2,10 @@
 
 #include <iostream>
 #include <regex>
+#include <stdexcept>
 // ========== ========== Constructor ========== ========== 
-HttpRequest::HttpRequest(std::string const &raw_string)
-	: _raw(raw_string), _valid(true), _http_stream(_raw)
+HttpRequest::HttpRequest(std::vector<unsigned char> const &raw_string)
+	: _raw(raw_string), _valid(true), _http_stream(reinterpret_cast<char *>(_raw.data()))
 {
 	_parse_http_request();
 }
@@ -12,10 +13,10 @@ HttpRequest::HttpRequest(std::string const &raw_string)
 // ========== ========== Validation ========== ========== 
 void HttpRequest::_parse_http_request()
 {
-	std::string line;
-
 	_parse_request_line();
 	_parse_headers();
+	_parse_body();
+
 }
 
 // ========== ========== Getters ========== ========== 
@@ -61,12 +62,9 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 
 	if (!std::regex_match(request_line, re_request_line))
 	{
-		std::cout << request_line << std::endl;
-		std::cout << "regex failed" << std::endl;
 		throw std::exception();
 	}
 }
-
 
 void HttpRequest::_parse_headers()
 {
@@ -90,7 +88,6 @@ void HttpRequest::_parse_headers()
 
 		std::getline(_http_stream, header_line);
 	}
-	// _http_stream now should be stopped after \n
 }
 
 
@@ -99,6 +96,36 @@ bool HttpRequest::_valid_header(std::string const &line) const
 	std::regex const re("^\\S+:[ ]?.*[ ]?\\r$");
 
 	return std::regex_match(line, re);
+}
+
+void HttpRequest::_parse_body()
+{
+	std::vector<unsigned char>::iterator it;
+
+	_body = std::vector<unsigned char>();
+	if (this->getHeader("content-length").empty())
+		return;
+
+	try
+	{
+		// Fetch content lenght
+		int content_length = std::atoi(this->getHeader("content-length").data());
+
+		// Search for body start
+		std::string delimiter = "\r\n\r\n";
+		it = std::search(_raw.begin(), _raw.end(), delimiter.begin(), delimiter.end());
+		if (it != _raw.end())
+		{
+			it += delimiter.size();
+			_body = std::vector<unsigned char>(it, it + content_length);
+		}
+	} catch (std::invalid_argument)
+	{
+		return;
+	}
+
+	
+
 }
 
 void HttpRequest::print_request() const

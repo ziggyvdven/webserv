@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 20:56:47 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/24 15:45:28 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_reasonPhrase[403] = "Forbidden";
 	_reasonPhrase[404] = "Not Found";
 	_reasonPhrase[405] = "Method Not Allowed";
+	_reasonPhrase[413] = "Request Entity Too Large";
 	_reasonPhrase[500] = "Internal Server error";
 	// 
 	_headers["Accept-Ranges"] = "bytes";
@@ -88,8 +89,8 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 
 	request.print_request();
 	_setRequestParameters(config, request);
-	std::cout << _path << std::endl;
-	std::cout << config << std::endl;
+	// std::cout << _path << std::endl;
+	// std::cout << config << std::endl;
 	if (config.getRedirect().first != 0)
 	{
 		_statusCode = config.getRedirect().first;
@@ -101,6 +102,11 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 		{
 			_content = config.getRedirect().second;
 		}
+	}
+	if (_content.size() > config.getClientMaxBodySize() && config.getClientMaxBodySize())
+	{
+		_content = _getPage(config, 413);
+		_statusCode = 413;
 	}
 	else if (!config.getMethod(request.method()))
 	{
@@ -164,14 +170,18 @@ std::string	HttpHandler::_setDefaultContent(short const & errorCode)
 std::string	HttpHandler::_getPage(ConfigServer const &config, short const & errorCode)
 {
 	std::string	file = config.getErrorPage(errorCode);
+	std::string path = _baseDir + config.getRoot() + "/" + file;
 
-	if (file.empty())
+	cout << "PATH: " << path << endl;
+	
+	if (file.empty() || access(path.c_str(), F_OK) != 0)
 	{
 		_getContentFromFile = false;
 		// return (_defaultPages[errorCode]);
 		return (_setDefaultContent(errorCode));
 	}
 	_getContentFromFile = true;
+	_path = path;
 	return (file);
 }
 
@@ -208,7 +218,7 @@ bool	HttpHandler::_pathIsDirectory(std::string path, ConfigServer const &config)
 	{
 		_content = _getPage(config, 500);
 		_statusCode = 500;
-		// throw std::exception();
+		throw std::exception();
 	}
 	return (false);
 }
@@ -221,35 +231,26 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	std::string temp;
 
 	path = _baseDir + config.getRoot() + _htmlFile;
-	cout << "PAth: " << path << endl;
 	if (!config.getTarget().empty() && config.getTarget() != "/")	// Added config.getTarget() != "/" here
 	{
 		size_t pos = path.find(config.getTarget());
 		if (pos != std::string::npos)
 			path.erase(pos, config.getTarget().length());
 	}
-	cout << "PAth: " << path << endl;
-	try 
-	{
-		if (_pathIsDirectory(path, config)){
-			if (!_htmlFile.empty() && _htmlFile.back() == '/')
-				temp = path + config.getIndex();
-			else
-				temp = path + "/" + config.getIndex();
-		}
-		cout << "PAth: " << path << endl;
-		if (access(temp.c_str(), F_OK) == -1)
-		{
-			if (config.getAutoIndex())
-				_autoIndex = true;
-		}
+	if (opendir(path.c_str()) != NULL){
+		if (!_htmlFile.empty() && _htmlFile.back() == '/')
+			temp = path + config.getIndex();
 		else
-			path = temp;
+			temp = path + "/" + config.getIndex();
 	}
-	catch (std::exception const &e)
+	if (access(temp.c_str(), F_OK) == -1)
 	{
+		if (config.getAutoIndex())
+			_autoIndex = true;
 	}
-	cout << "PAth: " << path << endl;
+	else
+		path = temp;
+	cout << path << endl;
 	return path;
 }
 
@@ -270,7 +271,7 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 {
 	try
 	{
-		if (_pathIsDirectory(_path, config))
+		if (opendir(_path.c_str()) != NULL)
 		{
 			if (_autoIndex)
 				_content = _autoIndexGenerator(_path, request.target(), config);
@@ -284,7 +285,7 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 		// {
 		// 	_execCGIScript(request);
 		// }
-		else
+		else if (access(_path.c_str(), F_OK) == 0)
 			_getContentFromFile = true;
 	}
 	catch (std::exception const &e)
@@ -436,7 +437,7 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 	</p>\n\
     </body>\n\
     </html>\n";
-	
+	closedir(dir);
 	return content;
 }
 

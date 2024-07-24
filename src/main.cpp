@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 		try {
 			Config  config(input);
 			// cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
-			config.printConfig();
+			// config.printConfig();
 			std::vector<Socket>	socketList;
 			for (unsigned i = 0; i < config.getNServers(); i++){
 				Socket				socket(config.getServer(i).getHost(), config.getServer(i).getPort());

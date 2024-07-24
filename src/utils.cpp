@@ -81,3 +81,9 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 
 	return list;
 }
+
+long int time_since(std::chrono::steady_clock::time_point start)
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>
+		(std::chrono::steady_clock::now() - start).count();
+}

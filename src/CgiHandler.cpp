@@ -6,6 +6,10 @@
 #include <iostream>	
 #include <fstream>
 #include <vector>
+#include <ctime>
+#include <signal.h>
+
+#define TIMEOUT 12
 
 CgiHandler::CgiHandler(HttpRequest const &request)
 	: _request(request), _htmlRoot("./data/www")
@@ -72,8 +76,8 @@ std::string	CgiHandler::execCgiScript()
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
 	
-	int							wstatus;
 	int							child_to_parent[2], parent_to_child[2];
+	int							wstatus;
 
 	pipe(child_to_parent);
 	pipe(parent_to_child);
@@ -121,7 +125,13 @@ std::string	CgiHandler::execCgiScript()
 
 	close(parent_to_child[1]);
 
-	waitpid (process_id, &wstatus, 0);
+	if (_timeout_cgi(process_id, wstatus, TIMEOUT))
+	{
+		kill(process_id, 9);
+		_cgiResponse = "<h1>[CGI] Script timed out!</h1>";
+		return _cgiResponse;
+	}
+
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
 	{
 		// DEBUG
@@ -131,7 +141,6 @@ std::string	CgiHandler::execCgiScript()
 			<< "\nSignaled: " << WIFSIGNALED(wstatus)\
 			<< std::endl;
 
-		// Add timout logic
 		_cgiResponse = "<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
 	}
 
@@ -147,4 +156,30 @@ std::string	CgiHandler::execCgiScript()
 	}
 
 	return (_cgiResponse);
+}
+
+bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
+{
+	std::chrono::steady_clock::time_point begin;
+	begin = std::chrono::steady_clock::now();
+
+	std::cout << "[Timing for ]" << timeout_sec<< std::endl;
+	while (true)
+	{
+		waitpid(process_id, &wstatus, WNOHANG);
+		if (WIFEXITED(wstatus))
+		{
+			std::cout << "Child process finished" << std::endl;
+			std::cout << "Elapsed time: " << time_since(begin) <<std::endl;
+			return false;
+		}
+
+		if (time_since(begin) > timeout_sec * 1000)
+		{
+			std::cout << "[TIMEOUT]" << std::endl;
+			return true;
+		}
+		usleep(50000);
+	}
+	return false;
 }

@@ -1,49 +1,24 @@
+#include <ios>
 #include <iostream>
-#include <fstream>
-
-struct Record {
-	char			name[40];
-	unsigned short	age;
-	float			gpa;
-};
-
-#include <iostream>
-#include <ifaddrs.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <cstring>
+#include <unistd.h>
+#include <sys/fcntl.h>
+#include "../includes/utils.hpp"
 
 int main()
 {
-	struct ifaddrs *interfaces = NULL;
-	struct ifaddrs *ifa = NULL;
+	int pid;
+	int wstat;
 
-	if (getifaddrs(&interfaces) == -1)
+	begin = std::chrono::steady_clock::now();
+	pid = fork();
+	if (pid == 0)
 	{
-		perror("getifaddrs");
-		return 1;
+		std::cout << "Child Porcess working ..." << std::endl;
+		sleep(1);
+		exit(0);
 	}
 
-	for (ifa = interfaces; ifa != NULL; ifa = ifa->ifa_next)
-	{
-		if (ifa->ifa_addr == NULL)
-			continue;
+	std::cout << "In Parent process" << std::endl;
+	std::cout << "Waiting for child proces ..." << std::endl;
 
-		int family = ifa->ifa_addr->sa_family;
-
-		if (family == AF_INET  || family == AF_INET6)
-		{
-			char address[INET6_ADDRSTRLEN];
-			void *addr_ptr = (family == AF_INET)
-				? (void *)&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr
-				: (void *)&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
-
-			inet_ntop(family, addr_ptr, address, sizeof(address));
-
-			std::cout	<< "Interface: " << ifa->ifa_name
-						<< "Address: " << address << std::endl;
-		}
-	}
-	freeifaddrs(interfaces);
-	return 0;
 }

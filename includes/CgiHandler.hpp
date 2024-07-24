@@ -20,6 +20,7 @@ private:
 	std::string			_cgiResponse;
 	std::vector<char const *>	_envp;
 
+	bool _timeout_cgi(int process_id, int &wstatus, int timeout_sec);
 
 public:
 	CgiHandler(HttpRequest const &request);

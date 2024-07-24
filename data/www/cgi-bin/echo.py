@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
 
-import sys, cgi
-print("Hello from echo.py\n")
+import os
 
-form = cgi.FieldStorage()
-print(f"{form=}")
-
-print("Cgi OUT")
+print(f"""
+<h1>CGI: echo.py</h1>
+<h4>Welcom {os.environ.get("PATH_INFO")}</h4>
+""")

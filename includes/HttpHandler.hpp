@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 18:52:55 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/24 16:08:50 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ private:
 	// Parameters at contruction -- Start
 
 	WebServer const &					_webServer;
+	ConfigServer*						_config;
 	Config &							_conf;
 	std::string const					_baseDir;
 

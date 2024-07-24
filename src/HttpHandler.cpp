@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 15:45:28 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/24 16:19:57 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,6 +86,7 @@ void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest 
 std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 {
 	ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
+	_config = &config;
 
 	request.print_request();
 	_setRequestParameters(config, request);

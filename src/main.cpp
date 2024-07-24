@@ -2,11 +2,19 @@
 # include "../includes/Config.hpp"
 # include "../includes/Socket.hpp"
 # include "../includes/WebServer.hpp"
+// # include <signal.h>
 
 using namespace std;
 
+// void	sighandler(int)
+// {
+	
+// 	exit (EXIT_FAILURE);
+// }
+
 int main(int argc, char **argv)
 {
+	// signal(SIGINT, sighandler);
 	if (argc == 2){
 		string 	input(argv[1]);
 		if (input.empty()){

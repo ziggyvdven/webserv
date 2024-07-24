@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/11 13:06:00 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/23 20:11:10 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@ Socket::Socket(std::string const host, unsigned int const port) : _host(host), _
 	memset(&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
 	_address.sin_port = htons(_port);
+	// _address.sin_addr.s_addr = inet_aton(_host.c_str(), &_address.sin_addr);
 	_address.sin_addr.s_addr = htonl(INADDR_ANY);
 	return ;
 }

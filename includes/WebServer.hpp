@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/23 18:02:58 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 15:13:12 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ private:
 	size_t const				_socketListSize;
 	Config&						_config;
 
-	std::string					_request;
+	std::vector<unsigned char>	_request;
 	std::string					_response;
 
 	bool						_isListeningSocket(int fd) const;

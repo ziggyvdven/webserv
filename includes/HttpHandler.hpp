@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 17:08:49 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 15:25:15 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,6 +85,7 @@ private:
 
 	bool								_execCGIScript(HttpRequest const &request) const;
 	bool								_isCGIScript(std::string const &target);
+	// char const						*_getScriptName(void) const;
 
 public:
 

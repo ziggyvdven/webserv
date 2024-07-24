@@ -3,14 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/23 18:02:49 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 15:14:23 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/WebServer.hpp"
+#include <cstddef>
+#include <ios>
+#include <type_traits>
 
 WebServer::WebServer(std::vector<Socket> socketList, Config &conf) : _nfds(0), \
 _socketList(socketList), _socketListSize(socketList.size()), _config(conf)
@@ -70,11 +73,11 @@ int	WebServer::run(void)
 					// This is an accepting socket. Do recv/send loop
 					if (_readData(_fds[i].fd))
 					{
-						// std::cout << _request << std::endl;
 						// Send HTTP Response
 						HttpRequest request(_request);
+						_request.clear();
 						_response = http.buildResponse(request);
-						_sendData(_fds[i].fd, _response.c_str(), _response.size() + 1);
+						_sendData(_fds[i].fd, _response.data(), _response.size());
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
 					// Close Accepting Socket
@@ -121,18 +124,14 @@ void	WebServer::_acceptConnection(int fd)
 bool	WebServer::_readData(int socket)
 {
 	char		buffer[255 + 1];
-	std::string	buffer_str;
-	std::string	request;
 	ssize_t		rtn = 0;
-	
+
 	memset(buffer, 0, sizeof (buffer));
-	while ((rtn = recv(socket, buffer, 255, 0)) > 0)
+ 	while ((rtn = recv(socket, buffer, 255, 0)) > 0)
 	{
-		buffer_str = buffer;
-		request += buffer_str.substr(0, rtn);
+		_request.insert(_request.end(), buffer, buffer + rtn);
 		memset(buffer, 0, rtn);
 	}
-	_request = request;
 	if (rtn == 0)
 	{
 		return (false);
@@ -142,12 +141,15 @@ bool	WebServer::_readData(int socket)
 
 void	WebServer::_sendData(int socket, const char* str, size_t len) const
 {
-	ssize_t	rtn = 0;
+	size_t	rtn = 0;
 	size_t	idx = 0;
+	size_t	chunk_size = 255;
+	size_t	send_size = 0;
 
 	while (idx < len)
 	{
-		rtn = send(socket, str + idx, 256, 0);
+		send_size = len - idx < chunk_size ? len - idx : chunk_size;
+		rtn = send(socket, str + idx, send_size, 0);
 		idx += rtn;
 	}
 }

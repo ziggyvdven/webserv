@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+         #
+#    By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/07/03 19:17:56 by zvan-de-         ###   ########.fr        #
+#    Updated: 2024/07/24 16:25:50 by oroy             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -103,3 +103,27 @@ fclean: clean
 re: fclean all
 
 .PHONY:		all clean fclean re explain
+
+#------------------------------------------------------------------------------#
+#                                 VALGRIND                                     #
+#------------------------------------------------------------------------------#
+
+vleaks:
+	valgrind \
+	--leak-check=full \
+	--show-leak-kinds=all \
+	--show-reachable=yes \
+	--show-possibly-lost=yes \
+	--track-origins=yes \
+	./$(NAME) config/webserv.conf
+
+vleaks_fd:
+	valgrind \
+	--leak-check=summary \
+	--show-leak-kinds=all \
+	--show-reachable=yes \
+	--show-possibly-lost=yes \
+	--track-origins=yes \
+    --track-fds=all \
+	./$(NAME) config/webserv.conf
+

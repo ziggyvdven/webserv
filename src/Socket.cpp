@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/23 20:11:10 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 13:59:13 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,12 @@ Socket::Socket(std::string const host, unsigned int const port) : _host(host), _
 	memset(&_address, 0, sizeof(_address));
 	_address.sin_family = AF_INET;
 	_address.sin_port = htons(_port);
-	// _address.sin_addr.s_addr = inet_aton(_host.c_str(), &_address.sin_addr);
 	_address.sin_addr.s_addr = htonl(INADDR_ANY);
+	// if (inet_pton(AF_INET, _host.c_str(), &_address.sin_addr) <= 0)
+	// {
+	// 	perror("inet_pton failed");
+    // 	exit(1);
+	// }
 	return ;
 }
 
@@ -53,6 +57,7 @@ int	Socket::createSocket(void)
 	// Identify a socket (bind the ip address and port)
 	if (bind(_socketFD, reinterpret_cast<struct sockaddr *>(&_address), sizeof(_address)) < 0)
 	{
+		perror("bind:");
 		return (_errorMessage("bind() failed"));
 	}
 

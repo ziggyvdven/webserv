@@ -153,7 +153,7 @@ std::string	CgiHandler::execCgiScript()
 			<< std::endl;
 
 		// Add timout logic
-		_cgiResponse = "Content-Type: text/html\r\n\r\n<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
+		_cgiResponse = "<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
 	}
 
 	#define BUFFERSIZE 255

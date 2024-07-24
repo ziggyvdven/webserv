@@ -29,8 +29,6 @@ def upload_file(field_item, upload_dir="./data/www/upload/"):
 
 def main():
 
-	response_headers()
-
 	# Populate form cgi data
 	form = cgi.FieldStorage()
 	

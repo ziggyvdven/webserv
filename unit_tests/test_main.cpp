@@ -7,43 +7,43 @@ struct Record {
 	float			gpa;
 };
 
+#include <iostream>
+#include <ifaddrs.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <cstring>
+
 int main()
 {
+	struct ifaddrs *interfaces = NULL;
+	struct ifaddrs *ifa = NULL;
 
-	std::fstream f("records.dat", std::ios::binary | std::ios::out);
-	Record records[3] = {
-		{"Karim", 30, 3.8},
-		{"Hank", 40, 3.8},
-		{"Same", 28, 2.9}
-		};
-
-
-	if (f)
+	if (getifaddrs(&interfaces) == -1)
 	{
-		f.write(reinterpret_cast<char*>(&records), 3 * sizeof(Record));
-		f.close();
-	}
-	else
-	{
-		std::cout << "Failed to open file" << std::endl;
+		perror("getifaddrs");
+		return 1;
 	}
 
-
-	Record records2[3];
-
-	f.open("records.dat", std::ios::in | std::ios::binary);
-	if (f)
+	for (ifa = interfaces; ifa != NULL; ifa = ifa->ifa_next)
 	{
-		f.read(reinterpret_cast<char *>(&records2), 3 * sizeof(Record));
+		if (ifa->ifa_addr == NULL)
+			continue;
 
-		for (int i = 0; i < 3; i++)
+		int family = ifa->ifa_addr->sa_family;
+
+		if (family == AF_INET  || family == AF_INET6)
 		{
-			Record rec2 = records2[i];
-			std::cout << rec2.name << "\n" << rec2.age << "\n" << rec2.gpa << std::endl;
-		}
+			char address[INET6_ADDRSTRLEN];
+			void *addr_ptr = (family == AF_INET)
+				? (void *)&((struct sockaddr_in *)ifa->ifa_addr)->sin_addr
+				: (void *)&((struct sockaddr_in6 *)ifa->ifa_addr)->sin6_addr;
 
-		f.close();
-	} else {
-		std::cout << "File not found" << std::endl;
+			inet_ntop(family, addr_ptr, address, sizeof(address));
+
+			std::cout	<< "Interface: " << ifa->ifa_name
+						<< "Address: " << address << std::endl;
+		}
 	}
+	freeifaddrs(interfaces);
+	return 0;
 }

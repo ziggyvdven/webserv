@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/23 19:10:59 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/24 14:54:39 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,12 +75,7 @@ int	WebServer::run(void)
 					{
 						// Send HTTP Response
 						HttpRequest request(_request);
-						std::cout << "\n\n[DEBUG] " << "Content-Length: " << request.getHeader("Content-Length")\
-						 << "\nActual body size: " << request.body().size() << std::endl;
-						std::cout << "[DEBUG] Request is valid: " << std::boolalpha << request.isValid() << std::endl;
-						std::cout << "\n\n " << std::endl;
-						 request.print_headers();
-
+						_request.clear();
 						_response = http.buildResponse(request);
 						_sendData(_fds[i].fd, _response.data(), _response.size());
 						std::cout << "\n------------------ Message sent -------------------\n\n";

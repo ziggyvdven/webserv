@@ -1,4 +1,5 @@
 #include "../includes/CgiHandler.hpp"
+#include "../includes/utils.hpp"
 #include <strings.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
@@ -132,9 +133,11 @@ std::string	CgiHandler::execCgiScript()
 	// Send request body to CGI
 	
 	// TODO: c'est un peu de la chnoute
-	for (unsigned long i = 0; i < _request.body().size(); i += 12000)
+	unsigned long chunk_size = 500000;
+	for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
 	{
-		write(parent_to_child[1], _request.body().data() + i, 12000);
+		chunk_size = min(chunk_size, _request.body().size() - i);
+		write(parent_to_child[1], _request.body().data() + i, chunk_size);
 	}
 
 	close(parent_to_child[1]);

@@ -34,7 +34,7 @@ public:
 	unsigned short				getPort() const;
 	string						getHost() const;
 	string						getServerName() const;
-	long long					getClientMaxBodySize() const;
+	size_t						getClientMaxBodySize() const;
 	string						getErrorPage(short const & errorcode) const;
 	const map<short, string>&	getErrorPageMap() const;
 	bool						getAutoIndex() const;
@@ -55,7 +55,7 @@ private:
 	unsigned short						_Port;
 	string								_Host;
 	string								_ServerName;
-	long long							_ClientMaxBodySize; // in bytes
+	size_t								_ClientMaxBodySize; // in bytes
 	map<short, string>					_ErrorPages;
 	bool								_AutoIndex;
 	string								_Root;

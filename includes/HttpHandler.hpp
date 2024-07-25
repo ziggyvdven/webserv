@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 15:25:15 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/24 16:37:52 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ private:
 	// Parameters at contruction -- Start
 
 	WebServer const &					_webServer;
+	ConfigServer*						_config;
 	Config &							_conf;
 	std::string const					_baseDir;
 
@@ -68,7 +69,7 @@ private:
 	std::string 						_createPath(ConfigServer const &config);
 	std::string							_getPage(ConfigServer const &config, short const & errorCode);
 	std::string							_setDefaultContent(short const & errorCode);
-	bool								_pathIsDirectory(ConfigServer const &config);
+	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
 	void								_openFile(ConfigServer const &config);	
 
 	void								_get(ConfigServer const &config, HttpRequest const &request);

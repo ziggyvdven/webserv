@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 18:35:16 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 19:55:39 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,12 +48,14 @@ int	WebServer::run(void)
 	HttpHandler	http(*this, _config);
 	int			current_fds_size;
 
-	while (true)
+	_serverOn = true;
+	while (_serverOn)
 	{
+		signal(SIGINT, _sighandler);
 		// Poll process. Checks the fds array to see if some file descriptors are ready for I/O
 		if (poll(_fds, _nfds, 0) < 0)
 		{
-			std::cerr << "poll() failed" << std::endl;
+			// std::cerr << "poll() failed" << std::endl;
 		}
 
 		// Loop through the fds that returned POLLIN and check if it's the listening or active socket
@@ -179,6 +181,10 @@ void	WebServer::cleanUpSockets(void) const
 	}
 }
 
-Config& WebServer::getConfig(void){
-	return (_config);
+void	WebServer::_sighandler(int signum)
+{
+	(void) signum;
+	_serverOn = false;
 }
+
+bool	WebServer::_serverOn = true;

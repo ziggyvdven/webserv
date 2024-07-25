@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 18:35:13 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/24 19:20:22 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,7 +57,6 @@ int	Socket::createSocket(void)
 	// Identify a socket (bind the ip address and port)
 	if (bind(_socketFD, reinterpret_cast<struct sockaddr *>(&_address), sizeof(_address)) < 0)
 	{
-		perror("bind:");
 		return (_errorMessage("bind() failed"));
 	}
 

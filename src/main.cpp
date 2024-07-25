@@ -2,19 +2,18 @@
 # include "../includes/Config.hpp"
 # include "../includes/Socket.hpp"
 # include "../includes/WebServer.hpp"
-// # include <signal.h>
+# include <csignal>
 
 using namespace std;
 
-// void	sighandler(int)
-// {
-	
-// 	exit (EXIT_FAILURE);
-// }
+void	sighandler(void)
+{
+	Webserver.cleanUpSockets
+}
 
 int main(int argc, char **argv)
 {
-	// signal(SIGINT, sighandler);
+	signal(SIGPIPE, SIG_IGN);
 	if (argc == 2){
 		string 	input(argv[1]);
 		if (input.empty()){
@@ -32,9 +31,6 @@ int main(int argc, char **argv)
 			}
 
 			WebServer			webServer(socketList, config);
-
-			(void) argc;
-			(void) argv;
 
 			if (webServer.init() < 0)
 			{	

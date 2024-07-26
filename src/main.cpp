@@ -6,11 +6,6 @@
 
 using namespace std;
 
-void	sighandler(void)
-{
-	Webserver.cleanUpSockets
-}
-
 int main(int argc, char **argv)
 {
 	signal(SIGPIPE, SIG_IGN);

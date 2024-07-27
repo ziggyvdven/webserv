@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 14:31:56 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/27 18:13:05 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,48 +21,33 @@ Socket::Socket(std::string const host, unsigned int const port) : _host(host), _
 	return ;
 }
 
+Socket::Socket(int socket_fd)
+	: _socketFD(socket_fd)
+{
+	bzero(&_address, sizeof(_address));
+}
+
 Socket::~Socket()
 {
+	close(_socketFD);
 	return ;
 }
 
-int	Socket::createSocket(void)
+Socket::Socket(Socket const &other)
 {
-	int	option = 1;
-
-	// Create a socket
-	_socketFD = socket(AF_INET, SOCK_STREAM, 0);
-	if (_socketFD < 0)
-	{
-		return (_errorMessage("socket() failed"));
-	}
-
-	// Allow socket to reuse local address
-	if (setsockopt(_socketFD, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)) < 0)
-	{
-		return (_errorMessage("setsockopt() failed"));
-	}
-
-	// Set socket to be nonblocking
-	if (fcntl(_socketFD, F_SETFL, O_NONBLOCK) < 0)
-	{
-		return (_errorMessage("fcntl() failed"));
-	}
-
-	// Identify a socket (bind the ip address and port)
-	if (bind(_socketFD, reinterpret_cast<struct sockaddr *>(&_address), sizeof(_address)) < 0)
-	{
-		return (_errorMessage("bind() failed"));
-	}
-
-	// Listen to accepting incoming connections
-	if (listen(_socketFD, SOMAXCONN) < 0)
-	{
-		return (_errorMessage("listen() failed"));
-	}
-
-	return (0);
+	*this = other;
 }
+
+Socket& Socket::operator= (Socket const &other)
+{
+	_address = other._address;
+	_host = other._host;
+	_port = other._port;
+	_socketFD = other._socketFD;
+	_root = other._root;
+	return *this;
+}
+
 
 int	Socket::getSocketFD(void) const
 {

@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 19:53:16 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/27 18:52:59 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ private:
 	std::string					_response;
 
 	static bool					_serverOn;
+	bool						_closeConnection;
 
 	bool						_isListeningSocket(int fd) const;
 	void						_acceptConnection(int fd);
@@ -62,6 +63,8 @@ public:
 
 	void						cleanUpSockets(void) const;
 	int							getNFds(void) const;
+
+	void						printFdsArray(void) const;
 
 };
 

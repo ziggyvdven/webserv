@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 19:55:39 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/27 19:00:18 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,6 +82,7 @@ int	WebServer::run(void)
 						_sendData(_fds[i].fd, _response.data(), _response.size());
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
+					printFdsArray();
 					// Close Accepting Socket
 					close(_fds[i].fd);
 					_fds[i].fd = -1;
@@ -136,8 +137,10 @@ bool	WebServer::_readData(int socket)
 	}
 	if (rtn == 0)
 	{
+		_closeConnection = true;
 		return (false);
 	}
+	_closeConnection = false;
 	return (true);
 }
 
@@ -166,9 +169,20 @@ void	WebServer::_compressFdsArray(void)
 			{
 				_fds[j] = _fds[j + 1];
 			}
+			memset(&_fds[_nfds - 1], 0, sizeof (struct pollfd));
 			i--;
 			_nfds--;
 		}
+	}
+	printFdsArray();
+}
+
+void	WebServer::printFdsArray(void) const
+{
+	for (int i = 0; i < _nfds; ++i)
+	{
+		std::cout << "====== FD idx " << i << " ======" << std::endl;
+		std::cout << "FD = " << _fds[i].fd << std::endl;
 	}
 }
 

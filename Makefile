@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+         #
+#    By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/07/24 16:37:09 by zvan-de-         ###   ########.fr        #
+#    Updated: 2024/07/25 13:12:12 by kmehour          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -90,7 +90,7 @@ $(NAME): $(OBJS_PATH) $(OBJS)
 	@echo "$(G)\n -- $(NAME) made 👾 --$(RT)"
 
 test: $(OBJS_PATH) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ) 
-	@$(CC)  $(CFLAGS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
+	@$(CC)  $(CFLAGS) $(HEADERS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
 	@./$(TEST_EXEC)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp $(HEADERS_FILES)

@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 15:13:12 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/27 18:42:19 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@
 # include "HttpHandler.hpp"
 # include "HttpRequest.hpp"
 # include "Socket.hpp"
+# include "TcpListener.hpp"
+# include "WebClient.hpp"
 # include "Config.hpp"
 
 class HttpHandler;
@@ -35,14 +37,15 @@ private:
 
 	struct pollfd				_fds[FD_SETSIZE];
 	int							_nfds;
-	std::vector<Socket>			_socketList;
-	size_t const				_socketListSize;
+	std::vector<TcpListener>	_listeners_list;
+	std::vector<WebClient>		_clients_list;
 	Config&						_config;
-
 	std::vector<unsigned char>	_request;
 	std::string					_response;
 
-	bool						_isListeningSocket(int fd) const;
+	
+	TcpListener*				_getListeningSocket(int fd);
+	WebClient*					_getClientSocket(int fd);
 	void						_acceptConnection(int fd);
 	void						_compressFdsArray(void);
 	bool						_readData(int socket);
@@ -50,7 +53,7 @@ private:
 
 public:
 
-	WebServer(std::vector<Socket> socketList, Config &config);
+	WebServer(std::vector<TcpListener> socketList, Config &config);
 	~WebServer();
 
 	int	init(void);

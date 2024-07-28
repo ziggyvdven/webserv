@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/27 18:13:05 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/27 19:44:00 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ Socket::Socket(int socket_fd)
 
 Socket::~Socket()
 {
-	close(_socketFD);
 	return ;
 }
 

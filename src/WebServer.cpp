@@ -3,20 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 16:38:15 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/27 20:11:48 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 #include "../includes/WebServer.hpp"
 #include <cstddef>
 #include <ios>
 #include <type_traits>
 
-WebServer::WebServer(std::vector<Socket> socketList, Config &conf) : _nfds(0), \
-_socketList(socketList), _socketListSize(socketList.size()), _config(conf)
+WebServer::WebServer(std::vector<TcpListener> socketList, Config &conf) : _nfds(0), \
+_listeners_list(socketList), _config(conf)
 {
 	memset(_fds, 0, sizeof(_fds));
 }
@@ -28,15 +29,15 @@ WebServer::~WebServer()
 
 int	WebServer::init(void)
 {
-	for (size_t i = 0; i < _socketListSize; ++i)
+	for (size_t i = 0; i < _listeners_list.size(); i++)
 	{
-		if (_socketList[i].createSocket() < 0)
+		if (_listeners_list[i].createListeningSocket() < 0)
 		{
 			cleanUpSockets();
 			return (-1);
 		}
 		// Add the listening socket in our fd set
-		_fds[i].fd = _socketList[i].getSocketFD();
+		_fds[i].fd = _listeners_list[i].getSocketFD();
 		_fds[i].events = POLLIN;
 		_nfds++;
 	}
@@ -47,6 +48,8 @@ int	WebServer::run(void)
 {
 	HttpHandler	http(*this, _config);
 	int			current_fds_size;
+	WebClient	*client_ptr;
+	TcpListener	*listener_ptr;
 
 	while (true)
 	{
@@ -58,33 +61,46 @@ int	WebServer::run(void)
 
 		// Loop through the fds that returned POLLIN and check if it's the listening or active socket
 		current_fds_size = _nfds;
+		// std::cout << "_nfds: " << _nfds << std::endl;
 		for (int i = 0; i < current_fds_size; i++)
 		{
+			// std::cout << "- [Debug] fd: " << i << std::endl;
 			if (_fds[i].revents & POLLIN)
 			{
-				if (_isListeningSocket(_fds[i].fd))
+				if ((listener_ptr = _getListeningSocket(_fds[i].fd)))
 				{
 					// This is a listening socket
 					// Process incoming connections and add to fds array
 					_acceptConnection(_fds[i].fd);
+					break;
 				}
-				else
+				else if ((client_ptr = _getClientSocket(_fds[i].fd)))
 				{
-					// This is an accepting socket. Do recv/send loop
-					if (_readData(_fds[i].fd))
+					if (!client_ptr->process())
 					{
-						// Send HTTP Response
-						HttpRequest request(_request);
-						_request.clear();
-						_response = http.buildResponse(request);
-						_sendData(_fds[i].fd, _response.data(), _response.size());
-						std::cout << "\n------------------ Message sent -------------------\n\n";
+						// Disconnect client
+						close(client_ptr->getSocketFD());
+						_fds[i].fd = -1;
+						_compressFdsArray();
 					}
+					
+					
+					// This is an accepting socket. Do recv/send loop
+					// if (_readData(_fds[i].fd))
+					// {
+					// 	// Send HTTP Response
+					// 	HttpRequest request;
+					// 	_request.clear();
+					// 	_response = http.buildResponse(request);
+					// 	_sendData(_fds[i].fd, _response.data(), _response.size());
+					// 	std::cout << "\n------------------ Message sent -------------------\n\n";
+					// }
 					// Close Accepting Socket
-					close(_fds[i].fd);
-					_fds[i].fd = -1;
-					_compressFdsArray();
+					// close(_fds[i].fd);
+					// _fds[i].fd = -1;
+					// _compressFdsArray();
 				}
+				
 			}
 		}
 	}
@@ -92,14 +108,24 @@ int	WebServer::run(void)
 	return (0);
 }
 
-bool	WebServer::_isListeningSocket(int fd) const
+TcpListener*	WebServer::_getListeningSocket(int fd)
 {
-	for (size_t i = 0; i < _socketListSize; ++i)
+	for (size_t i = 0; i < _listeners_list.size(); ++i)
 	{
-		if (fd == _socketList[i].getSocketFD())
-			return (true);
+		if (fd == _listeners_list[i].getSocketFD())
+			return (&_listeners_list[i]);
 	}
-	return (false);
+	return (nullptr);
+}
+
+WebClient*	WebServer::_getClientSocket(int fd)
+{
+	for (size_t i = 0; i < _clients_list.size(); ++i)
+	{
+		if (fd == _clients_list[i].getSocketFD())
+			return (&_clients_list[i]);
+	}
+	return (nullptr);
 }
 
 void	WebServer::_acceptConnection(int fd)
@@ -116,9 +142,13 @@ void	WebServer::_acceptConnection(int fd)
 		}
 		return ;
 	}
+	std::cout << "[DEBUG] Accepting connection to fd " << fd << std::endl;
 	_fds[_nfds].fd = new_fd;
 	_fds[_nfds].events = POLLIN;
 	_nfds++;
+	
+	WebClient new_client(new_fd);
+	_clients_list.push_back(new_client);
 }
 
 bool	WebServer::_readData(int socket)

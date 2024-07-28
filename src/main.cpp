@@ -2,6 +2,7 @@
 # include "../includes/Config.hpp"
 # include "../includes/Socket.hpp"
 # include "../includes/WebServer.hpp"
+# include "../includes/TcpListener.hpp"
 
 using namespace std;
 
@@ -17,9 +18,9 @@ int main(int argc, char **argv)
 			Config  config(input);
 			// cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
 			// config.printConfig();
-			std::vector<Socket>	socketList;
+			std::vector<TcpListener>	socketList;
 			for (unsigned i = 0; i < config.getNServers(); i++){
-				Socket				socket(config.getServer(i).getHost(), config.getServer(i).getPort());
+				TcpListener socket(config.getServer(i).getHost(), config.getServer(i).getPort());
 				socketList.push_back(socket);
 			}
 

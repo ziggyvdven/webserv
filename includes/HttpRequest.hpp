@@ -8,29 +8,37 @@
 
 class HttpRequest
 {
+public:
+	enum State {
+		READING_REQUEST_LINE,
+		READING_HEADERS,
+		READING_BODY,
+		COMPLETE,
+		ERROR
+	};
+
+	HttpRequest();
+	std::vector<char> const	raw() const		{ return _buffer; }
+	std::string const	method() const	{ return _method; };
+	std::string const	target() const	{ return _target; };
+	std::string const	version() const	{ return _version; };
+	std::vector<char> const	body() const	{ return _body; };
+	bool				isValid() const	{ return _state == COMPLETE; };
+	std::string const	getHeader(std::string const key) const;
+	void 				reset();
+	bool				parse(char *data, int bytes_read);
+
 private:
-	std::vector<unsigned char>			_raw;
+	std::vector<char>					_buffer;
 	std::string							_method;
 	std::string							_target;
 	std::string							_version;
 	std::map<std::string, std::string>	_headers;
-	std::vector<unsigned char>			_body;
-	bool _valid;
-	std::istringstream					_http_stream;
+	std::vector<char>					_body;
+	State								_state;
 
 
-public:
-	HttpRequest(std::vector<unsigned char> const &raw_str);
-	std::vector<unsigned char> const	raw() const		{ return _raw; }
-	std::string const	method() const	{ return _method; };
-	std::string const	target() const	{ return _target; };
-	std::string const	version() const	{ return _version; };
-	std::vector<unsigned char> const	body() const	{ return _body; };
-	bool				isValid() const	{ return _valid; };
-	std::string const	getHeader(std::string const key) const;
-
-private:
-	void _parse_http_request();
+	void parse();
 	void _parse_request_line();
 	void _validate_request_line(std::string const &request_line) const;
 
@@ -39,6 +47,7 @@ private:
 	bool _valid_header(std::string const &line) const;
 
 	void _parse_body();
+	void _extract_line(std::vector<char> &read_buffer, std::vector<char> &dest);
 
 
 // Debug

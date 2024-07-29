@@ -30,11 +30,10 @@ WebClient::~WebClient() {}
 
 bool WebClient::process()
 {
-	if( read_data())
-		return true;
+	if(!read_data())
+		return false;
 	_request.parse(_read_buffer.data(), _read_buffer.size());
 	_read_buffer.clear();
-
+	return true;
 	// Finished processing
-	return false;
 }

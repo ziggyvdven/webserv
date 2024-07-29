@@ -66,7 +66,7 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 	std::string token;
 
 	size_t pos = 0;
-		
+
 	while ((pos = str.find(delim)) != std::string::npos && !delim.empty() && !str.empty())
 	{
 		token = str.substr(0, pos);
@@ -82,8 +82,9 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 	return list;
 }
 
-long int time_since(std::chrono::steady_clock::time_point start)
+int time_since(clock_t start)
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>
-		(std::chrono::steady_clock::now() - start).count();
+	std::clock_t now = std::clock();
+	double elapsed = static_cast<double>(now - start) / CLOCKS_PER_SEC;
+	return static_cast<int>(elapsed);
 }

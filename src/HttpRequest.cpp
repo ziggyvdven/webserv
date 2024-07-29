@@ -3,25 +3,29 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
-// ========== ========== Constructor ========== ========== 
+// ========== ========== Constructor ========== ==========
 HttpRequest::HttpRequest()
 	: _state(READING_REQUEST_LINE)
 {
 }
 
-// ========== ========== Validation ========== ========== 
+bool _extract_http_line()
+{
+
+}
+
+// ========== ========== Validation ========== ==========
 bool HttpRequest::parse(char *buffer, int read_bytes)
 {
+	std::
 	_buffer.insert(_buffer.end(), buffer, buffer + read_bytes);
-	std::cout << "Inserted " << read_bytes << " into request" << std::endl;
-	std::cout << "Request data: \n" << _buffer.data() << "\n" << std::endl;
 	// _parse_request_line();
 	// _parse_headers();
 	// _parse_body();
 	return false;
 }
 
-// ========== ========== Getters ========== ========== 
+// ========== ========== Getters ========== ==========
 std::string const HttpRequest::getHeader(std::string key) const
 {
 	toLowerCase(key);
@@ -126,7 +130,7 @@ void HttpRequest::_parse_body()
 	// 	return;
 	// }
 
-	
+
 
 }
 

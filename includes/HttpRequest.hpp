@@ -23,7 +23,7 @@ public:
 	std::string const	target() const	{ return _target; };
 	std::string const	version() const	{ return _version; };
 	std::vector<char> const	body() const	{ return _body; };
-	bool				isValid() const	{ return _state == COMPLETE; };
+	bool				isValid() const	{ return _state != ERROR; };
 	std::string const	getHeader(std::string const key) const;
 	void 				reset();
 	bool				parse(char *data, int bytes_read);
@@ -39,14 +39,15 @@ private:
 
 
 	void parse();
-	void _parse_request_line();
+	void _parse_request_line(char *line);
 	void _validate_request_line(std::string const &request_line) const;
 
-	void _parse_headers();
+	void _parse_headers(char *line);
 	void _add_header(std::string const key, std::string const value);
 	bool _valid_header(std::string const &line) const;
 
-	void _parse_body();
+	void _parse_body(char *line);
+	bool _expectBody() const;
 	void _extract_line(std::vector<char> &read_buffer, std::vector<char> &dest);
 
 

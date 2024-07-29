@@ -1,27 +1,74 @@
 #include "../includes/HttpRequest.hpp"
 
 #include <iostream>
+#include <ostream>
 #include <regex>
 #include <stdexcept>
+#include <string>
 // ========== ========== Constructor ========== ==========
 HttpRequest::HttpRequest()
 	: _state(READING_REQUEST_LINE)
 {
 }
 
-bool _extract_http_line()
+// ========== ========== Vector<char> manipulatoins ========== ==========
+void insert_vector_data(std::vector<char> &dest, char *src, size_t len)
 {
+	dest.insert(dest.end(), src, src + len);
+}
 
+void print_vector_data(std::vector<char> const &buffer)
+{
+	std::cout << "vector<char>: " << std::string (buffer.begin(), buffer.end()) << std::endl;
+}
+
+bool _extract_http_line(std::vector<char> &buffer, std::vector<char> &line)
+{
+	std::vector<char>::const_iterator pos;
+	std::string delimiter = "\r\n";
+
+	pos = std::search(buffer.begin(), buffer.end(), delimiter.begin(), delimiter.end());
+
+	if (pos == buffer.end())
+		return false;
+	insert_vector_data(line, buffer.data(), (pos - buffer.begin()));
+	buffer.erase(buffer.begin(), pos + delimiter.size());
+	return true;
 }
 
 // ========== ========== Validation ========== ==========
 bool HttpRequest::parse(char *buffer, int read_bytes)
 {
-	std::
+	std::vector<char> line;
 	_buffer.insert(_buffer.end(), buffer, buffer + read_bytes);
-	// _parse_request_line();
-	// _parse_headers();
-	// _parse_body();
+
+	if (_extract_http_line(_buffer,line))
+	{
+		line.push_back('\0');
+		std::cout << "\n[LINE] " << line.data() << std::endl;
+		switch (_state) {
+			case READING_REQUEST_LINE:
+				std::cout << "[DEBUG] Parsing request line ..." << std::endl;
+				_parse_request_line(line.data());
+				break;
+			case READING_HEADERS:
+				std::cout << "[DEBUG] Parsing headers ..." << std::endl;
+				_parse_headers(line.data());
+				break;
+			case READING_BODY:
+				std::cout << "[DEBUG] Parsing body ..." << std::endl;
+				_parse_body(line.data());
+				break;
+			case COMPLETE:
+				std::cout << "[UNIMPLEMENTED] Http switch case COMPLETE" << std::endl;
+				break;
+			case ERROR:
+				std::cout << "HttpRequest [ERROR], aborting." << std::endl;
+				exit(0);
+				break;
+		}
+		line.clear();
+	}
 	return false;
 }
 
@@ -43,15 +90,13 @@ void HttpRequest::_add_header(std::string key, std::string value)
 }
 
 
-void HttpRequest::_parse_request_line()
+void HttpRequest::_parse_request_line(char *start_line)
 {
-	std::vector<char> start_line;
-	_extract_line(_buffer, start_line);
-
 	try {
-		std::istringstream iss(start_line.data());
-		_validate_request_line(start_line.data());
+		std::istringstream iss(start_line);
+		_validate_request_line(start_line);
 		iss >> _method >> _target >> _version;
+		_state = READING_HEADERS;
 	}
 	catch (std::exception const &e)
 	{
@@ -64,7 +109,7 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 	std::regex re_request_line(
 		"^(GET|POST|DELETE)"
 		" \\/\\S* "
-		"HTTP\\/1.[1,3]\\r$");
+		"HTTP\\/1.[1,3]$");
 
 	if (!std::regex_match(request_line, re_request_line))
 	{
@@ -72,40 +117,59 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 	}
 }
 
-void HttpRequest::_parse_headers()
+bool HttpRequest::_expectBody() const
 {
-	// std::string header_line;
+	std::string str;
 
-	// std::getline(_http_stream, header_line);
-	// while (!header_line.empty() && header_line != "\r")
-	// {
-	// 	// Skip invalid headers
-	// 	if (!_valid_header(header_line))
-	// 	{
-	// 		std::getline(_http_stream, header_line);
-	// 		continue;
-	// 	}
+	if ((str = getHeader("content-length")).empty())
+		return false;
+	try {
+		return (std::stoi(str) > 0);
+	} catch( std::exception ) {
+		return false;
+	}
+}
 
-	// 	// Add header to map
-	// 	int const pos = header_line.find(":");
-	// 	std::string key = header_line.substr(0, pos);
-	// 	std::string value = header_line.substr(pos + 1, header_line.size());
-	// 	_add_header(key, value);
+void HttpRequest::_parse_headers(char *line)
+{
+	std::string header_line = line;
 
-	// 	std::getline(_http_stream, header_line);
-	// }
+	// End of headers
+	if (header_line.empty()){
+		_state = _expectBody() ? READING_BODY : COMPLETE;
+		return ;
+	}
+
+	// Stop on invalid headers
+	if (!_valid_header(header_line)) {
+		_state = ERROR;
+		return ;
+	}
+
+	// Add header to map
+	int const pos = header_line.find(":");
+	std::string key = header_line.substr(0, pos);
+	std::string value = header_line.substr(pos + 1, header_line.size());
+	_add_header(key, value);
+
 }
 
 
 bool HttpRequest::_valid_header(std::string const &line) const
 {
-	std::regex const re("^\\S+:[ ]?.*[ ]?\\r$");
+	std::regex const re("^\\S+:[ ]?.*[ ]?$");
 
 	return std::regex_match(line, re);
 }
 
-void HttpRequest::_parse_body()
+
+
+void HttpRequest::_parse_body(char *line)
 {
+	(void) line;
+	std::cout << "Unimplemented BODY parsing" << std::endl;
+	_state = COMPLETE;
+
 	// std::vector<unsigned char>::iterator it;
 
 	// _body = std::vector<unsigned char>();
@@ -148,6 +212,8 @@ void HttpRequest::print_request() const
 
 	std::cout << "\nHeaders: \n" << std::endl;
 	print_headers();
+
+	std::cout << std::boolalpha << "\nHas body: " << _expectBody() << std::endl;
 }
 
 void HttpRequest::print_headers() const

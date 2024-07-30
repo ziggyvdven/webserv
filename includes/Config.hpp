@@ -10,7 +10,7 @@
 # include <utility>
 # include <cstdlib>
 
-# define NUM_DIRECTIVES 13
+# define NUM_DIRECTIVES 14
 
 const string CONFIG_FOLDER = "config";
 
@@ -37,6 +37,7 @@ private:
 	void						incrementLinenumber( void );
 	int							CreateConfigServer( void );
 	void 						init_directives( void );
+	void						check_double_configs( void );
 
 	unsigned					_Linenumber;
 	unsigned					_NServers;

@@ -100,6 +100,7 @@ int	Config::CreateConfigServer( ){
 	_ConfigServers.push_back(server);
 	_ConfigServers.back().Init(block);
 	_NServers++;
+	check_double_configs();
 	return (0);
 
 }
@@ -119,6 +120,18 @@ void Config::init_directives( void ){
 	_Directives.insert("cgi_bin");
 	_Directives.insert("cgi_ext");
 	_Directives.insert("return");
+	_Directives.insert("upload_dir");
+}
+
+void Config::check_double_configs( void ){
+
+	for (unsigned i = 0; i < _NServers - 1; i++){
+		if (_ConfigServers.back().getPort() == _ConfigServers[i].getPort())
+			if (_ConfigServers.back().getHost() == _ConfigServers[i].getHost())
+				if (_ConfigServers.back().getServerName() == _ConfigServers[i].getServerName())
+					throw (runtime_error("Multiple servers in " + _Filename + " with the same settings."));
+	}
+
 }
 
 /*
@@ -184,7 +197,7 @@ ConfigServer&	Config::getServerConfig(string const & host, string const & target
 	}
 	for (vector<ConfigServer>::iterator it = _ConfigServers.begin(); it != _ConfigServers.end(); ++it)
 	{
-		if (it->getPort() == port && it->getHost() == mhost)
+		if (it->getPort() == port && (it->getHost() == mhost || it->getServerName() == mhost))
 		{
 			if (it->getRedirect().first != 0)
 				return (*it);

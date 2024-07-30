@@ -5,7 +5,7 @@
 */
 ConfigServer::ConfigServer(Config & config): _Config(config), _Port(80), _Host("127.0.0.1"),
  _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/www"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
- _Return(0, ""), _Routes(), _SetDirectives(), _Target(""){
+ _UploadDir("/uploads"), _Return(0, ""), _Routes(), _SetDirectives(), _Target(""){
 	// std::cout << G << "ConfigServer constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = true;
@@ -148,7 +148,7 @@ void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
     string	Directives[NUM_DIRECTIVES] = {
         "listen", "host", "server_name", "client_max_body_size", 
         "error_page", "autoindex", "root", "allow_methods",  
-        "index", "cgi_bin", "cgi_ext", "return", "location"
+        "index", "cgi_bin", "cgi_ext", "return", "location", "upload_dir"
     };
 	for (int i = 0; i <= NUM_DIRECTIVES; i++){
 		if (line == Directives[i])
@@ -188,6 +188,9 @@ void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
 					ParseCGIext(linepair);
 					break;
 				case 11:
+					ParseReturn(linepair);
+					break;
+				case 12:
 					ParseReturn(linepair);
 					break;
 				break;
@@ -284,9 +287,10 @@ void	ConfigServer::ParseServerName(pair<string, unsigned> & linepair){
 	regex 	servername_line("\\s*server_name\\s*[A-Za-z0-9-_.]+;\\s*");
 	string  line = linepair.first;
 
-	size_t start = line.find("server_name") + 11;
-	size_t end = line.find(";") - 2;
-	string servername = line.substr(line.find_first_not_of(" \t", start), end - start);
+	string servername = line.substr(line.find("server_name") + 12, line.find(";"));
+	servername = trim(servername);
+	servername.pop_back();
+
 	if (regex_match(line, servername_line))
 		_ServerName = servername;
 	else 
@@ -485,9 +489,25 @@ void	ConfigServer::ParseCGIext(pair<string, unsigned> & linepair){
 		throw (runtime_error("Invalid value \"" + cgi_ext + "\" in the \"cgi_ext\" directive, must be \".FOO\" in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 }
 
+void	ConfigServer::ParseUploadDir(pair<string, unsigned> & linepair){
+	//Sets the root folder if not set then the default folder will be /data
+	regex 	upload_dir_line("\\s*upload_dir\\s*/[A-Za-z0-9-_./]+\\s*;\\s*");
+	string  line = linepair.first;
+
+	string upload_dir = line.substr(line.find("upload_dir") + 10, line.find(";"));
+	upload_dir = trim(upload_dir);
+	upload_dir.pop_back();
+
+	if (regex_match(line, upload_dir_line)){
+		_UploadDir = upload_dir;
+	}
+	else
+		throw (runtime_error("Invalid value \"" + upload_dir + "\" in the \"upload_dir\" directive, must be \".FOO\" in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+}
+
 void	ConfigServer::ParseReturn(pair<string, unsigned> & linepair){
 	//Sets the root folder if not set then the default folder will be /data
-	regex 	return_line("\\s*return\\s+\\d{3}\\s+[^\\s;]+\\s*;\\s*");
+	regex 	return_line("\\s*return\\s+\\d{3}\\s*[^\\s;]*\\s*;\\s*");
 	string  line = linepair.first;
 
 	string redirect = line.substr(line.find("redirect") + 8, line.find(";"));
@@ -581,6 +601,10 @@ string	ConfigServer::getCGIbin() const{
 
 string	ConfigServer::getCGIext() const{
 	return (this->_CGIext);
+}
+
+string	ConfigServer::getUploadDir() const{
+	return (this->_UploadDir);
 }
 
 pair<short, string>	ConfigServer::getRedirect() const{

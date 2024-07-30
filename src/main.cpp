@@ -2,11 +2,13 @@
 # include "../includes/Config.hpp"
 # include "../includes/Socket.hpp"
 # include "../includes/WebServer.hpp"
+# include <csignal>
 
 using namespace std;
 
 int main(int argc, char **argv)
 {
+	signal(SIGPIPE, SIG_IGN);
 	if (argc == 2){
 		string 	input(argv[1]);
 		if (input.empty()){
@@ -18,9 +20,13 @@ int main(int argc, char **argv)
 			// cout << config.getServerConfig(80, "127.0.0.1/example") << endl;
 			// config.printConfig();
 			std::vector<Socket>	socketList;
+			vector<short> portlist;
 			for (unsigned i = 0; i < config.getNServers(); i++){
-				Socket				socket(config.getServer(i).getHost(), config.getServer(i).getPort());
-				socketList.push_back(socket);
+				if (std::find(portlist.begin(), portlist.end(), config.getServer(i).getPort()) == portlist.end()){
+					Socket				socket(config.getServer(i).getHost(), config.getServer(i).getPort());
+					socketList.push_back(socket);
+					portlist.push_back(config.getServer(i).getPort());
+				}
 			}
 
 			WebServer			webServer(socketList, config);

@@ -6,14 +6,14 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 16:36:28 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/30 18:04:31 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 #include "../includes/CgiHandler.hpp"
 
-HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(webServer), _conf(conf), _baseDir("./data")
+HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(webServer), _conf(conf), _baseDir("./data"), _content("")
 {
 	(void) _webServer;
 	
@@ -46,7 +46,13 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_reasonPhrase[200] = "OK";
 	_reasonPhrase[201] = "Created";
 	_reasonPhrase[204] = "No Content";
+	_reasonPhrase[301] = "Moved Permanently";
 	_reasonPhrase[302] = "Found";
+	_reasonPhrase[303] = "See Other";
+	_reasonPhrase[304] = "Not Modified";
+	_reasonPhrase[307] = "Temporary Redirect";
+	_reasonPhrase[308] = "Permanent Redirect";
+	_reasonPhrase[304] = "Not Modified";
 	_reasonPhrase[400] = "Bad Request";
 	_reasonPhrase[403] = "Forbidden";
 	_reasonPhrase[404] = "Not Found";
@@ -88,60 +94,76 @@ void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest 
 
 std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 {
-	ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
-	_config = &config;
+	try {
+		ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
+	
+		_config = &config;
 
-	request.print_request();
-	_setRequestParameters(config, request);
-	// std::cout << _path << std::endl;
-	// std::cout << config << std::endl;
-	if (config.getRedirect().first != 0)
-	{
-		_statusCode = config.getRedirect().first;
-		if (_statusCode >= 300 && _statusCode <= 399)
+		request.print_request();
+		_setRequestParameters(config, request);
+		// std::cout << _path << std::endl;
+		// std::cout << config << std::endl;
+		if (config.getRedirect().first != 0)
 		{
-			_headers["Location"] = config.getRedirect().second;
+			_statusCode = config.getRedirect().first;
+			if ((_statusCode >= 301 && _statusCode <= 304) || _statusCode == 307 || _statusCode == 308)
+			{
+				_headers["Location"] = config.getRedirect().second;
+				goto redirect;
+			}
+			else
+			{
+				if (config.getRedirect().second.empty()){
+					_content = _getPage(config, _statusCode);
+					goto page;
+				}
+				else{
+					_content = config.getRedirect().second;
+					goto redirect;
+				}
+			}
+		}
+		if (config.getClientMaxBodySize() && request.body().size() > config.getClientMaxBodySize())
+		{
+			_content = _getPage(config, 413);
+			_statusCode = 413;
+		}
+		else if (!config.getMethod(request.method()))
+		{
+			_content = _getPage(config, 405);
+			_statusCode = 405;
+		}
+		else if (access(_path.c_str(), F_OK) != 0)
+		{
+			_content = _getPage(config, 404);
+			_statusCode = 404;
 		}
 		else
 		{
-			_content = config.getRedirect().second;
+			if (request.method() == "GET")
+				_get(config, request);
+			else if (request.method() == "POST")
+				_post(config, request);
+			else if (request.method() == "DELETE")
+				_delete(config);
 		}
+		page:
+		while (_getContentFromFile)
+			_openFile(config);
+		redirect:
+		return (_response(config, request));
 	}
-	if (_content.size() > config.getClientMaxBodySize() && config.getClientMaxBodySize())
-	{
-		_content = _getPage(config, 413);
-		_statusCode = 413;
+	catch (exception &e){
+		cerr << "webserv: " << R << "ERROR" << END << "[" << e.what() << "]" << endl;
+		return ("");
 	}
-	else if (!config.getMethod(request.method()))
-	{
-		_content = _getPage(config, 405);
-		_statusCode = 405;
-	}
-	else if (access(_path.c_str(), F_OK) != 0)
-	{
-		_content = _getPage(config, 404);
-		_statusCode = 404;
-	}
-	else
-	{
-		if (request.method() == "GET")
-			_get(config, request);
-		else if (request.method() == "POST")
-			_post(config, request);
-		else if (request.method() == "DELETE")
-			_delete(config);
-	}
-	while (_getContentFromFile)
-		_openFile(config);
-
-	return (_response(config, request));
 }
 
 std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
 {
 	std::ostringstream	response;
 
-	response << request.version() << " " << _statusCode << " " << _reasonPhrase.at(_statusCode) << "\r\n";
+	response << request.version() << " " << _statusCode << " " << _reasonPhrase[_statusCode] << "\r\n";
 	response << "Allow: " << _setAllow(config) << "\r\n";
 	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
 	response << "Content-Length: " << _content.size() << "\r\n";

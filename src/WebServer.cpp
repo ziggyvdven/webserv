@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/27 20:11:48 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/29 20:18:41 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,32 +74,29 @@ int	WebServer::run(void)
 					_acceptConnection(_fds[i].fd);
 					break;
 				}
-				else if ((client_ptr = _getClientSocket(_fds[i].fd)))
+				
+				client_ptr = _getClientSocket(_fds[i].fd);
+			
+				if (client_ptr->process())
 				{
-					if (!client_ptr->process())
-					{
-						// Disconnect client
-						close(client_ptr->getSocketFD());
-						_fds[i].fd = -1;
-						_compressFdsArray();
-					}
-					
-					
-					// This is an accepting socket. Do recv/send loop
-					// if (_readData(_fds[i].fd))
-					// {
-					// 	// Send HTTP Response
-					// 	HttpRequest request;
-					// 	_request.clear();
-					// 	_response = http.buildResponse(request);
-					// 	_sendData(_fds[i].fd, _response.data(), _response.size());
-					// 	std::cout << "\n------------------ Message sent -------------------\n\n";
-					// }
-					// Close Accepting Socket
-					// close(_fds[i].fd);
-					// _fds[i].fd = -1;
-					// _compressFdsArray();
+					continue;
 				}
+				
+				// This is an accepting socket. Do recv/send loop
+				// if (_readData(_fds[i].fd))
+				// {
+				// 	// Send HTTP Response
+				// 	HttpRequest request;
+				// 	_request.clear();
+					_response = http.buildResponse(client_ptr->getRequest());
+					_sendData(_fds[i].fd, _response.data(), _response.size());
+				// 	std::cout << "\n------------------ Message sent -------------------\n\n";
+				// }
+				// Close Accepting Socket
+				close(_fds[i].fd);
+				_fds[i].fd = -1;
+				_compressFdsArray();
+			
 				
 			}
 		}

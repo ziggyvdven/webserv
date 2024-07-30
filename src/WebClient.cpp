@@ -16,13 +16,19 @@ bool WebClient::read_data() {
 	int bytes_read = 0;
 	char buffer[BUFFER_SIZE];
 
-
-	bytes_read = recv(_socketFD, buffer, BUFFER_SIZE, 0);
-	_read_buffer.insert(_read_buffer.end(), buffer, buffer + bytes_read);
-	if (bytes_read <= 0)
+	if (!_request.isValid() || _request.isComplete())
 	{
+		std::cout << "[DEBUG] request is invalid or complete" << std::endl;
 		return false;
 	}
+
+	bytes_read = recv(_socketFD, buffer, BUFFER_SIZE, 0);
+	if (bytes_read <= 0)
+	{
+		std::cout << "[UNIMPLEMENTED] Web Client disconnected" << std::endl;
+		return false;
+	}
+	_request.parse(buffer, bytes_read);
 	return true;
 }
 
@@ -30,10 +36,15 @@ WebClient::~WebClient() {}
 
 bool WebClient::process()
 {
-	if(!read_data())
-		return false;
-	_request.parse(_read_buffer.data(), _read_buffer.size());
-	_read_buffer.clear();
+	if(!read_data()) {
+		_request.print_request();
+	}
+
+	// Check if it's a Cgi Request
+
+	// Check if it's a get request
+
+	// Handle it accordingly
+	
 	return true;
-	// Finished processing
 }

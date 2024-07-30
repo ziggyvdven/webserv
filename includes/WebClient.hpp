@@ -11,11 +11,12 @@ public:
 	WebClient(int accepted_connection);
 	~WebClient();
 
+	HttpRequest getRequest() { return _request; };
 	void send_data();
 	bool read_data();
 	bool process();
+
 private:
-	WebClient();
 	HttpRequest _request;
-	std::vector<char> _read_buffer;
+	WebClient();
 };

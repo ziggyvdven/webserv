@@ -24,6 +24,7 @@ public:
 	std::string const	version() const	{ return _version; };
 	std::vector<char> const	body() const	{ return _body; };
 	bool				isValid() const	{ return _state != ERROR; };
+	bool				isComplete() const	{ return _state == COMPLETE; };
 	std::string const	getHeader(std::string const key) const;
 	void 				reset();
 	bool				parse(char *data, int bytes_read);

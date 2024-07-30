@@ -39,6 +39,11 @@ bool _extract_http_line(std::vector<char> &buffer, std::vector<char> &line)
 // ========== ========== Validation ========== ==========
 bool HttpRequest::parse(char *buffer, int read_bytes)
 {
+	if (!buffer)
+	{
+		_state = ERROR;
+		return false;
+	}
 	std::vector<char> line;
 	_buffer.insert(_buffer.end(), buffer, buffer + read_bytes);
 
@@ -48,15 +53,15 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 		std::cout << "\n[LINE] " << line.data() << std::endl;
 		switch (_state) {
 			case READING_REQUEST_LINE:
-				std::cout << "[DEBUG] Parsing request line ..." << std::endl;
+				// std::cout << "[DEBUG] Parsing request line ..." << std::endl;
 				_parse_request_line(line.data());
 				break;
 			case READING_HEADERS:
-				std::cout << "[DEBUG] Parsing headers ..." << std::endl;
+				// std::cout << "[DEBUG] Parsing headers ..." << std::endl;
 				_parse_headers(line.data());
 				break;
 			case READING_BODY:
-				std::cout << "[DEBUG] Parsing body ..." << std::endl;
+				// std::cout << "[DEBUG] Parsing body ..." << std::endl;
 				_parse_body(line.data());
 				break;
 			case COMPLETE:
@@ -143,6 +148,7 @@ void HttpRequest::_parse_headers(char *line)
 	// Stop on invalid headers
 	if (!_valid_header(header_line)) {
 		_state = ERROR;
+		std::cout << "[DEBUG] Invalid Header" << std::endl;
 		return ;
 	}
 
@@ -200,11 +206,11 @@ void HttpRequest::_parse_body(char *line)
 
 void HttpRequest::print_request() const
 {
-	if (!isValid())
-	{
+	if (!isValid()) {
 		std::cerr << "\nInvalid Request." << std::endl;
 		return;
 	}
+
 
 	std::cout << "method: " << _method << std::endl;
 	std::cout << "Target: " << _target << std::endl;
@@ -214,6 +220,11 @@ void HttpRequest::print_request() const
 	print_headers();
 
 	std::cout << std::boolalpha << "\nHas body: " << _expectBody() << std::endl;
+
+	if (!isComplete()) {
+		std::cerr << "\n[DEBUG] Incomplete Request." << std::endl;
+		return;
+	}
 }
 
 void HttpRequest::print_headers() const

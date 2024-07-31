@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 18:34:44 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/31 18:00:41 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ private:
 	Config &							_conf;
 	std::string const					_baseDir;
 
-	std::map<std::string const, std::string>	_env;
 	std::map<std::string const, std::string>	_headers;
 	std::map<std::string const, std::string>	_mimeTypes;
 	std::map<int, std::string>					_defaultPages;

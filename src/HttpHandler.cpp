@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 18:35:08 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/31 18:14:57 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,11 +63,6 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_headers["Date"] = "";
 	_headers["Location"] = "";
 	_headers["Server"] = "";
-	//
-	_env["CONTENT_LENGTH"] = "";
-	_env["PATH_INFO"] = "";
-	_env["QUERY_STRING"] = "";
-	_env["SCRIPT_NAME"] = "";
 }
 
 HttpHandler::~HttpHandler()

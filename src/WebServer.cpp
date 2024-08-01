@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/31 18:16:36 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/01 13:32:07 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,10 +48,10 @@ int	WebServer::run(void)
 	HttpHandler	http(*this, _config);
 	int			current_fds_size;
 
+	signal(SIGINT, _sighandler);
 	_serverOn = true;
 	while (_serverOn)
 	{
-		signal(SIGINT, _sighandler);
 		// Poll process. Checks the fds array to see if some file descriptors are ready for I/O
 		if (poll(_fds, _nfds, 0) < 0)
 		{
@@ -82,7 +82,7 @@ int	WebServer::run(void)
 						_sendData(_fds[i].fd, _response.data(), _response.size());
 						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
-					printFdsArray();
+					// printFdsArray();
 					// Close Accepting Socket
 					close(_fds[i].fd);
 					_fds[i].fd = -1;

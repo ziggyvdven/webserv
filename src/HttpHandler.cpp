@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/31 18:14:57 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/01 16:36:25 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 
 HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(webServer), _conf(conf), _baseDir("./data")
 {
-	(void) _webServer;
-	
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
 	_mimeTypes[".htm"] = "text/html";
@@ -62,7 +60,6 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_headers["Content-Type"] = "text/plain";
 	_headers["Date"] = "";
 	_headers["Location"] = "";
-	_headers["Server"] = "";
 }
 
 HttpHandler::~HttpHandler()

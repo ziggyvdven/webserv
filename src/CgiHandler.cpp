@@ -95,6 +95,7 @@ std::string	CgiHandler::execCgiScript()
 		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
 
+		_envp.push_back(_htmlRoot.data());
 		_envp.push_back(version.data());
 		_envp.push_back(method.data());
 		_envp.push_back(filename.data());

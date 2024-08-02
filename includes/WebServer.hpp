@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 15:13:12 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/07/27 18:52:59 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,11 +42,16 @@ private:
 	std::vector<unsigned char>	_request;
 	std::string					_response;
 
+	static bool					_serverOn;
+	bool						_closeConnection;
+
 	bool						_isListeningSocket(int fd) const;
 	void						_acceptConnection(int fd);
 	void						_compressFdsArray(void);
 	bool						_readData(int socket);
 	void						_sendData(int socket, const char* str, size_t len) const;
+
+	static void					_sighandler(int signum);
 
 public:
 
@@ -58,8 +63,9 @@ public:
 
 	void						cleanUpSockets(void) const;
 	int							getNFds(void) const;
-	Config&						getConfig(void);
-	
+
+	void						printFdsArray(void) const;
+
 };
 
 #endif

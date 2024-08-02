@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 18:56:37 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/10 13:47:26 by oroy             ###   ########.fr       */
+/*   Updated: 2024/07/23 20:06:27 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <iostream>
 # include <string>
 # include <netinet/in.h>
+# include <arpa/inet.h>
 # include <sys/socket.h>
 # include <fcntl.h>
 

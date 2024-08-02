@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 14:25:02 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/02 14:27:49 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,6 @@
 
 HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(webServer), _conf(conf), _baseDir("./data"), _content("")
 {
-	(void) _webServer;
-	
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
 	_mimeTypes[".htm"] = "text/html";

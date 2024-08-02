@@ -71,6 +71,7 @@ std::string	CgiHandler::execCgiScript()
 	std::vector<char const *>	argv;
 	pid_t						process_id;
 
+	std::string	const			root = "ROOT=" + _htmlRoot;
 	std::string	const			version = "HTTP_VERSION=" + _request.version();
 	std::string	const			method = "REQUEST_METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
@@ -102,6 +103,7 @@ std::string	CgiHandler::execCgiScript()
 		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
 
+		_envp.push_back(root.data());
 		_envp.push_back(version.data());
 		_envp.push_back(method.data());
 		_envp.push_back(filename.data());

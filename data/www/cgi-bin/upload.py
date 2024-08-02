@@ -34,6 +34,13 @@ def main():
 		print("<h1>Upload: No files found!</h1>")
 		exit(0)
 
+	header = os.getenv('ROOT') + '/template/header.html'
+	footer = os.getenv('ROOT') + '/template/footer.html'
+	with open(header, 'r') as f:
+		print(f.read())
+	f.close()
+	print("<h1>Upload successful!</h1>")
+	print('<div class="content_small">')
 	# Create folder if it does not exit
 	for key in form.keys():
 		field_item = form[key]
@@ -42,8 +49,10 @@ def main():
 		else:
 			print(f"Field: {key}, Value: {field_item.value}")
 		print("</br>")
-	
-	print("<h1>Upload successful!</h1>")
+	print('</div>')
+	with open(footer, 'r') as f:
+		print(f.read())
+	f.close()
 	exit (0)
 
 if __name__ == "__main__":

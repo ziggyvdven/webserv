@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   WebServer.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/31 15:19:17 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/02 14:28:09 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,12 +48,14 @@ int	WebServer::run(void)
 	HttpHandler	http(*this, _config);
 	int			current_fds_size;
 
-	while (true)
+	signal(SIGINT, _sighandler);
+	_serverOn = true;
+	while (_serverOn)
 	{
 		// Poll process. Checks the fds array to see if some file descriptors are ready for I/O
 		if (poll(_fds, _nfds, 0) < 0)
 		{
-			std::cerr << "poll() failed" << std::endl;
+			// std::cerr << "poll() failed" << std::endl;
 		}
 
 		// Loop through the fds that returned POLLIN and check if it's the listening or active socket
@@ -79,6 +81,7 @@ int	WebServer::run(void)
 						_response = http.buildResponse(request);
 						_sendData(_fds[i].fd, _response.data(), _response.size());
 					}
+					// printFdsArray();
 					// Close Accepting Socket
 					close(_fds[i].fd);
 					_fds[i].fd = -1;
@@ -133,8 +136,10 @@ bool	WebServer::_readData(int socket)
 	}
 	if (rtn == 0)
 	{
+		_closeConnection = true;
 		return (false);
 	}
+	_closeConnection = false;
 	return (true);
 }
 
@@ -163,9 +168,20 @@ void	WebServer::_compressFdsArray(void)
 			{
 				_fds[j] = _fds[j + 1];
 			}
+			memset(&_fds[_nfds - 1], 0, sizeof (struct pollfd));
 			i--;
 			_nfds--;
 		}
+	}
+	// printFdsArray();
+}
+
+void	WebServer::printFdsArray(void) const
+{
+	for (int i = 0; i < _nfds; ++i)
+	{
+		std::cout << "====== FD idx " << i << " ======" << std::endl;
+		std::cout << "FD = " << _fds[i].fd << std::endl;
 	}
 }
 
@@ -178,6 +194,10 @@ void	WebServer::cleanUpSockets(void) const
 	}
 }
 
-Config& WebServer::getConfig(void){
-	return (_config);
+void	WebServer::_sighandler(int signum)
+{
+	(void) signum;
+	_serverOn = false;
 }
+
+bool	WebServer::_serverOn = true;

@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 18:56:37 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/27 18:28:06 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/01 13:31:03 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ protected:
 public:
 	int					getSocketFD(void) const;
 	int					_errorMessage(std::string const msg) const;
+	void				close_connection();
 };
 
 #endif

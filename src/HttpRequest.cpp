@@ -7,7 +7,7 @@
 #include <string>
 // ========== ========== Constructor ========== ==========
 HttpRequest::HttpRequest()
-	: _state(READING_REQUEST_LINE)
+	: _contentLength(0), _state(READING_REQUEST_LINE)
 {
 }
 
@@ -47,6 +47,13 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 	std::vector<char> line;
 	_buffer.insert(_buffer.end(), buffer, buffer + read_bytes);
 
+	if (_state == READING_BODY)
+	{
+		// std::cout << "[DEBUG] Parsing body ..." << std::endl;
+		_parse_body();
+	}
+
+
 	if (_extract_http_line(_buffer,line))
 	{
 		line.push_back('\0');
@@ -61,15 +68,14 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 				_parse_headers(line.data());
 				break;
 			case READING_BODY:
-				// std::cout << "[DEBUG] Parsing body ..." << std::endl;
-				_parse_body(line.data());
 				break;
 			case COMPLETE:
 				std::cout << "[UNIMPLEMENTED] Http switch case COMPLETE" << std::endl;
+				return true;
 				break;
 			case ERROR:
 				std::cout << "HttpRequest [ERROR], aborting." << std::endl;
-				exit(0);
+				return true;
 				break;
 		}
 		line.clear();
@@ -122,14 +128,15 @@ void HttpRequest::_validate_request_line(std::string const &request_line) const 
 	}
 }
 
-bool HttpRequest::_expectBody() const
+bool HttpRequest::_expectBody()
 {
 	std::string str;
 
 	if ((str = getHeader("content-length")).empty())
 		return false;
 	try {
-		return (std::stoi(str) > 0);
+		_contentLength = std::stoi(str);
+		return  _contentLength > 0 && _method == "POST";
 	} catch( std::exception ) {
 		return false;
 	}
@@ -170,38 +177,20 @@ bool HttpRequest::_valid_header(std::string const &line) const
 
 
 
-void HttpRequest::_parse_body(char *line)
+void HttpRequest::_parse_body()
 {
-	(void) line;
-	std::cout << "Unimplemented BODY parsing" << std::endl;
-	_state = COMPLETE;
+	if (_contentLength <= 0) {
+		_state = ERROR;
+		return;
+	}
 
-	// std::vector<unsigned char>::iterator it;
+	_body.insert(_body.end(), _buffer.begin(), _buffer.end());
+	_buffer.clear();
 
-	// _body = std::vector<unsigned char>();
-	// if (this->getHeader("content-length").empty())
-	// 	return;
-
-	// try
-	// {
-	// 	// Fetch content lenght
-	// 	int content_length = std::atoi(this->getHeader("content-length").data());
-
-	// 	// Search for body start
-	// 	std::string delimiter = "\r\n\r\n";
-	// 	it = std::search(_buffer.begin(), _buffer.end(), delimiter.begin(), delimiter.end());
-	// 	if (it != _buffer.end())
-	// 	{
-	// 		it += delimiter.size();
-	// 		_body = std::vector<unsigned char>(it, it + content_length);
-	// 	}
-	// } catch (std::invalid_argument)
-	// {
-	// 	return;
-	// }
-
-
-
+	if (static_cast<int>(_body.size()) >= _contentLength) {
+		_state = COMPLETE;
+		return;
+	}
 }
 
 void HttpRequest::print_request() const
@@ -219,7 +208,7 @@ void HttpRequest::print_request() const
 	std::cout << "\nHeaders: \n" << std::endl;
 	print_headers();
 
-	std::cout << std::boolalpha << "\nHas body: " << _expectBody() << std::endl;
+	std::cout << std::boolalpha << "\nBody size: " << _body.size()  << std::endl;
 
 	if (!isComplete()) {
 		std::cerr << "\n[DEBUG] Incomplete Request." << std::endl;
@@ -233,18 +222,4 @@ void HttpRequest::print_headers() const
 
 	for(cit = _headers.begin(); cit != _headers.end(); ++cit)
 		std::cout << cit->first << ": " << cit->second << std::endl;
-}
-
-void HttpRequest::_extract_line(std::vector<char> &read_buffer, std::vector<char> &dest)
-{
-	std::vector<char>::iterator it;
-	std::string delimiter = "\r\n";
-	it = std::search(read_buffer.begin(), read_buffer.end(), delimiter.begin(), delimiter.end());
-	(void) read_buffer;
-	(void) dest;
-	// if (it != _buffer.end())
-	// {
-	// 	it += delimiter.size();
-	// 	_body = std::vector<unsigned char>(it, it + content_length);
-	// }
 }

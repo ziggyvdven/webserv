@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/27 18:42:19 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/01 13:35:46 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ private:
 	
 	TcpListener*				_getListeningSocket(int fd);
 	WebClient*					_getClientSocket(int fd);
+	void						_removeClient(WebClient *client_ptr);
 	void						_acceptConnection(int fd);
 	void						_compressFdsArray(void);
 	bool						_readData(int socket);

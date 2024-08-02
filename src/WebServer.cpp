@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/29 20:18:41 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/01 14:29:17 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ int	WebServer::run(void)
 		// std::cout << "_nfds: " << _nfds << std::endl;
 		for (int i = 0; i < current_fds_size; i++)
 		{
-			// std::cout << "- [Debug] fd: " << i << std::endl;
 			if (_fds[i].revents & POLLIN)
 			{
 				if ((listener_ptr = _getListeningSocket(_fds[i].fd)))
@@ -81,21 +80,23 @@ int	WebServer::run(void)
 				{
 					continue;
 				}
-				
+
 				// This is an accepting socket. Do recv/send loop
 				// if (_readData(_fds[i].fd))
 				// {
 				// 	// Send HTTP Response
 				// 	HttpRequest request;
 				// 	_request.clear();
-					_response = http.buildResponse(client_ptr->getRequest());
-					_sendData(_fds[i].fd, _response.data(), _response.size());
+				_response = http.buildResponse(client_ptr->getRequest());
+				_sendData(_fds[i].fd, _response.data(), _response.size());
 				// 	std::cout << "\n------------------ Message sent -------------------\n\n";
 				// }
 				// Close Accepting Socket
+				_removeClient(client_ptr);
 				close(_fds[i].fd);
 				_fds[i].fd = -1;
 				_compressFdsArray();
+				break;
 			
 				
 			}
@@ -115,15 +116,6 @@ TcpListener*	WebServer::_getListeningSocket(int fd)
 	return (nullptr);
 }
 
-WebClient*	WebServer::_getClientSocket(int fd)
-{
-	for (size_t i = 0; i < _clients_list.size(); ++i)
-	{
-		if (fd == _clients_list[i].getSocketFD())
-			return (&_clients_list[i]);
-	}
-	return (nullptr);
-}
 
 void	WebServer::_acceptConnection(int fd)
 {
@@ -139,7 +131,7 @@ void	WebServer::_acceptConnection(int fd)
 		}
 		return ;
 	}
-	std::cout << "[DEBUG] Accepting connection to fd " << fd << std::endl;
+	// std::cout << "[DEBUG] Accepting connection to fd " << fd << std::endl;
 	_fds[_nfds].fd = new_fd;
 	_fds[_nfds].events = POLLIN;
 	_nfds++;
@@ -208,4 +200,26 @@ void	WebServer::cleanUpSockets(void) const
 
 Config& WebServer::getConfig(void){
 	return (_config);
+}
+
+void	WebServer::_removeClient(WebClient *client_ptr) {
+	if (!client_ptr) {
+		std::cerr << "[DEBUG] Unexpected error, client_ptr is null";
+	}
+	
+	// close(client_ptr->getSocketFD());
+	// std::vector<WebClient>::iterator pos;
+	// pos = std::find(_clients_list.begin(), _clients_list.end(), *client_ptr);
+	// if (pos != _clients_list.end())
+	// 	_clients_list.erase(pos);
+}
+
+WebClient*	WebServer::_getClientSocket(int fd)
+{
+	for (size_t i = 0; i < _clients_list.size(); ++i)
+	{
+		if (fd == _clients_list[i].getSocketFD())
+			return (&_clients_list[i]);
+	}
+	return (nullptr);
 }

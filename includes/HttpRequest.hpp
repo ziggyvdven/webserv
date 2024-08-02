@@ -36,6 +36,7 @@ private:
 	std::string							_version;
 	std::map<std::string, std::string>	_headers;
 	std::vector<char>					_body;
+	int									_contentLength;
 	State								_state;
 
 
@@ -47,8 +48,8 @@ private:
 	void _add_header(std::string const key, std::string const value);
 	bool _valid_header(std::string const &line) const;
 
-	void _parse_body(char *line);
-	bool _expectBody() const;
+	void _parse_body();
+	bool _expectBody();
 	void _extract_line(std::vector<char> &read_buffer, std::vector<char> &dest);
 
 

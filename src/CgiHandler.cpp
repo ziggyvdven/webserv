@@ -17,6 +17,11 @@ CgiHandler::CgiHandler(HttpRequest const &request)
 {
 	if (!request.isValid())
 		throw std::exception();
+	_init();
+}
+
+void CgiHandler::_init() {
+	
 }
 
 bool CgiHandler::isCgiRequest() const

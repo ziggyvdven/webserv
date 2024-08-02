@@ -3,20 +3,34 @@
 #include <vector>
 #include "Socket.hpp"
 #include "HttpRequest.hpp"
+#include "../includes/CgiHandler.hpp"
 
 #define BUFFER_SIZE 3
 
 class WebClient: public Socket {
+	enum State {
+		PARSING_REQUEST,
+		EXECUTING_CGI,
+		COMPLETE,
+		ERROR
+	};
+
 public:
 	WebClient(int accepted_connection);
 	~WebClient();
 
 	HttpRequest getRequest() { return _request; };
 	void send_data();
-	bool read_data();
 	bool process();
+	void close();
 
 private:
-	HttpRequest _request;
+	State		_state;
+	HttpRequest	_request;
+	CgiHandler	*_cgi;
+
+	void _processInput();
+	void _processCGI();
+
 	WebClient();
 };

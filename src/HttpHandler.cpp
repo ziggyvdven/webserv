@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 12:43:02 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/02 14:25:02 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,9 +160,9 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 void	HttpHandler::_server_msg(){
 		
 		if (_autoIndex)
-			_conf.printMsg(B, "Server[%s]: sending resonse  [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
+			_conf.printMsg(B, "Server[%s]: sending response  [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
 		else if (_statusCode == 200)
-			_conf.printMsg(B, "Server[%s]: sending resonse  [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+			_conf.printMsg(B, "Server[%s]: sending response  [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
 		else if (_config->getErrorPage(_statusCode) != "")
 			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
 		else

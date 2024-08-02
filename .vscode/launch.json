@@ -5,7 +5,7 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "lldb",
       "request": "launch",
-      "args": ["config/webserv.conf"],
+      "args": ["config/errors/error0.conf"],
       "cwd": "/Users/zvan-de-/42/webserv/",
       "program": "/Users/zvan-de-/42/webserv/webserv"
     }

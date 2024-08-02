@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/30 18:04:31 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/02 12:43:02 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,11 +69,8 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_headers["Date"] = "";
 	_headers["Location"] = "";
 	_headers["Server"] = "";
-	//
-	_env["CONTENT_LENGTH"] = "";
-	_env["PATH_INFO"] = "";
-	_env["QUERY_STRING"] = "";
-	_env["SCRIPT_NAME"] = "";
+	
+	_contentType = "text/html";
 }
 
 HttpHandler::~HttpHandler()
@@ -95,14 +92,12 @@ void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest 
 std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 {
 	try {
-		ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
-	
+		ConfigServer config = _conf.getServerConfig(request.getHeader("host"), request.target());
 		_config = &config;
-
-		request.print_request();
+		
+		// cout << config << endl;
+		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", config.getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
 		_setRequestParameters(config, request);
-		// std::cout << _path << std::endl;
-		// std::cout << config << std::endl;
 		if (config.getRedirect().first != 0)
 		{
 			_statusCode = config.getRedirect().first;
@@ -140,6 +135,7 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 		}
 		else
 		{
+			_contentType = _getContentType();
 			if (request.method() == "GET")
 				_get(config, request);
 			else if (request.method() == "POST")
@@ -151,12 +147,27 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 		while (_getContentFromFile)
 			_openFile(config);
 		redirect:
+		_server_msg();
 		return (_response(config, request));
 	}
 	catch (exception &e){
 		cerr << "webserv: " << R << "ERROR" << END << "[" << e.what() << "]" << endl;
 		return ("");
 	}
+}
+
+
+void	HttpHandler::_server_msg(){
+		
+		if (_autoIndex)
+			_conf.printMsg(B, "Server[%s]: sending resonse  [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
+		else if (_statusCode == 200)
+			_conf.printMsg(B, "Server[%s]: sending resonse  [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+		else if (_config->getErrorPage(_statusCode) != "")
+			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+		else
+			_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
+		
 }
 
 std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
@@ -167,7 +178,7 @@ std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest
 	response << "Allow: " << _setAllow(config) << "\r\n";
 	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
 	response << "Content-Length: " << _content.size() << "\r\n";
-	response << "Content-Type: " << _getContentType() << "\r\n";
+	response << "Content-Type: " << _contentType << "\r\n";
 	response << "Location: " << _getHeaderFieldValue(request, "Location") << "\r\n";
 	response << "\r\n";
 	response << _content;
@@ -198,8 +209,6 @@ std::string	HttpHandler::_getPage(ConfigServer const &config, short const & erro
 	std::string	file = config.getErrorPage(errorCode);
 	std::string path = _baseDir + config.getRoot() + "/" + file;
 
-	cout << "PATH: " << path << endl;
-	
 	if (file.empty() || access(path.c_str(), F_OK) != 0)
 	{
 		_getContentFromFile = false;
@@ -276,7 +285,6 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	}
 	else
 		path = temp;
-	cout << path << endl;
 	return path;
 }
 
@@ -297,7 +305,7 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 {
 	try
 	{
-		CgiHandler cgi_handler(request);
+		CgiHandler cgi_handler(request, _config);
 		
 		if (opendir(_path.c_str()) != NULL)
 		{
@@ -326,7 +334,7 @@ void	HttpHandler::_post(ConfigServer const &config, HttpRequest const &request)
 {
 	try
 	{
-		CgiHandler cgi_handler(request);
+		CgiHandler cgi_handler(request, _config);
 
 		if (_pathIsDirectory(_path, config))
 		{
@@ -454,7 +462,6 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
     <p>\n";
 	
 	dp = readdir (dir);
-	// cout << path << endl;
 	while((dp = readdir (dir)) != NULL){
 		// cout << dp->d_name << endl;
 		content += "\t\t<p><a href=\"http://" + config.getHost() + ":" + to_string(config.getPort()) + target;

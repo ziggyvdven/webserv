@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include "ConfigServer.hpp"
 
 
 class CgiHandler
@@ -18,11 +19,13 @@ private:
 	std::string			_pathInfo;
 	std::string			_queryString;
 	std::string			_cgiResponse;
+	ConfigServer*		_ConfigServer;
+	
 	std::vector<char const *>	_envp;
 
 
 public:
-	CgiHandler(HttpRequest const &request);
+	CgiHandler(HttpRequest const &request, ConfigServer* config);
 
 	bool	isCgiRequest() const; 
 	bool	isCgiScript(std::string const &target);

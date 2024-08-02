@@ -419,30 +419,36 @@ void	ConfigServer::ParseRoot(pair<string, unsigned> & linepair){
 }
 
 void	ConfigServer::ParseMethods(pair<string, unsigned> & linepair){
-	//Sets the root folder if not set then the default folder will be /data
-	regex 	methods_line("\\s*allow_methods\\s*(GET|POST|DELETE)(?:\\s+(GET|POST|DELETE))*\\s*;\\s*");
+	//Sets the allowed methods root folder if not set then the default folder will be /data
+	// regex 	methods_line("\\s*allow_methods\\s*(GET|POST|DELETE|0)(?:\\s+(GET|POST|DELETE|0))*\\s*;\\s*");
 	string  line = linepair.first;
 	string methods = line.substr(line.find("allow_methods") + 13, line.find(";"));
 	
-
 	methods = trim(methods);
 	methods.pop_back();
-	if (regex_match(line, methods_line)){
-		for (int i = 0; i < 3; i++)
-			_Methods[i] = false;
-		if (methods.find("GET") != string::npos)
-			_Methods[0] = true;
-		if (methods.find("POST") != string::npos)
-			_Methods[1] = true;
-		if (methods.find("DELETE") != string::npos)
-			_Methods[2] = true;
-	}
-	else
+	if (methods.empty())
 		throw (runtime_error("Invalid value \"" + methods + "\" in the \"allow_methods\" directive, it must be GET|POST|DELETE, in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+	for (int i = 0; i < 3; i++)
+		_Methods[i] = false;
+	istringstream iss(methods);
+	string line2;
+	while (iss >> line2)
+	{
+		if (line2 == "GET")
+			_Methods[0] = true;
+		else if (line2 == "POST")
+			_Methods[1] = true;
+		else if (line2 == "DELETE")
+			_Methods[2] = true;
+		else if (line2 == "0")
+			continue;
+		else
+			throw (runtime_error("Invalid value \"" + line2 + "\" in the \"allow_methods\" directive, it must be GET|POST|DELETE, in " + _Config.getFilename() + ":" + to_string(linepair.second)));
+	}
 }
 
 void	ConfigServer::ParseIndex(pair<string, unsigned> & linepair){
-	//Sets the root folder if not set then the default folder will be /data
+	//Sets the default file to answer if the request is a directory. By default it is set to index.html
 	regex 	index_line("\\s*index\\s*[A-Za-z0-9-_.]+\\s*;\\s*");
 	string  line = linepair.first;
 
@@ -517,6 +523,8 @@ void	ConfigServer::ParseReturn(pair<string, unsigned> & linepair){
 		istringstream iss(redirect);
 		iss >> _Return.first;
 		iss >> _Return.second;
+		if (_Return.first < 0 || _Return.first > 999)
+			throw (runtime_error("Invalid value \"" + to_string(_Return.first) + "\" in the \"return\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
 	}
 	else
 		throw (runtime_error("Invalid value \"" + redirect + "\" in the \"return\" directive in " + _Config.getFilename() + ":" + to_string(linepair.second)));
@@ -564,7 +572,6 @@ string	ConfigServer::getErrorPage(short const & errorcode) const{
 		return errorpage;
 	}
 	catch (const std::out_of_range& e) {
-        std::cerr << "Exception: " << e.what() << std::endl;
     }
 	return ("");
 }

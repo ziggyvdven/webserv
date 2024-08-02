@@ -31,7 +31,9 @@ public:
 	vector<ConfigServer>&		getConfigServers( void );
 	ConfigServer&				getServer(size_t index);
 	ConfigServer&				getServerConfig(string const & host, string const & target);
-	void						printConfig();
+	void						printConfig( void );
+	void   						printMsg(const char *color, const char* msg, ...);
+	std::string 				getCurrTime( void );
 
 private:
 	void						incrementLinenumber( void );

@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 Config::Config(string const & input) :_Linenumber(0), _NServers(0){
-	regex 			config_filename(CONFIG_FOLDER + "\\/[a-zA-Z_0-9]+\\.conf");
+	regex 			config_filename(CONFIG_FOLDER + "\\/([a-zA-Z_0-9]+\\/)*[a-zA-Z_0-9]+\\.conf");
 	regex			server_reg("^server\\s*\\{");
 	string			line;
 	string 			whitespace = " \t";
@@ -18,6 +18,8 @@ Config::Config(string const & input) :_Linenumber(0), _NServers(0){
 	_ConfigFile.open(input);
 	if (!_ConfigFile.good())
 		throw(runtime_error("unable to open: " + input));
+	if (_ConfigFile.peek() == std::ifstream::traits_type::eof())
+		throw(runtime_error("Configuration file : " + input + ", is empty"));
 	// look for "server {""
 	while (getline(_ConfigFile, line)){
 		_Linenumber++;
@@ -26,10 +28,17 @@ Config::Config(string const & input) :_Linenumber(0), _NServers(0){
 		else if (!line.empty() && line[line.find_first_not_of(whitespace)] != '#' && line.find_first_not_of(whitespace) != string::npos)
 			throw (runtime_error("unknown directive \"" + line + "\" in " + _Filename + ":" + to_string(_Linenumber)));
 	}
+	if (_ConfigServers.empty())
+		throw (runtime_error("No directives found in " + _Filename));
 }
 
 Config::Config( const Config & src ){
 	// std::cout << G << "Config Copy constructor called" << END << std::endl;
+	_Linenumber = src._Linenumber;
+	_NServers = src._NServers;
+	_Filename = src._Filename ; 
+	_Directives = src._Directives;
+	_ConfigServers =  src._ConfigServers;
 	*this = src;
 }
 
@@ -46,6 +55,7 @@ Config::~Config(){
 			delete it->second;
 		}
 	}
+	_ConfigFile.close();
 }
 
 /*
@@ -57,7 +67,11 @@ Config & Config::operator=( Config const & rhs )
 	// std::cout << "Config Copy assignment operator called" << std::endl;
 	if ( this != &rhs )
 	{
-
+			_Linenumber = rhs._Linenumber;
+			_NServers = rhs._NServers;
+			_Filename = rhs._Filename ; 
+			_Directives = rhs._Directives;
+			_ConfigServers =  rhs._ConfigServers;
 	}
 	return *this;
 }
@@ -132,6 +146,30 @@ void Config::check_double_configs( void ){
 					throw (runtime_error("Multiple servers in " + _Filename + " with the same settings."));
 	}
 
+}
+
+void    Config::printMsg(const char *color, const char* msg, ...)
+{
+    char        output[8192];
+    va_list     args;
+    int         n;
+
+	va_start(args, msg);
+	n = vsnprintf(output, 8192, msg, args);
+	std::string date = getCurrTime();
+	std::cout << color << getCurrTime() << output << END << std::endl;   
+	va_end(args);
+}
+
+std::string Config::getCurrTime()
+{
+    tzset();
+    char date[1000];
+    time_t now = time(0);
+    struct tm tm = *gmtime(&now);
+    tm.tm_hour = tm.tm_hour - 4;
+    strftime(date, sizeof(date), "[%Y-%m-%d  %H:%M:%S]   ", &tm);
+    return (std::string(date));
 }
 
 /*
@@ -210,7 +248,7 @@ ConfigServer&	Config::getServerConfig(string const & host, string const & target
 			}
 			if (ptr)
 				return (*ptr);
-			cout << "[getServerConfig]: target: \"" << target << "\" not found returning default settings for server." << endl;
+			// cout << "[getServerConfig]: target: \"" << target << "\" not found returning default settings for server." << endl;
 			return (*it);
 		}
 	}

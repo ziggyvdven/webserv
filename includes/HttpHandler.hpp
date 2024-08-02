@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 16:37:52 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/01 15:13:04 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,6 @@ private:
 	Config &							_conf;
 	std::string const					_baseDir;
 
-	std::map<std::string const, std::string>	_env;
 	std::map<std::string const, std::string>	_headers;
 	std::map<std::string const, std::string>	_mimeTypes;
 	std::map<int, std::string>					_defaultPages;
@@ -60,6 +59,7 @@ private:
 	std::string							_queryString;
 	std::string							_pathInfo;
 	std::string							_scriptName;
+	std::string							_contentType;
 
 	std::map<std::string, std::string>	_fields;
 	std::string							_body;
@@ -70,7 +70,8 @@ private:
 	std::string							_getPage(ConfigServer const &config, short const & errorCode);
 	std::string							_setDefaultContent(short const & errorCode);
 	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
-	void								_openFile(ConfigServer const &config);	
+	void								_openFile(ConfigServer const &config);
+	void								_server_msg( void );
 
 	void								_get(ConfigServer const &config, HttpRequest const &request);
 	void								_post(ConfigServer const &config, HttpRequest const &request);
@@ -93,6 +94,8 @@ public:
 	HttpHandler(WebServer const &webServer, Config &conf);
 	~HttpHandler();
 
+	std::string	const					getPath( void ) const { return _path; };
+	ConfigServer*						getConfigServer( void ) { return _config; };
 	std::string const					buildResponse(HttpRequest const &request);
 };
 

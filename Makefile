@@ -6,7 +6,7 @@
 #    By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/07/24 16:37:09 by zvan-de-         ###   ########.fr        #
+#    Updated: 2024/08/02 14:13:34 by zvan-de-         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -101,7 +101,12 @@ $(OBJS_PATH):
 	@mkdir -p $(OBJS_PATH)
 
 run: all
-	@./$(NAME) config/webserv.conf
+	@./$(NAME) config/default.conf
+
+errors: all
+	@for i in {0..13}; do \
+		./$(NAME) config/errors/error$$i.conf; \
+	done
 
 clean:
 	@rm -rf $(OBJS) $(OBJS_PATH) $(TEST_EXEC).dSYM/

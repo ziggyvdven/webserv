@@ -5,7 +5,7 @@
 */
 ConfigServer::ConfigServer(Config & config): _Config(config), _Port(80), _Host("127.0.0.1"),
  _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/www"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
- _UploadDir("/uploads"), _Return(0, ""), _Routes(), _SetDirectives(), _Target(""){
+ _Return(0, ""), _Routes(), _SetDirectives(), _Target(""), _UploadDir("/uploads"){
 	// std::cout << G << "ConfigServer constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = true;
@@ -60,7 +60,7 @@ vector<pair<string, unsigned> >::iterator	ConfigServer::CreateLocationBlocks(vec
 
 ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
 _ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex), _Root(src._Root),
-_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return), _Routes(src._Routes), _Target(src._Target){
+_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return), _Routes(src._Routes), _Target(src._Target), _UploadDir(src._UploadDir){
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)
 		_Methods[i] = src._Methods[i];
@@ -100,6 +100,7 @@ ConfigServer &	ConfigServer::operator=( ConfigServer const & rhs )
 		_Return = rhs._Return;
 		_Routes = rhs._Routes;
 		_Target = rhs._Target;
+		_UploadDir = rhs._UploadDir;
 	}
 	return *this;
 }
@@ -134,6 +135,7 @@ std::ostream &			operator<<( std::ostream & o, ConfigServer const & i )
 	o << endl;
 	o << "   CGI_BIN| " << i.getCGIbin() << endl;
 	o << "   CGI_EXT| " << i.getCGIext() << endl;
+	o << "UPLOAD_DIR| " << i.getUploadDir() << endl;
 	o << "  REDIRECT| " << i.getRedirect().first << " " << i.getRedirect().second << endl;
 	o << "    TARGET| " << i.getTarget() << endl;
 
@@ -193,6 +195,8 @@ void	ConfigServer::Parseline(pair<string, unsigned> &linepair, string& line){
 				case 12:
 					ParseReturn(linepair);
 					break;
+				case 13:
+					ParseUploadDir(linepair);
 				break;
 			}
 			return ;
@@ -516,7 +520,7 @@ void	ConfigServer::ParseReturn(pair<string, unsigned> & linepair){
 	regex 	return_line("\\s*return\\s+\\d{3}\\s*[^\\s;]*\\s*;\\s*");
 	string  line = linepair.first;
 
-	string redirect = line.substr(line.find("redirect") + 8, line.find(";"));
+	string redirect = line.substr(line.find("return") + 6, line.find(";"));
 	redirect = trim(redirect);
 	redirect.pop_back();
 	if (regex_match(line, return_line)){

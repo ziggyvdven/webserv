@@ -65,12 +65,12 @@ private:
 	string								_Index;
 	string								_CGIbin;
 	string								_CGIext;
-	string								_UploadDir;
 	pair<short, string>					_Return;
 	map<string, ConfigServer*>			_Routes;
 	vector<vector<pair<string, unsigned> > > _Location_blocks;
 	vector<string>						_SetDirectives;
 	string								_Target;
+	string								_UploadDir;
 
 	bool				ValidatePort(string& line, string N) const;
 	string 				trim(const std::string& str);

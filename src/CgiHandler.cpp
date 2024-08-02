@@ -76,6 +76,7 @@ std::string	CgiHandler::execCgiScript()
 	std::string	const			method = "REQUEST_METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
 	std::string const			content_type = "CONTENT_TYPE=" + _request.getHeader("content-type");
+	std::string const			upload_folder = "UPLOAD_DIR=" + _htmlRoot + _ConfigServer->getUploadDir(); 
 
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
@@ -109,6 +110,7 @@ std::string	CgiHandler::execCgiScript()
 		_envp.push_back(filename.data());
 		_envp.push_back(content_length.str().data());
 		_envp.push_back(content_type.data());
+		_envp.push_back(upload_folder.data());
 		_envp.push_back(NULL);
 
 		execve (_scriptPath.data(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));

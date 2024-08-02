@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 16:12:36 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/02 18:38:41 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,11 +80,13 @@ HttpHandler::~HttpHandler()
 
 void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest const &request)
 {
+	_contentType = "text/html";
 	_autoIndex = false;
 	_getContentFromFile = false;
 	_htmlFile = _parseTarget(request.target());
 	_path = _createPath(config);
 	_statusCode = 200;
+	_autoIndex = false;
 }
 
 std::string const	HttpHandler::buildResponse(HttpRequest const &request)
@@ -93,8 +95,6 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 		ConfigServer config = _conf.getServerConfig(request.getHeader("host"), request.target());
 		_config = &config;
 		
-		// cout << config << endl;
-		_autoIndex = false;
 		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", config.getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
 		_setRequestParameters(config, request);
 		if (config.getRedirect().first != 0)
@@ -216,7 +216,7 @@ std::string	HttpHandler::_getPage(ConfigServer const &config, short const & erro
 	std::string	file = config.getErrorPage(errorCode);
 	std::string path = _baseDir + config.getRoot() + "/" + file;
 
-	if (file.empty() || access(path.c_str(), F_OK) != 0)
+	if (file.empty() || access(path.c_str(), F_OK) != 0 || config.getRedirect().first != 0)
 	{
 		_getContentFromFile = false;
 		// return (_defaultPages[errorCode]);

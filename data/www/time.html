@@ -10,14 +10,21 @@
 		<nav id="menu">
 			<ul>
 				<li><a href="index.html">Home</a></li>
-				<li><a href="upload.html">Upload</a></li>
+				<li><a href="#">CGI</a>
+					<ul>
+						<li><a href="upload.html">Upload</a></li>
+						<li><a href="time.html">Time</a></li>
+					</ul>
+				</li>
 				<li><a href="about.html">About</a></li>
 			</ul>
 		</nav>
 		<h1>Get Time</h1>
-		<form action="/cgi-bin/time.py" method="get">
-			<button type="submit">Get Current Time</button>
-		</form>
+		<div class="content_small">
+			<form action="/cgi-bin/time.py" method="get">
+				<button type="submit">Get Current Time</button>
+			</form>
+		</div>
 		<footer>
 			<p>
 				<img src="images/triforce.png" width="16" height="13">

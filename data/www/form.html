@@ -10,11 +10,13 @@
 <body>
 	<div id="main-container">
 		<h1>Post Request</h1>
-		<form action="/cgi-bin/echo.py" method="post" enctype="multipart/form-data">
-			<input type="file" name="filename"><br>
-			<br>
-			<button type="submit">Upload</button>
-		</form>
+		<div class="content">
+			<form action="/cgi-bin/echo.py" method="post" enctype="multipart/form-data">
+				<input type="file" name="filename"><br>
+				<br>
+				<button type="submit">Upload</button>
+			</form>
+		</div>
 	</div>
 </body>
 </html>

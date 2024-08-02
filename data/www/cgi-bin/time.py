@@ -5,12 +5,17 @@ import time
 
 def response(current_time):
 
-	with open('./template/header.html', 'r') as f:
+	header = os.getenv('ROOT') + '/template/header.html'
+	footer = os.getenv('ROOT') + '/template/footer.html'
+
+	with open(header, 'r') as f:
 		print(f.read())
 	f.close()
-	print("<h1>Current Time:</h1>")
+	print('<h1>Current Time</h1>')
+	print('<div class="content_small">')
 	print(current_time)
-	with open('./template/footer.html', 'r') as f:
+	print('</div>')
+	with open(footer, 'r') as f:
 		print(f.read())
 	f.close()
 
@@ -18,7 +23,7 @@ def response(current_time):
 def main():
 
 	t = time.localtime()
-	current_time = time.strftime("%H:%M:%S", t)
+	current_time = time.strftime('%H:%M:%S', t)
 	response(current_time)
 	exit (0)
 

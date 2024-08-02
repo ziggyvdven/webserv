@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 14:27:09 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/02 16:04:34 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,7 @@ private:
 	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
 	void								_openFile(ConfigServer const &config);
 	void								_server_msg( void );
+	bool								_isDirectory(const char *path);
 
 	void								_get(ConfigServer const &config, HttpRequest const &request);
 	void								_post(ConfigServer const &config, HttpRequest const &request);

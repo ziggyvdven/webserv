@@ -54,9 +54,9 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 			{
 				_queryString += target.substr(it + 1);
 			}
-			std::cout << _scriptName << std::endl;
-			std::cout << _pathInfo << std::endl;
-			std::cout << _queryString << std::endl;
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _scriptName.c_str());
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _pathInfo.c_str());
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _queryString.c_str());
 			_envp.push_back(_scriptName.data());
 			_envp.push_back(_pathInfo.data());
 			_envp.push_back(_queryString.data());
@@ -140,11 +140,11 @@ std::string	CgiHandler::execCgiScript()
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
 	{
 		// DEBUG
-		std::cout << "[CGI] Process exited with error code" << std::endl;
-		std::cout << std::boolalpha << "Exited: " << WIFEXITED(wstatus)\
+		_ConfigServer->getConfig().printMsg(B, "Server[%s]: [CGI] Process exited with error code", _ConfigServer->getServerName().c_str());
+		std::cout << std::boolalpha << B << "Exited: " << WIFEXITED(wstatus)\
 			<< "\nExit status: " << WEXITSTATUS(wstatus)\
 			<< "\nSignaled: " << WIFSIGNALED(wstatus)\
-			<< std::endl;
+			<< END << std::endl;
 
 		_cgiResponse = "<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
 	}
@@ -168,20 +168,20 @@ bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
 	std::chrono::steady_clock::time_point begin;
 	begin = std::chrono::steady_clock::now();
 
-	std::cout << "[Timing for ]" << timeout_sec<< std::endl;
+	_ConfigServer->getConfig().printMsg(B, "Server[%s]: [Timing for ] %d", _ConfigServer->getServerName().c_str(), timeout_sec);
 	while (true)
 	{
 		waitpid(process_id, &wstatus, WNOHANG);
 		if (WIFEXITED(wstatus))
 		{
-			std::cout << "Child process finished" << std::endl;
-			std::cout << "Elapsed time: " << time_since(begin) <<std::endl;
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Child process finished", _ConfigServer->getServerName().c_str());
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Elapsed time: %d", _ConfigServer->getServerName().c_str(), time_since(begin));
 			return false;
 		}
 
 		if (time_since(begin) > timeout_sec * 1000)
 		{
-			std::cout << "[TIMEOUT]" << std::endl;
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Cgi-handler [TIMEOUT]", _ConfigServer->getServerName().c_str());
 			return true;
 		}
 		usleep(50000);

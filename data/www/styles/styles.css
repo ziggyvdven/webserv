@@ -40,7 +40,7 @@ body {
 	list-style-type: none;
 	background-color: #222;
 	color: beige;
-	padding: 30px;
+	padding: 0;
 	margin: 0;
 	font-weight:bold;
 }
@@ -48,13 +48,15 @@ body {
 #menu li {
 	display: inline-block;
 	position: relative;
+	width: 120px;
+	height: 60px;
+	line-height: 60px;
 }
 
 #menu li ul {
 	display: none;
 	position: absolute;
 	padding: 0;
-	top: 50px;
 }
 
 #menu li ul a {
@@ -62,7 +64,9 @@ body {
 }
 
 #menu a {
-	padding: 30px;
+	width: 120px;
+	height: 60px;
+	display: inline-block;
 	text-decoration: none;
 	color: beige;
 	font-family:Georgia, 'Times New Roman', Times, serif

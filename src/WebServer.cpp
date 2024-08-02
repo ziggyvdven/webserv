@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/24 16:38:15 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/07/31 15:19:17 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,6 @@ int	WebServer::run(void)
 						_request.clear();
 						_response = http.buildResponse(request);
 						_sendData(_fds[i].fd, _response.data(), _response.size());
-						std::cout << "\n------------------ Message sent -------------------\n\n";
 					}
 					// Close Accepting Socket
 					close(_fds[i].fd);

@@ -11,8 +11,8 @@
 
 #define TIMEOUT 12
 
-CgiHandler::CgiHandler(HttpRequest const &request)
-	: _request(request), _htmlRoot("./data/www")
+CgiHandler::CgiHandler(HttpRequest const &request, ConfigServer* config)
+	: _request(request), _htmlRoot("./data/www"), _ConfigServer(config)
 {
 	if (!request.isValid())
 		throw std::exception();
@@ -25,12 +25,15 @@ bool CgiHandler::isCgiRequest() const
 
 bool	CgiHandler::isCgiScript(std::string const &target)
 {
-	std::string const	cgi_bin = "/cgi-bin/";
+	std::string 	cgi_bin = _ConfigServer->getCGIbin();
+	if (cgi_bin.back() != '/')
+		cgi_bin += "/";
 	size_t				it = target.find(cgi_bin);
 	
 	_scriptName = "SCRIPT_NAME=";
 	_pathInfo = "PATH_INFO=";
 	_queryString = "QUERY_STRING=";
+
 
 	if (it == 0)
 	{
@@ -119,7 +122,7 @@ std::string	CgiHandler::execCgiScript()
 	unsigned long chunk_size = 500000;
 	for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
 	{
-		chunk_size = min(chunk_size, _request.body().size() - i);
+		chunk_size = ::min(chunk_size, _request.body().size() - i);
 		write(parent_to_child[1], _request.body().data() + i, chunk_size);
 	}
 

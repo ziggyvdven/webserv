@@ -10,7 +10,7 @@
 # include <utility>
 # include <cstdlib>
 
-# define NUM_DIRECTIVES 13
+# define NUM_DIRECTIVES 14
 
 const string CONFIG_FOLDER = "config";
 
@@ -31,12 +31,15 @@ public:
 	vector<ConfigServer>&		getConfigServers( void );
 	ConfigServer&				getServer(size_t index);
 	ConfigServer&				getServerConfig(string const & host, string const & target);
-	void						printConfig();
+	void						printConfig( void );
+	void   						printMsg(const char *color, const char* msg, ...);
+	std::string 				getCurrTime( void );
 
 private:
 	void						incrementLinenumber( void );
 	int							CreateConfigServer( void );
 	void 						init_directives( void );
+	void						check_double_configs( void );
 
 	unsigned					_Linenumber;
 	unsigned					_NServers;

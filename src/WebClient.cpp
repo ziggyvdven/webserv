@@ -32,7 +32,8 @@ void WebClient::_processInput()
 	// Parse the request
 	_request.parse(buffer, bytes_read);
 
-	if (!_request.isValid() || _request.isComplete()) {
+	if (_request.hasError() || _request.isComplete()) {
+
 		_state = _request.isComplete() ? COMPLETE : ERROR;
 		std::cout << "[DEBUG] request is invalid or complete" << std::endl;
 	}
@@ -65,13 +66,6 @@ bool WebClient::process()
 			return false;
 
 	}
-
-	// Check if it's a Cgi Request
-	std::cout << "[DEBUG] Check if it's a cgi request" << std::endl;
-
-	// Check if it's a get request
-
-	// Handle it accordingly
 
 	return !(_state == COMPLETE || _state == ERROR);
 }

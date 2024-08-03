@@ -61,30 +61,20 @@ int	WebServer::run(void)
 
 		// Loop through the fds that returned POLLIN and check if it's the listening or active socket
 		current_fds_size = _nfds;
-		// std::cout << "_nfds: " << _nfds << std::endl;
 		for (int i = 0; i < current_fds_size; i++)
 		{
 			if (_fds[i].revents & POLLIN)
 			{
 				if ((listener_ptr = _getListeningSocket(_fds[i].fd)))
 				{
-					// This is a listening socket
-					// Process incoming connections and add to fds array
 					_acceptConnection(_fds[i].fd);
 					break;
 				}
-				
 				client_ptr = _getClientSocket(_fds[i].fd);
-			
 				if (client_ptr->process())
 				{
 					continue;
 				}
-
-				// This is an accepting socket. Do recv/send loop
-				// if (_readData(_fds[i].fd))
-				// {
-				// 	// Send HTTP Response
 				// 	HttpRequest request;
 				// 	_request.clear();
 				_response = http.buildResponse(client_ptr->getRequest());
@@ -97,8 +87,6 @@ int	WebServer::run(void)
 				_fds[i].fd = -1;
 				_compressFdsArray();
 				break;
-			
-				
 			}
 		}
 	}
@@ -135,7 +123,6 @@ void	WebServer::_acceptConnection(int fd)
 	_fds[_nfds].fd = new_fd;
 	_fds[_nfds].events = POLLIN;
 	_nfds++;
-	
 	WebClient new_client(new_fd);
 	_clients_list.push_back(new_client);
 }
@@ -151,8 +138,7 @@ bool	WebServer::_readData(int socket)
 		_request.insert(_request.end(), buffer, buffer + rtn);
 		memset(buffer, 0, rtn);
 	}
-	if (rtn == 0)
-	{
+	if (rtn == 0) {
 		return (false);
 	}
 	return (true);
@@ -205,13 +191,19 @@ Config& WebServer::getConfig(void){
 void	WebServer::_removeClient(WebClient *client_ptr) {
 	if (!client_ptr) {
 		std::cerr << "[DEBUG] Unexpected error, client_ptr is null";
+		return ;
 	}
-	
-	// close(client_ptr->getSocketFD());
-	// std::vector<WebClient>::iterator pos;
-	// pos = std::find(_clients_list.begin(), _clients_list.end(), *client_ptr);
-	// if (pos != _clients_list.end())
-	// 	_clients_list.erase(pos);
+
+	close(client_ptr->getSocketFD());
+	std::vector<WebClient>::iterator it;
+
+	for (it = _clients_list.begin(); it != _clients_list.end(); ++it){
+		if(&(*it) == client_ptr){
+			_clients_list.erase(it);
+			return ;
+		}
+	}
+	std::cerr << "[DEBUG] Client not found in the list" << std::endl;
 }
 
 WebClient*	WebServer::_getClientSocket(int fd)

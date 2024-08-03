@@ -15,13 +15,13 @@
 CgiHandler::CgiHandler(HttpRequest const &request)
 	: _request(request), _htmlRoot("./data/www")
 {
-	if (!request.isValid())
+	if (request.hasError())
 		throw std::exception();
 	_init();
 }
 
 void CgiHandler::_init() {
-	
+
 }
 
 bool CgiHandler::isCgiRequest() const

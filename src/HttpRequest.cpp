@@ -57,7 +57,7 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 	while (_extract_http_line(_buffer,line))
 	{
 		line.push_back('\0');
-		std::cout << "\n[LINE] " << line.data() << std::endl;
+		// std::cout << "\n[LINE] " << line.data() << std::endl;
 		switch (_state) {
 			case READING_REQUEST_LINE:
 				// std::cout << "[DEBUG] Parsing request line ..." << std::endl;
@@ -195,7 +195,7 @@ void HttpRequest::_parse_body()
 
 void HttpRequest::print_request() const
 {
-	if (!isValid()) {
+	if (hasError()) {
 		std::cerr << "\nInvalid Request." << std::endl;
 		return;
 	}

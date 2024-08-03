@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <sstream>
 #include <string>
@@ -23,7 +23,7 @@ public:
 	std::string const	target() const	{ return _target; };
 	std::string const	version() const	{ return _version; };
 	std::vector<char> const	body() const	{ return _body; };
-	bool				isValid() const	{ return _state != ERROR; };
+	bool				hasError() const	{ return _state == ERROR; };
 	bool				isComplete() const	{ return _state == COMPLETE; };
 	std::string const	getHeader(std::string const key) const;
 	void 				reset();

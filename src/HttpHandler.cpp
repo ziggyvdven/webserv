@@ -16,7 +16,7 @@
 HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(webServer), _conf(conf), _baseDir("./data")
 {
 	(void) _webServer;
-	
+
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
 	_mimeTypes[".htm"] = "text/html";
@@ -30,7 +30,7 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_mimeTypes[".png"] = "image/png";
 	_mimeTypes[".svg"] = "image/svg+xml";
 	_mimeTypes[".webp"] = "image/webp";
-	// 
+	//
 	_defaultPages[100] = "/default/10x.html";
 	_defaultPages[200] = "/default/20x.html";
 	_defaultPages[201] = "/default/20x.html";
@@ -41,7 +41,7 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_defaultPages[404] = "/default/40x.html";
 	_defaultPages[405] = "/default/40x.html";
 	_defaultPages[500] = "/default/50x.html";
-	// 
+	//
 	_reasonPhrase[100] = "Continue";
 	_reasonPhrase[200] = "OK";
 	_reasonPhrase[201] = "Created";
@@ -53,7 +53,7 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_reasonPhrase[405] = "Method Not Allowed";
 	_reasonPhrase[413] = "Request Entity Too Large";
 	_reasonPhrase[500] = "Internal Server error";
-	// 
+	//
 	_headers["Accept-Ranges"] = "bytes";
 	_headers["Allow"] = "GET, POST, DELETE";
 	_headers["Cache-Control"] = "no-cache, private";
@@ -91,7 +91,7 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 	ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
 	_config = &config;
 
-	request.print_request();
+	// request.print_request();
 	_setRequestParameters(config, request);
 	// std::cout << _path << std::endl;
 	// std::cout << config << std::endl;
@@ -177,7 +177,7 @@ std::string	HttpHandler::_getPage(ConfigServer const &config, short const & erro
 	std::string path = _baseDir + config.getRoot() + "/" + file;
 
 	cout << "PATH: " << path << endl;
-	
+
 	if (file.empty() || access(path.c_str(), F_OK) != 0)
 	{
 		_getContentFromFile = false;
@@ -276,7 +276,6 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 	try
 	{
 		CgiHandler cgi_handler(request);
-		
 		if (opendir(_path.c_str()) != NULL)
 		{
 			if (_autoIndex)
@@ -293,6 +292,7 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 		}
 		else if (access(_path.c_str(), F_OK) == 0)
 			_getContentFromFile = true;
+
 	}
 	catch (std::exception const &e)
 	{
@@ -430,7 +430,7 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
     <h1>Index of " + cut_path + "</h1>\n\
 	<hr>\n\
     <p>\n";
-	
+
 	dp = readdir (dir);
 	// cout << path << endl;
 	while((dp = readdir (dir)) != NULL){

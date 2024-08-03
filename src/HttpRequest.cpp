@@ -54,7 +54,7 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 	}
 
 
-	if (_extract_http_line(_buffer,line))
+	while (_extract_http_line(_buffer,line))
 	{
 		line.push_back('\0');
 		std::cout << "\n[LINE] " << line.data() << std::endl;
@@ -137,7 +137,7 @@ bool HttpRequest::_expectBody()
 	try {
 		_contentLength = std::stoi(str);
 		return  _contentLength > 0 && _method == "POST";
-	} catch( std::exception ) {
+	} catch( std::exception &e ) {
 		return false;
 	}
 }

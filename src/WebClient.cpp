@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 
 WebClient::WebClient(int accepted_connection)
-	: Socket(accepted_connection), _state(PARSING_REQUEST)
+	: Socket(accepted_connection), _state(READING)
 {
 	// std::cout << "[DEBUG] Creating new web clinet" << std::endl;
 }
@@ -40,36 +40,38 @@ void WebClient::_processInput()
 
 void WebClient::_processCGI() {
 	// Init cgi execution
+	std::cout << "[UNIMPLEMENTED] Handling CGI" << std::endl;
 
 	// Time the cgi execution
 
-	// 
+	//
 
 }
 
 bool WebClient::process()
 {
 	switch (_state) {
-		case PARSING_REQUEST:
+		case READING:
 			_processInput();
 			break;
-		case EXECUTING_CGI:
-			_processCGI();
-			break;
+		case WRITING:
+			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
+			return false;
 		case COMPLETE:
 			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
 			return false;
 		case ERROR:
 			std::cout << "[UNIMPLEMENTED] Web Client ERROR" << std::endl;
 			return false;
-	
+
 	}
 
 	// Check if it's a Cgi Request
+	std::cout << "[DEBUG] Check if it's a cgi request" << std::endl;
 
 	// Check if it's a get request
 
 	// Handle it accordingly
-	
+
 	return !(_state == COMPLETE || _state == ERROR);
 }

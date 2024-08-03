@@ -9,8 +9,8 @@
 
 class WebClient: public Socket {
 	enum State {
-		PARSING_REQUEST,
-		EXECUTING_CGI,
+		READING,
+		WRITING,
 		COMPLETE,
 		ERROR
 	};

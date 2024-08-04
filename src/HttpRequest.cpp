@@ -13,15 +13,6 @@ HttpRequest::HttpRequest()
 }
 
 // ========== ========== Vector<char> manipulatoins ========== ==========
-void insert_vector_data(std::vector<char> &dest, char *src, size_t len)
-{
-	dest.insert(dest.end(), src, src + len);
-}
-
-void print_vector_data(std::vector<char> const &buffer)
-{
-	std::cout << "vector<char>: " << std::string (buffer.begin(), buffer.end()) << std::endl;
-}
 
 bool _extract_http_line(std::vector<char> &buffer, std::vector<char> &line)
 {
@@ -48,14 +39,9 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 	std::vector<char> line;
 	_buffer.insert(_buffer.end(), buffer, buffer + read_bytes);
 
-	if (_state == READING_BODY)
-	{
-		// std::cout << "[DEBUG] Parsing body ..." << std::endl;
-		_parse_body();
-	}
 
 
-	while (_extract_http_line(_buffer,line))
+	while (_state != READING_BODY && _extract_http_line(_buffer,line) )
 	{
 		line.push_back('\0');
 		// std::cout << "\n[LINE] " << line.data() << std::endl;
@@ -80,6 +66,12 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 				break;
 		}
 		line.clear();
+	}
+
+	if (_state == READING_BODY)
+	{
+		// std::cout << "[DEBUG] Parsing body ..." << std::endl;
+		_parse_body();
 	}
 	return false;
 }
@@ -193,12 +185,15 @@ bool HttpRequest::_valid_header(std::string const &line) const
 
 void HttpRequest::_parse_body()
 {
+	int read_bytes = 0;
+
 	if (_contentLength <= 0) {
 		_state = ERROR;
 		return;
 	}
 
-	_body.insert(_body.end(), _buffer.begin(), _buffer.end());
+	read_bytes = min(_buffer.size(), _contentLength - _body.size());
+	_body.insert(_body.end(), _buffer.begin(), _buffer.begin() + read_bytes);
 	_buffer.clear();
 
 	if (static_cast<int>(_body.size()) >= _contentLength) {

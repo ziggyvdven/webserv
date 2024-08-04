@@ -1,5 +1,6 @@
 
 #include "../includes/HttpRequest.hpp"
+#include "../includes/utils.hpp"
 
 void test_request_edge()
 {
@@ -10,34 +11,41 @@ void test_request_edge()
 
 }
 
-void parse_str_request(char const *str_request, HttpRequest &request)
+void parse_str_request(std::string const &str_request, HttpRequest &request)
 {
 
-	const int SIZE = 2;
+	const int SIZE = 1026;
 	char read_buf[SIZE];
 	std::istringstream stream = std::istringstream(str_request);
 
-	while (stream.read(read_buf, SIZE))
+	while (stream.read(read_buf, SIZE) || stream.gcount() > 0)
 	{
-		request.parse(read_buf, SIZE);
+		request.parse(read_buf, stream.gcount());
 	}
+
 }
 
 void test_request_parsing()
 {
-	char str_request[] = "GET /index.html HTTP/1.1\r\n"
+	std::string headers = "POST /index.html HTTP/1.1\r\n"
 				"Host: some host\r\n"
-				"SomeHeader: some other header\r\n"
-				"CONTENT-length:    123 \r\n"
-				"\r\n"
-				"<Body content>\r\n";
+				"SomeHeader: some other header\r\n";
+	std::string body("Hello\0 World!");
+	std::stringstream ss_request;
+
+	ss_request	<< headers
+					<< "content-length: " << body.size() << "\r\n"
+					<< "\r\n"
+					<< body;
+
+	std::cout << ss_request.str()<< std::endl;
 
 	HttpRequest request;
-	parse_str_request(str_request, request);
+	parse_str_request(ss_request.str(), request);
 
 	request.print_request();
 	if (request.getContentLength() > 0)
 	{
-		std::cout << "[PRINT BODY]" << std::endl;
+		print_vector_data(request.body());
 	}
 }

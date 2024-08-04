@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 
+// ========== ========== String Utils ========== ==========
 // trim from end of string (right)
 std::string& rtrim(std::string& s, const char* t)
 {
@@ -91,6 +92,7 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 	return list;
 }
 
+// ========== ========== Time utils========== ==========
 int time_since(clock_t start)
 {
 	std::clock_t now = std::clock();
@@ -98,3 +100,18 @@ int time_since(clock_t start)
 	return static_cast<int>(elapsed);
 }
 
+
+// ========== ========== Vector<char> manipulatoins ========== ==========
+void insert_vector_data(std::vector<char> &dest, char *src, size_t len)
+{
+	dest.insert(dest.end(), src, src + len);
+}
+
+void print_vector_data(std::vector<char> const &buffer)
+{
+	for (std::vector<char>::const_iterator it = buffer.begin(); it != buffer.end(); ++it)
+	{
+		std::cout << *it;
+	}
+	std::cout << std::endl;
+}

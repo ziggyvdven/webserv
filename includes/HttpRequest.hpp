@@ -18,26 +18,30 @@ public:
 	};
 
 	HttpRequest();
-	std::vector<char> const	raw() const		{ return _buffer; }
-	std::string const	method() const	{ return _method; };
-	std::string const	target() const	{ return _target; };
-	std::string const	version() const	{ return _version; };
-	std::vector<char> const	body() const	{ return _body; };
-	bool				hasError() const	{ return _state == ERROR; };
-	bool				isComplete() const	{ return _state == COMPLETE; };
-	std::string const	getHeader(std::string const key) const;
-	void 				reset();
-	bool				parse(char *data, int bytes_read);
+
+	// Getters
+	std::vector<char> const	raw()	const		{ return _buffer; }
+	std::string const		method() const		{ return _method; };
+	std::string const		target() const		{ return _target; };
+	std::string const		version() const		{ return _version; };
+	std::vector<char> const	body() const		{ return _body; };
+	bool					hasError() const	{ return _state == ERROR; };
+	bool					isComplete() const	{ return _state == COMPLETE; };
+	std::string const		getHeader(std::string const key) const;
+	int						getContentLength();
+
+	bool					parse(char *data, int bytes_read);
+	void 					reset();
 
 private:
-	std::vector<char>					_buffer;
+	State								_state;
 	std::string							_method;
 	std::string							_target;
 	std::string							_version;
-	std::map<std::string, std::string>	_headers;
+	std::vector<char>					_buffer;
 	std::vector<char>					_body;
+	std::map<std::string, std::string>	_headers;
 	int									_contentLength;
-	State								_state;
 
 
 	void parse();

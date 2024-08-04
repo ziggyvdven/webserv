@@ -5,10 +5,11 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
+
+#include <iomanip>
 // ========== ========== Constructor ========== ==========
 HttpRequest::HttpRequest()
-	: _contentLength(0), _state(READING_REQUEST_LINE)
-{
+	: _state(READING_REQUEST_LINE), _contentLength(0) {
 }
 
 // ========== ========== Vector<char> manipulatoins ========== ==========
@@ -92,6 +93,19 @@ std::string const HttpRequest::getHeader(std::string key) const
 	return "";
 }
 
+int	HttpRequest::getContentLength()
+{
+
+	std::string _contentLength;
+	_contentLength = getHeader("content-length");
+	if (!is_number(_contentLength))
+		return 0;
+
+	return std::stoi(_contentLength);
+
+}
+
+
 void HttpRequest::_add_header(std::string key, std::string value)
 {
 	value = trim(value);
@@ -135,7 +149,7 @@ bool HttpRequest::_expectBody()
 	if ((str = getHeader("content-length")).empty())
 		return false;
 	try {
-		_contentLength = std::stoi(str);
+		_contentLength = getContentLength();
 		return  _contentLength > 0 && _method == "POST";
 	} catch( std::exception &e ) {
 		return false;
@@ -195,25 +209,27 @@ void HttpRequest::_parse_body()
 
 void HttpRequest::print_request() const
 {
+	char const BLUE[] = "\033[34m";
+	char const RESET[] = "\033[00m";
+	char const RED[] = "\033[31m";
+
 	if (hasError()) {
-		std::cerr << "\nInvalid Request." << std::endl;
+		std::cerr << RED << "\nInvalid Request."  << RESET << std::endl;
 		return;
 	}
-
-
-	std::cout << "method: " << _method << std::endl;
-	std::cout << "Target: " << _target << std::endl;
-	std::cout << "Version: " << _version << std::endl;
-
-	std::cout << "\nHeaders: \n" << std::endl;
+	std::cout << BLUE << "\nHttpRequest:\n" << std::setw(10);
+	std::cout << "  Method: " << _method << std::endl;
+	std::cout << "  Target: " << _target << std::endl;
+	std::cout << "  Version: " << _version << std::endl;
+	std::cout << "  Headers:" << std::endl;
 	print_headers();
-
-	std::cout << std::boolalpha << "\nBody size: " << _body.size()  << std::endl;
-
+	std::cout << std::boolalpha << "parsed contentLenght:  " << _contentLength  << std::endl;
+	std::cout << std::boolalpha << "Body size: " << _body.size()  << std::endl;
 	if (!isComplete()) {
-		std::cerr << "\n[DEBUG] Incomplete Request." << std::endl;
+		std::cerr << RED << "\n[DEBUG] Incomplete Request." << std::endl;
 		return;
 	}
+	std::cout << RESET;
 }
 
 void HttpRequest::print_headers() const
@@ -221,5 +237,5 @@ void HttpRequest::print_headers() const
 	std::map<std::string, std::string>::const_iterator cit;
 
 	for(cit = _headers.begin(); cit != _headers.end(); ++cit)
-		std::cout << cit->first << ": " << cit->second << std::endl;
+		std::cout << "  - " <<  cit->first << ": " << cit->second << std::endl;
 }

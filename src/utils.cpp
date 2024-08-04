@@ -38,6 +38,15 @@ void printStringWithNonPrintables(const std::string& str) {
     }
 }
 
+bool is_number(const std::string& s)
+{
+	std::string trimed = s;
+	trimed = trim(trimed);
+    std::string::const_iterator it = trimed.begin();
+    while (it != trimed.end() && std::isdigit(*it)) ++it;
+    return !trimed.empty() && it == trimed.end();
+}
+
 void dump_stream(std::istream is)
 {
 	std::string line;
@@ -88,3 +97,4 @@ int time_since(clock_t start)
 	double elapsed = static_cast<double>(now - start) / CLOCKS_PER_SEC;
 	return static_cast<int>(elapsed);
 }
+

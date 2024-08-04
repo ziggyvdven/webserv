@@ -14,6 +14,7 @@ void printStringWithNonPrintables(const std::string& str);
 void toLowerCase(std::string & str);
 std::vector<std::string> ft_split(std::string str, std::string const &delim);
 int time_since(clock_t start_time);
+bool is_number(const std::string& s);
 
 template <typename T> T min(T a, T b)
 {

@@ -91,10 +91,7 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 	ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
 	_config = &config;
 
-	// request.print_request();
 	_setRequestParameters(config, request);
-	// std::cout << _path << std::endl;
-	// std::cout << config << std::endl;
 	if (config.getRedirect().first != 0)
 	{
 		_statusCode = config.getRedirect().first;

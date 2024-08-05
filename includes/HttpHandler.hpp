@@ -23,7 +23,6 @@
 # include <dirent.h>
 # include <map>
 # include "HttpRequest.hpp"
-# include "WebServer.hpp"
 # include "Config.hpp"
 # include "ConfigServer.hpp"
 
@@ -35,7 +34,6 @@ private:
 
 	// Parameters at contruction -- Start
 
-	WebServer const &					_webServer;
 	ConfigServer*						_config;
 	Config &							_conf;
 	std::string const					_baseDir;
@@ -70,7 +68,7 @@ private:
 	std::string							_getPage(ConfigServer const &config, short const & errorCode);
 	std::string							_setDefaultContent(short const & errorCode);
 	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
-	void								_openFile(ConfigServer const &config);	
+	void								_openFile(ConfigServer const &config);
 
 	void								_get(ConfigServer const &config, HttpRequest const &request);
 	void								_post(ConfigServer const &config, HttpRequest const &request);
@@ -90,7 +88,7 @@ private:
 
 public:
 
-	HttpHandler(WebServer const &webServer, Config &conf);
+	HttpHandler(Config &conf);
 	~HttpHandler();
 
 	std::string const					buildResponse(HttpRequest const &request);

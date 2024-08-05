@@ -13,9 +13,8 @@
 #include "../includes/HttpHandler.hpp"
 #include "../includes/CgiHandler.hpp"
 
-HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(webServer), _conf(conf), _baseDir("./data")
+HttpHandler::HttpHandler(Config &conf) : _conf(conf), _baseDir("./data")
 {
-	(void) _webServer;
 
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";

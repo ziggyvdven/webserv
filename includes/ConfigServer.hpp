@@ -32,6 +32,7 @@ public:
 
 
 	unsigned short				getPort() const;
+	Config&						getConfig();
 	string						getHost() const;
 	string						getServerName() const;
 	size_t						getClientMaxBodySize() const;

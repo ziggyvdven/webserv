@@ -6,7 +6,7 @@
 #    By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/08/02 16:14:53 by oroy             ###   ########.fr        #
+#    Updated: 2024/08/07 17:58:27 by oroy             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -140,4 +140,4 @@ vleaks_fd:
 	--show-possibly-lost=yes \
 	--track-origins=yes \
 	--track-fds=all \
-	./$(NAME) config/webserv.conf
+	./$(NAME) config/default.conf

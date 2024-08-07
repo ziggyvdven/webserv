@@ -93,15 +93,15 @@ int	Config::CreateConfigServer( ){
 	while (getline(_ConfigFile, line))
 	{
 		_Linenumber++;
-		if (line[line.find_first_not_of(whitespace)] != '#' && line.find("}") != string::npos)
+		if (line.find('#') != line.find_first_not_of(whitespace) && line.find("}") != string::npos)
 			closing_brackets++;
-		if (line[line.find_first_not_of(whitespace)] != '#' && line.find("{") != string::npos)
+		if (line.find('#') != line.find_first_not_of(whitespace) && line.find("{") != string::npos)
 			opening_brackets++;
 		if (opening_brackets == closing_brackets)
 			goto match;
 		if (regex_match(line, server_reg))
 			throw (runtime_error(_Filename + " missing closing bracket for server configuration"));	
-		if (!line.empty() && line[line.find_first_not_of(whitespace)] != '#' && line.find_first_not_of(whitespace) != string::npos)
+		if (!line.empty() && line.find('#') != line.find_first_not_of(whitespace) && line.find_first_not_of(whitespace) != string::npos)
 		{
 			linepair.first = line;
 			linepair.second = _Linenumber;

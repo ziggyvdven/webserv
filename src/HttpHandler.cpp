@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 17:52:05 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 17:59:43 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,6 +91,7 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 		_config = &config;
 		
 		// cout << config << endl;
+		_autoIndex = false;
 		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", config.getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
 		_setRequestParameters(config, request);
 		if (config.getRedirect().first != 0)
@@ -151,17 +152,25 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 	}
 }
 
+bool	HttpHandler::_isDirectory(const char *cpath){
+	DIR *dir = opendir(cpath);
+	if (dir == NULL){
+		return false;
+	}
+	closedir(dir);
+	return true;
+}
 
 void	HttpHandler::_server_msg(){
 		
-	if (_autoIndex)
-		_conf.printMsg(B, "Server[%s]: sending response  [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
-	else if (_statusCode == 200)
-		_conf.printMsg(B, "Server[%s]: sending response  [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
-	else if (_config->getErrorPage(_statusCode) != "")
-		_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
-	else
-		_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
+		if (_autoIndex && _isDirectory(_path.c_str()))
+			_conf.printMsg(B, "Server[%s]: sending response [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
+		else if (_statusCode == 200)
+			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+		else if (_config->getErrorPage(_statusCode) != "")
+			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+		else
+			_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
 		
 }
 
@@ -268,7 +277,7 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 		if (pos != std::string::npos)
 			path.erase(pos, config.getTarget().length());
 	}
-	if (opendir(path.c_str()) != NULL){
+	if (_isDirectory(path.c_str())){
 		if (!_htmlFile.empty() && _htmlFile.back() == '/')
 			temp = path + config.getIndex();
 		else
@@ -303,7 +312,7 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 	{
 		CgiHandler cgi_handler(request, _config);
 		
-		if (opendir(_path.c_str()) != NULL)
+		if ((_isDirectory(_path.c_str())))
 		{
 			if (_autoIndex)
 				_content = _autoIndexGenerator(_path, request.target(), config);
@@ -448,11 +457,26 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 		cut_path += '/';
 	std::string content =\
 	"<!DOCTYPE html>\n\
-    <html>\n\
+    <html lang=\"en\">\n\
     <head>\n\
-            <title>" + path + "</title>\n\
+            	<meta charset=\"utf-8\">\n\
+				<title>Welcome to our webserv</title>\n\
+				<link rel=\"stylesheet\" href=\"styles/styles.css\">\n\
     </head>\n\
     <body>\n\
+	<div id=\"main-container\">\n\
+		<nav id=\"menu\">\n\
+			<ul>\n\
+				<li><a href=\".\">Home</a></li>\n\
+				<li><a href=\"#\">CGI</a>\n\
+					<ul>\n\
+						<li><a href=\"upload.html\">Upload</a></li>\n\
+						<li><a href=\"time.html\">Time</a></li>\n\
+					</ul>\n\
+				</li>\n\
+				<li><a href=\"about.html\">About</a></li>\n\
+			</ul>\n\
+		</nav>\n\
     <h1>Index of " + cut_path + "</h1>\n\
 	<hr>\n\
     <p>\n";
@@ -468,6 +492,14 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 	content +="\
 	<hr>\n\
 	</p>\n\
+			<footer>\n\
+			<p>\n\
+				<img src=\"images/triforce.png\" width=\"16\" height=\"13\">\n\
+				&nbsp;&nbsp;All Hail Ganondorf&nbsp;&nbsp;\n\
+				<img src=\"images/triforce.png\" width=\"16\" height=\"13\">\n\
+			</p>\n\
+		</footer>\n\
+	</div>\n\
     </body>\n\
     </html>\n";
 	closedir(dir);

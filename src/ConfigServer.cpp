@@ -550,6 +550,10 @@ void	ConfigServer::CreateRoutes(){
 ** --------------------------------- ACCESSOR ---------------------------------
 */
 
+Config&	ConfigServer::getConfig(){
+	return (this->_Config);
+}
+
 unsigned short	ConfigServer::getPort() const{
 	return (this->_Port);
 }

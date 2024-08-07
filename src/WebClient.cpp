@@ -1,14 +1,23 @@
 #include "../includes/WebClient.hpp"
 #include <sys/socket.h>
 
-WebClient::WebClient(int accepted_connection)
-	: Socket(accepted_connection), _state(READING)
+WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler)
+	: Socket(accepted_connection), _state(READING), _httpHandler(httpHandler)
 {
-	// std::cout << "[DEBUG] Creating new web clinet" << std::endl;
 }
 
-void WebClient::send_data() {
-	std::cout << "<Sending data to client>" << std::endl;
+void WebClient::_sendData(char const *data, size_t data_len) {
+	size_t	rtn = 0;
+	size_t	idx = 0;
+	size_t	chunk_size = 255;
+	size_t	send_size = 0;
+
+	while (idx < data_len)
+	{
+		send_size = data_len - idx < chunk_size ? data_len - idx : chunk_size;
+		rtn = send(_socketFD, data + idx, send_size, 0);
+		idx += rtn;
+	}
 
 }
 
@@ -24,8 +33,7 @@ void WebClient::_processInput()
 
 	if (bytes_read <= 0)
 	{
-		std::cout << "[UNIMPLEMENTED] Web Client disconnected" << std::endl;
-		_state = _request.isComplete() ? COMPLETE : ERROR;
+		_state = HANDLING_REQUEST;
 		return ;
 	}
 
@@ -34,8 +42,7 @@ void WebClient::_processInput()
 
 	if (_request.hasError() || _request.isComplete()) {
 
-		_state = _request.isComplete() ? COMPLETE : ERROR;
-		std::cout << "[DEBUG] request is invalid or complete" << std::endl;
+		_state = HANDLING_REQUEST;
 	}
 }
 
@@ -55,17 +62,20 @@ bool WebClient::process()
 		case READING:
 			_processInput();
 			break;
-		case WRITING:
-			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
+		case HANDLING_REQUEST:
+			_response = _httpHandler->buildResponse(_request);
+			_sendData(_response.data(), _response.size());
+			_state = COMPLETE;
 			return false;
 		case COMPLETE:
 			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
-			return false;
+			break;
 		case ERROR:
 			std::cout << "[UNIMPLEMENTED] Web Client ERROR" << std::endl;
 			return false;
-
 	}
 
-	return !(_state == COMPLETE || _state == ERROR);
+
+
+	return !(_state == COMPLETE);
 }

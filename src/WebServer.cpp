@@ -17,7 +17,7 @@
 #include <type_traits>
 
 WebServer::WebServer(std::vector<TcpListener> socketList, Config &conf) : _nfds(0), \
-_listeners_list(socketList), _config(conf)
+_listeners_list(socketList), _config(conf), _httpHandler(conf)
 {
 	memset(_fds, 0, sizeof(_fds));
 }
@@ -46,7 +46,6 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	HttpHandler	http(*this, _config);
 	int			current_fds_size;
 	WebClient	*client_ptr;
 	TcpListener	*listener_ptr;
@@ -77,8 +76,8 @@ int	WebServer::run(void)
 				}
 				// 	HttpRequest request;
 				// 	_request.clear();
-				_response = http.buildResponse(client_ptr->getRequest());
-				_sendData(_fds[i].fd, _response.data(), _response.size());
+				// _response = http.buildResponse(client_ptr->getRequest());
+				// _sendData(_fds[i].fd, _response.data(), _response.size());
 				// 	std::cout << "\n------------------ Message sent -------------------\n\n";
 				// }
 				// Close Accepting Socket
@@ -123,7 +122,7 @@ void	WebServer::_acceptConnection(int fd)
 	_fds[_nfds].fd = new_fd;
 	_fds[_nfds].events = POLLIN;
 	_nfds++;
-	WebClient new_client(new_fd);
+	WebClient new_client(new_fd, &_httpHandler);
 	_clients_list.push_back(new_client);
 }
 

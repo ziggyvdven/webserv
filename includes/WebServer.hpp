@@ -42,8 +42,8 @@ private:
 	Config&						_config;
 	std::vector<unsigned char>	_request;
 	std::string					_response;
+	HttpHandler					_httpHandler;
 
-	
 	TcpListener*				_getListeningSocket(int fd);
 	WebClient*					_getClientSocket(int fd);
 	void						_removeClient(WebClient *client_ptr);
@@ -63,7 +63,6 @@ public:
 	void						cleanUpSockets(void) const;
 	int							getNFds(void) const;
 	Config&						getConfig(void);
-	
 };
 
 #endif

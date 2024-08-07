@@ -166,7 +166,7 @@ std::string	CgiHandler::execCgiScript()
 
 bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
 {
-	std::clock_t begin = std::clock();
+	std::time_t begin = std::time(NULL);
 
 	std::cout << "[Timing for ]" << timeout_sec<< std::endl;
 	while (true)
@@ -175,11 +175,11 @@ bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
 		if (WIFEXITED(wstatus))
 		{
 			std::cout << "Child process finished" << std::endl;
-			std::cout << "Elapsed time: " << time_since(begin) <<std::endl;
+			std::cout << "Elapsed time: " << seconds_since(begin) <<std::endl;
 			return false;
 		}
 
-		if (time_since(begin) > timeout_sec * 1000)
+		if (seconds_since(begin) > timeout_sec * 1000)
 		{
 			std::cout << "[TIMEOUT]" << std::endl;
 			return true;

@@ -57,7 +57,6 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 			case READING_BODY:
 				break;
 			case COMPLETE:
-				std::cout << "[UNIMPLEMENTED] Http switch case COMPLETE" << std::endl;
 				return true;
 				break;
 			case ERROR:

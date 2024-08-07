@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/01 13:31:27 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/07 17:49:41 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,6 +64,6 @@ int	Socket::_errorMessage(std::string const msg) const
 	return (-1);
 }
 
-void Socket::close_connection() {
+void Socket::close_socket() {
 	close(_socketFD);
 }

@@ -93,10 +93,10 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 }
 
 // ========== ========== Time utils========== ==========
-int time_since(clock_t start)
+int seconds_since(std::time_t start)
 {
-	std::clock_t now = std::clock();
-	double elapsed = static_cast<double>(now - start) / CLOCKS_PER_SEC;
+	std::time_t now = std::time(NULL);
+	double elapsed = std::difftime(now, start);
 	return static_cast<int>(elapsed);
 }
 

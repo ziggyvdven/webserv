@@ -1,9 +1,12 @@
 #include "../includes/WebClient.hpp"
 #include <sys/socket.h>
 
-WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler)
-	: Socket(accepted_connection), _state(READING), _httpHandler(httpHandler)
+WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler, pollfd *pollFd)
+	: Socket(accepted_connection), _pollFd(pollFd), 
+	_state(READING), _httpHandler(httpHandler)
+	
 {
+	_updateTime();
 }
 
 void WebClient::_sendData(char const *data, size_t data_len) {
@@ -29,12 +32,15 @@ void WebClient::_processInput()
 	char buffer[BUFFER_SIZE];
 
 
-	bytes_read = recv(_socketFD, buffer, BUFFER_SIZE, 0);
-
-	if (bytes_read <= 0)
+	if (_pollFd->revents & POLLIN)
 	{
-		_state = HANDLING_REQUEST;
-		return ;
+		bytes_read = recv(_socketFD, buffer, BUFFER_SIZE, 0);
+
+		if (bytes_read <= 0)
+		{
+			_state = HANDLING_REQUEST;
+			return ;
+		}
 	}
 
 	// Parse the request
@@ -78,4 +84,23 @@ bool WebClient::process()
 
 
 	return !(_state == COMPLETE);
+}
+
+int		WebClient::getTime() const
+{
+	return seconds_since(_last_update);
+}
+
+void	WebClient::_updateTime()
+{
+	_last_update = std::time(NULL);
+}
+
+void WebClient::close()
+{
+	std::string debug_str = "[DEBUG] You were disconnected by the server\n";
+	_sendData(debug_str.data(), debug_str.size());
+
+	close_socket();
+	_pollFd->fd = -1;
 }

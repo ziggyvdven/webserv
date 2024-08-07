@@ -25,7 +25,7 @@ std::string& rtrim(std::string& s, const char* t);
 void printStringWithNonPrintables(const std::string& str);
 void toLowerCase(std::string & str);
 std::vector<std::string> ft_split(std::string str, std::string const &delim);
-int time_since(clock_t start_time);
+int seconds_since(std::time_t start_time);
 bool is_number(const std::string& s);
 
 void insert_vector_data(std::vector<char> &dest, char *src, size_t len);

@@ -34,7 +34,6 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 	_pathInfo = "PATH_INFO=";
 	_queryString = "QUERY_STRING=";
 
-
 	if (it == 0)
 	{
 		it = target.find_first_of("/?", cgi_bin.size());

@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 14:27:49 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 17:52:05 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,6 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_reasonPhrase[304] = "Not Modified";
 	_reasonPhrase[307] = "Temporary Redirect";
 	_reasonPhrase[308] = "Permanent Redirect";
-	_reasonPhrase[304] = "Not Modified";
 	_reasonPhrase[400] = "Bad Request";
 	_reasonPhrase[403] = "Forbidden";
 	_reasonPhrase[404] = "Not Found";
@@ -66,9 +65,6 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_headers["Content-Type"] = "text/plain";
 	_headers["Date"] = "";
 	_headers["Location"] = "";
-	_headers["Server"] = "";
-	
-	_contentType = "text/html";
 }
 
 HttpHandler::~HttpHandler()
@@ -81,6 +77,7 @@ HttpHandler::~HttpHandler()
 void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest const &request)
 {
 	_autoIndex = false;
+	_contentType = "text/html";
 	_getContentFromFile = false;
 	_htmlFile = _parseTarget(request.target());
 	_path = _createPath(config);
@@ -157,14 +154,14 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 
 void	HttpHandler::_server_msg(){
 		
-		if (_autoIndex)
-			_conf.printMsg(B, "Server[%s]: sending response  [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
-		else if (_statusCode == 200)
-			_conf.printMsg(B, "Server[%s]: sending response  [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
-		else if (_config->getErrorPage(_statusCode) != "")
-			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
-		else
-			_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
+	if (_autoIndex)
+		_conf.printMsg(B, "Server[%s]: sending response  [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
+	else if (_statusCode == 200)
+		_conf.printMsg(B, "Server[%s]: sending response  [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+	else if (_config->getErrorPage(_statusCode) != "")
+		_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+	else
+		_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
 		
 }
 
@@ -177,6 +174,7 @@ std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest
 	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
 	response << "Content-Length: " << _content.size() << "\r\n";
 	response << "Content-Type: " << _contentType << "\r\n";
+	response << "Date: " << _conf.getCurrTime() << "\r\n";
 	response << "Location: " << _getHeaderFieldValue(request, "Location") << "\r\n";
 	response << "\r\n";
 	response << _content;

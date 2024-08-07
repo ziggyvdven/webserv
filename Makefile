@@ -6,7 +6,7 @@
 #    By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/08/02 14:26:07 by oroy             ###   ########.fr        #
+#    Updated: 2024/08/02 16:14:53 by oroy             ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -127,10 +127,10 @@ vleaks:
 	valgrind \
 	--leak-check=full \
 	--show-leak-kinds=all \
-	--show-reachable=no \
+	--show-reachable=yes \
 	--show-possibly-lost=yes \
 	--track-origins=yes \
-	./$(NAME) config/webserv.conf
+	./$(NAME) config/default.conf
 
 vleaks_fd:
 	valgrind \

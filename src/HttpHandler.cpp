@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 18:38:41 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/07 19:42:58 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -394,7 +394,7 @@ std::string const	HttpHandler::_setAllow(ConfigServer const &config)
 	}
 	if (config.getMethod("POST"))
 	{
-		if (!methods.empty())
+		if (!methods.empty())2
 			methods += ", ";
 		methods += "POST";
 	}

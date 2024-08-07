@@ -4,7 +4,7 @@
 ** ------------------------------- CONSTRUCTOR --------------------------------
 */
 ConfigServer::ConfigServer(Config & config): _Config(config), _Port(80), _Host("127.0.0.1"),
- _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/www"), _Index("index.html"), _CGIbin("/cgi_bin"), _CGIext(".php"),
+ _ServerName("default"), _ClientMaxBodySize(1048576), _AutoIndex(false), _Root("/www"), _Index("index.html"), _CGIbin("/cgi-bin"), _CGIext(".php"),
  _Return(0, ""), _Routes(), _SetDirectives(), _Target(""), _UploadDir("/uploads"){
 	// std::cout << G << "ConfigServer constructor called" << END << std::endl;
 	for (int i = 0; i < 3; i++)

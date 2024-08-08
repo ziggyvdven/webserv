@@ -52,6 +52,7 @@ int	WebServer::run(void)
 		if (poll(_fds, _nfds, 0) < 0)
 		{
 			// std::cerr << "poll() failed" << std::endl;
+			continue;
 		}
 		_handleNewConnections();
 		_processClients();
@@ -128,6 +129,10 @@ void	WebServer::_compressFdsArray(void)
 		{
 			for(int j = i; j < _nfds - 1; j++)
 			{
+				// Move WebClient pollFd
+				WebClient *client = _getClient(_fds[j + 1].fd);
+				if (client)
+					client->setPollFd(_fds + j);
 				_fds[j] = _fds[j + 1];
 			}
 			memset(&_fds[_nfds - 1], 0, sizeof (struct pollfd));
@@ -185,3 +190,14 @@ void	WebServer::_removeClient(WebClient *client_ptr) {
 }
 
 bool	WebServer::_serverOn = true;
+
+WebClient*	WebServer::_getClient(int socketFd) {
+	std::vector<WebClient>::iterator it;
+
+	for (it = _clients_list.begin(); it != _clients_list.end(); ++it)
+	{
+		if (it->getSocketFD() == socketFd)
+			return &(*it);
+	}
+	return (NULL);
+}

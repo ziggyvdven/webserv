@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/08/07 19:58:09 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/08 17:35:13 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@
 # include "WebClient.hpp"
 # include "Config.hpp"
 
-#define CLIENT_TIMEOUT 1
+#define CLIENT_TIMEOUT 3
 
 class HttpHandler;
 
@@ -50,6 +50,7 @@ private:
 	void						_handleNewConnections();
 	void						_processClients();
 	void						_removeClient(WebClient *client_ptr);
+	WebClient*					_getClient(int socketFd);
 	static bool					_serverOn;
 	bool						_closeConnection;
 

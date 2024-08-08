@@ -29,7 +29,7 @@ public:
 	bool process();
 	void close();
 	bool	isComplete() const { return _state == COMPLETE; };
-
+	void	setPollFd(struct pollfd *poll_ptr);
 
 	void	_updateTime();
 private:

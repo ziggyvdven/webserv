@@ -1,11 +1,12 @@
 #include "../includes/WebClient.hpp"
 #include <sys/socket.h>
 
-WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler, pollfd *pollFd)
-	: Socket(accepted_connection), _pollFd(pollFd), 
+WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler, pollfd *pollFd_ptr)
+	: Socket(accepted_connection), _pollFd(pollFd_ptr), 
 	_state(READING), _httpHandler(httpHandler)
 	
 {
+	setPollFd(pollFd_ptr);
 	_updateTime();
 }
 
@@ -103,4 +104,8 @@ void WebClient::close()
 
 	close_socket();
 	_pollFd->fd = -1;
+}
+
+void	WebClient::setPollFd(struct pollfd *poll_ptr) {
+	_pollFd = poll_ptr;
 }

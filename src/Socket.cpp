@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/09 15:53:01 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 17:49:41 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/07 19:31:40 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,11 @@ Socket::Socket(std::string const host, unsigned int const port) : _host(host), _
 	_address.sin_family = AF_INET;
 	_address.sin_port = htons(_port);
 	_address.sin_addr.s_addr = htonl(INADDR_ANY);
+	// if (inet_pton(AF_INET, _host.c_str(), &_address.sin_addr) <= 0)
+	// {
+	// 	perror("inet_pton failed");
+    // 	exit(1);
+	// }
 	return ;
 }
 

@@ -3,19 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/07/24 16:36:28 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/07 19:36:45 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
 #include "../includes/CgiHandler.hpp"
 
-HttpHandler::HttpHandler(Config &conf) : _conf(conf), _baseDir("./data")
+HttpHandler::HttpHandler(Config &conf) : _conf(conf), _baseDir("./data"), _content("")
 {
-
 	_mimeTypes[".txt"] = "text/plain";
 	_mimeTypes[".css"] = "text/css";
 	_mimeTypes[".htm"] = "text/html";
@@ -45,7 +44,13 @@ HttpHandler::HttpHandler(Config &conf) : _conf(conf), _baseDir("./data")
 	_reasonPhrase[200] = "OK";
 	_reasonPhrase[201] = "Created";
 	_reasonPhrase[204] = "No Content";
+	_reasonPhrase[301] = "Moved Permanently";
 	_reasonPhrase[302] = "Found";
+	_reasonPhrase[303] = "See Other";
+	_reasonPhrase[304] = "Not Modified";
+	_reasonPhrase[307] = "Temporary Redirect";
+	_reasonPhrase[308] = "Permanent Redirect";
+	_reasonPhrase[304] = "Not Modified";
 	_reasonPhrase[400] = "Bad Request";
 	_reasonPhrase[403] = "Forbidden";
 	_reasonPhrase[404] = "Not Found";
@@ -62,11 +67,8 @@ HttpHandler::HttpHandler(Config &conf) : _conf(conf), _baseDir("./data")
 	_headers["Date"] = "";
 	_headers["Location"] = "";
 	_headers["Server"] = "";
-	//
-	_env["CONTENT_LENGTH"] = "";
-	_env["PATH_INFO"] = "";
-	_env["QUERY_STRING"] = "";
-	_env["SCRIPT_NAME"] = "";
+	
+	_contentType = "text/html";
 }
 
 HttpHandler::~HttpHandler()
@@ -87,61 +89,103 @@ void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest 
 
 std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 {
-	ConfigServer	config = _conf.getServerConfig(request.getHeader("host"), request.target());
-	_config = &config;
-
-	_setRequestParameters(config, request);
-	if (config.getRedirect().first != 0)
-	{
-		_statusCode = config.getRedirect().first;
-		if (_statusCode >= 300 && _statusCode <= 399)
+	try {
+		ConfigServer config = _conf.getServerConfig(request.getHeader("host"), request.target());
+		_config = &config;
+		
+		// cout << config << endl;
+		_autoIndex = false;
+		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", config.getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
+		_setRequestParameters(config, request);
+		if (config.getRedirect().first != 0)
 		{
-			_headers["Location"] = config.getRedirect().second;
+			_statusCode = config.getRedirect().first;
+			if ((_statusCode >= 301 && _statusCode <= 304) || _statusCode == 307 || _statusCode == 308)
+			{
+				_headers["Location"] = config.getRedirect().second;
+				goto redirect;
+			}
+			else
+			{
+				if (config.getRedirect().second.empty()){
+					_content = _getPage(config, _statusCode);
+					goto page;
+				}
+				else{
+					_content = config.getRedirect().second;
+					goto redirect;
+				}
+			}
+		}
+		if (config.getClientMaxBodySize() && request.body().size() > config.getClientMaxBodySize())
+		{
+			_content = _getPage(config, 413);
+			_statusCode = 413;
+		}
+		else if (!config.getMethod(request.method()))
+		{
+			_content = _getPage(config, 405);
+			_statusCode = 405;
+		}
+		else if (access(_path.c_str(), F_OK) != 0)
+		{
+			_content = _getPage(config, 404);
+			_statusCode = 404;
 		}
 		else
 		{
-			_content = config.getRedirect().second;
+			_contentType = _getContentType();
+			if (request.method() == "GET")
+				_get(config, request);
+			else if (request.method() == "POST")
+				_post(config, request);
+			else if (request.method() == "DELETE")
+				_delete(config);
 		}
+		page:
+		while (_getContentFromFile)
+			_openFile(config);
+		redirect:
+		_server_msg();
+		return (_response(config, request));
 	}
-	if (_content.size() > config.getClientMaxBodySize() && config.getClientMaxBodySize())
-	{
-		_content = _getPage(config, 413);
-		_statusCode = 413;
+	catch (exception &e){
+		cerr << "webserv: " << R << "ERROR" << END << "[" << e.what() << "]" << endl;
+		return ("");
 	}
-	else if (!config.getMethod(request.method()))
-	{
-		_content = _getPage(config, 405);
-		_statusCode = 405;
-	}
-	else if (access(_path.c_str(), F_OK) != 0)
-	{
-		_content = _getPage(config, 404);
-		_statusCode = 404;
-	}
-	else
-	{
-		if (request.method() == "GET")
-			_get(config, request);
-		else if (request.method() == "POST")
-			_post(config, request);
-		else if (request.method() == "DELETE")
-			_delete(config);
-	}
-	while (_getContentFromFile)
-		_openFile(config);
+}
 
-	return (_response(config, request));
+bool	HttpHandler::_isDirectory(const char *cpath){
+	DIR *dir = opendir(cpath);
+	if (dir == NULL){
+		return false;
+	}
+	closedir(dir);
+	return true;
+}
+
+void	HttpHandler::_server_msg(){
+		
+		if (_autoIndex && _isDirectory(_path.c_str()))
+			_conf.printMsg(B, "Server[%s]: sending response [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
+		else if (_statusCode == 200)
+			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+		else if (_config->getErrorPage(_statusCode) != "")
+			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+		else
+			_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
+		
 }
 
 std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
 {
 	std::ostringstream	response;
 
-	response << request.version() << " " << _statusCode << " " << _reasonPhrase.at(_statusCode) << "\r\n";
+	response << request.version() << " " << _statusCode << " " << _reasonPhrase[_statusCode] << "\r\n";
 	response << "Allow: " << _setAllow(config) << "\r\n";
 	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
 	response << "Content-Length: " << _content.size() << "\r\n";
-	response << "Content-Type: " << _getContentType() << "\r\n";
+	response << "Content-Type: " << _contentType << "\r\n";
 	response << "Location: " << _getHeaderFieldValue(request, "Location") << "\r\n";
 	response << "\r\n";
 	response << _content;
@@ -171,8 +215,6 @@ std::string	HttpHandler::_getPage(ConfigServer const &config, short const & erro
 {
 	std::string	file = config.getErrorPage(errorCode);
 	std::string path = _baseDir + config.getRoot() + "/" + file;
-
-	cout << "PATH: " << path << endl;
 
 	if (file.empty() || access(path.c_str(), F_OK) != 0)
 	{
@@ -237,7 +279,7 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 		if (pos != std::string::npos)
 			path.erase(pos, config.getTarget().length());
 	}
-	if (opendir(path.c_str()) != NULL){
+	if (_isDirectory(path.c_str())){
 		if (!_htmlFile.empty() && _htmlFile.back() == '/')
 			temp = path + config.getIndex();
 		else
@@ -250,7 +292,6 @@ std::string	HttpHandler::_createPath(ConfigServer const &config)
 	}
 	else
 		path = temp;
-	cout << path << endl;
 	return path;
 }
 
@@ -271,8 +312,9 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 {
 	try
 	{
-		CgiHandler cgi_handler(request);
-		if (opendir(_path.c_str()) != NULL)
+		CgiHandler cgi_handler(request, _config);
+		
+		if ((_isDirectory(_path.c_str())))
 		{
 			if (_autoIndex)
 				_content = _autoIndexGenerator(_path, request.target(), config);
@@ -300,7 +342,7 @@ void	HttpHandler::_post(ConfigServer const &config, HttpRequest const &request)
 {
 	try
 	{
-		CgiHandler cgi_handler(request);
+		CgiHandler cgi_handler(request, _config);
 
 		if (_pathIsDirectory(_path, config))
 		{
@@ -418,17 +460,31 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 		cut_path += '/';
 	std::string content =\
 	"<!DOCTYPE html>\n\
-    <html>\n\
+    <html lang=\"en\">\n\
     <head>\n\
-            <title>" + path + "</title>\n\
+            	<meta charset=\"utf-8\">\n\
+				<title>Welcome to our webserv</title>\n\
+				<link rel=\"stylesheet\" href=\"styles/styles.css\">\n\
     </head>\n\
     <body>\n\
+	<div id=\"main-container\">\n\
+		<nav id=\"menu\">\n\
+			<ul>\n\
+				<li><a href=\".\">Home</a></li>\n\
+				<li><a href=\"#\">CGI</a>\n\
+					<ul>\n\
+						<li><a href=\"upload.html\">Upload</a></li>\n\
+						<li><a href=\"time.html\">Time</a></li>\n\
+					</ul>\n\
+				</li>\n\
+				<li><a href=\"about.html\">About</a></li>\n\
+			</ul>\n\
+		</nav>\n\
     <h1>Index of " + cut_path + "</h1>\n\
 	<hr>\n\
     <p>\n";
 
 	dp = readdir (dir);
-	// cout << path << endl;
 	while((dp = readdir (dir)) != NULL){
 		// cout << dp->d_name << endl;
 		content += "\t\t<p><a href=\"http://" + config.getHost() + ":" + to_string(config.getPort()) + target;
@@ -439,6 +495,14 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 	content +="\
 	<hr>\n\
 	</p>\n\
+			<footer>\n\
+			<p>\n\
+				<img src=\"images/triforce.png\" width=\"16\" height=\"13\">\n\
+				&nbsp;&nbsp;All Hail Ganondorf&nbsp;&nbsp;\n\
+				<img src=\"images/triforce.png\" width=\"16\" height=\"13\">\n\
+			</p>\n\
+		</footer>\n\
+	</div>\n\
     </body>\n\
     </html>\n";
 	closedir(dir);

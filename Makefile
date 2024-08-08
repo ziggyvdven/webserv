@@ -6,7 +6,7 @@
 #    By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/07/25 13:12:12 by kmehour          ###   ########.fr        #
+#    Updated: 2024/08/07 19:35:01 by kmehour          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -101,7 +101,12 @@ $(OBJS_PATH):
 	@mkdir -p $(OBJS_PATH)
 
 run: all
-	@./$(NAME) config/webserv.conf
+	@./$(NAME) config/default.conf
+
+errors: all
+	@for i in {0..13}; do \
+		./$(NAME) config/errors/error$$i.conf; \
+	done
 
 clean:
 	@rm -rf $(OBJS) $(OBJS_PATH) $(TEST_EXEC).dSYM/
@@ -122,10 +127,10 @@ vleaks:
 	valgrind \
 	--leak-check=full \
 	--show-leak-kinds=all \
-	--show-reachable=no \
+	--show-reachable=yes \
 	--show-possibly-lost=yes \
 	--track-origins=yes \
-	./$(NAME) config/webserv.conf
+	./$(NAME) config/default.conf
 
 vleaks_fd:
 	valgrind \
@@ -135,4 +140,4 @@ vleaks_fd:
 	--show-possibly-lost=yes \
 	--track-origins=yes \
 	--track-fds=all \
-	./$(NAME) config/webserv.conf
+	./$(NAME) config/default.conf

@@ -12,8 +12,8 @@
 
 #define TIMEOUT 12
 
-CgiHandler::CgiHandler(HttpRequest const &request)
-	: _request(request), _htmlRoot("./data/www")
+CgiHandler::CgiHandler(HttpRequest const &request, ConfigServer* config)
+	: _request(request), _htmlRoot("./data/www"), _ConfigServer(config)
 {
 	if (request.hasError())
 		throw std::exception();
@@ -31,12 +31,15 @@ bool CgiHandler::isCgiRequest() const
 
 bool	CgiHandler::isCgiScript(std::string const &target)
 {
-	std::string const	cgi_bin = "/cgi-bin/";
+	std::string 	cgi_bin = _ConfigServer->getCGIbin();
+	if (cgi_bin.back() != '/')
+		cgi_bin += "/";
 	size_t				it = target.find(cgi_bin);
 
 	_scriptName = "SCRIPT_NAME=";
 	_pathInfo = "PATH_INFO=";
 	_queryString = "QUERY_STRING=";
+
 
 	if (it == 0)
 	{
@@ -57,9 +60,9 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 			{
 				_queryString += target.substr(it + 1);
 			}
-			std::cout << _scriptName << std::endl;
-			std::cout << _pathInfo << std::endl;
-			std::cout << _queryString << std::endl;
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _scriptName.c_str());
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _pathInfo.c_str());
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _queryString.c_str());
 			_envp.push_back(_scriptName.data());
 			_envp.push_back(_pathInfo.data());
 			_envp.push_back(_queryString.data());
@@ -74,6 +77,7 @@ std::string	CgiHandler::execCgiScript()
 	std::vector<char const *>	argv;
 	pid_t						process_id;
 
+	std::string	const			root = "ROOT=" + _htmlRoot;
 	std::string	const			version = "HTTP_VERSION=" + _request.version();
 	std::string	const			method = "REQUEST_METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
@@ -105,6 +109,7 @@ std::string	CgiHandler::execCgiScript()
 		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
 
+		_envp.push_back(root.data());
 		_envp.push_back(version.data());
 		_envp.push_back(method.data());
 		_envp.push_back(filename.data());
@@ -125,7 +130,7 @@ std::string	CgiHandler::execCgiScript()
 	unsigned long chunk_size = 500000;
 	for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
 	{
-		chunk_size = min(chunk_size, _request.body().size() - i);
+		chunk_size = ::min(chunk_size, _request.body().size() - i);
 		write(parent_to_child[1], _request.body().data() + i, chunk_size);
 	}
 
@@ -141,11 +146,11 @@ std::string	CgiHandler::execCgiScript()
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
 	{
 		// DEBUG
-		std::cout << "[CGI] Process exited with error code" << std::endl;
-		std::cout << std::boolalpha << "Exited: " << WIFEXITED(wstatus)\
+		_ConfigServer->getConfig().printMsg(B, "Server[%s]: [CGI] Process exited with error code", _ConfigServer->getServerName().c_str());
+		std::cout << std::boolalpha << B << "Exited: " << WIFEXITED(wstatus)\
 			<< "\nExit status: " << WEXITSTATUS(wstatus)\
 			<< "\nSignaled: " << WIFSIGNALED(wstatus)\
-			<< std::endl;
+			<< END << std::endl;
 
 		_cgiResponse = "<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
 	}
@@ -168,20 +173,20 @@ bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
 {
 	std::time_t begin = std::time(NULL);
 
-	std::cout << "[Timing for ]" << timeout_sec<< std::endl;
+	_ConfigServer->getConfig().printMsg(B, "Server[%s]: [Timing for ] %d", _ConfigServer->getServerName().c_str(), timeout_sec);
 	while (true)
 	{
 		waitpid(process_id, &wstatus, WNOHANG);
 		if (WIFEXITED(wstatus))
 		{
-			std::cout << "Child process finished" << std::endl;
-			std::cout << "Elapsed time: " << seconds_since(begin) <<std::endl;
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Child process finished", _ConfigServer->getServerName().c_str());
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Elapsed time: %d", _ConfigServer->getServerName().c_str(), seconds_since(begin));
 			return false;
 		}
 
 		if (seconds_since(begin) > timeout_sec * 1000)
 		{
-			std::cout << "[TIMEOUT]" << std::endl;
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Cgi-handler [TIMEOUT]", _ConfigServer->getServerName().c_str());
 			return true;
 		}
 		usleep(50000);

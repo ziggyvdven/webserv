@@ -46,11 +46,12 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	while (true)
+	signal(SIGINT, _sighandler);
+	while (_serverOn)
 	{
 		if (poll(_fds, _nfds, 0) < 0)
 		{
-			std::cerr << "poll() failed" << std::endl;
+			// std::cerr << "poll() failed" << std::endl;
 		}
 		_handleNewConnections();
 		_processClients();
@@ -101,7 +102,6 @@ void	WebServer::_handleNewConnections()
 			_acceptConnection(_fds[i].fd);
 		}
 	}
-	
 }
 
 void	WebServer::_processClients()
@@ -130,9 +130,20 @@ void	WebServer::_compressFdsArray(void)
 			{
 				_fds[j] = _fds[j + 1];
 			}
+			memset(&_fds[_nfds - 1], 0, sizeof (struct pollfd));
 			i--;
 			_nfds--;
 		}
+	}
+	// printFdsArray();
+}
+
+void	WebServer::printFdsArray(void) const
+{
+	for (int i = 0; i < _nfds; ++i)
+	{
+		std::cout << "====== FD idx " << i << " ======" << std::endl;
+		std::cout << "FD = " << _fds[i].fd << std::endl;
 	}
 }
 
@@ -145,8 +156,10 @@ void	WebServer::cleanUpSockets(void) const
 	}
 }
 
-Config& WebServer::getConfig(void){
-	return (_config);
+void	WebServer::_sighandler(int signum)
+{
+	(void) signum;
+	_serverOn = false;
 }
 
 void	WebServer::_removeClient(WebClient *client_ptr) {
@@ -170,3 +183,5 @@ void	WebServer::_removeClient(WebClient *client_ptr) {
 	}
 	std::cerr << "[DEBUG] Client not found in the list" << std::endl;
 }
+
+bool	WebServer::_serverOn = true;

@@ -11,6 +11,7 @@
 # include <arpa/inet.h>
 # include <iostream>
 # include <fstream>
+# include <string>
 
 using namespace std;
 
@@ -19,6 +20,7 @@ using namespace std;
 # define G "\033[0;32m"
 # define B "\033[0;34m"
 # define R "\033[0;31m"
+# define Y "\033[0;33m"
 
 
 #endif /* ******************************************************** COMMON_HPP */

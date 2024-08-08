@@ -1,12 +1,108 @@
 /* styles.css */
 
 body {
-	background-color: lightpink;
+	background-color: #222;
+	margin: 0;
+	padding: 0;
+	font-family: Arial, Helvetica, sans-serif;
+	text-align: center;
 }
 
 #main-container {
+	background-color: beige;
+	font-size: 18px;
+}
+
+#main-container .content {
+	background-color: gray;
+	border-radius: 20px;
+	max-width: 960px;
 	margin: auto;
-	width: 50%;
-	background-color: blueviolet;
-	padding: 20px;
+	padding: 30px;
+	text-align: justify;
+	line-height: 30px;
+}
+
+#main-container .content_small {
+	background-color: gray;
+	border-radius: 20px;
+	width: 300px;
+	margin: auto;
+	padding: 30px;
+}
+
+#main-container .content img {
+	float: right;
+	margin: 5px 5px 15px 25px;
+}
+
+#menu ul {
+	list-style-type: none;
+	background-color: #222;
+	color: beige;
+	padding: 0;
+	margin: 0;
+	font-weight:bold;
+}
+
+#menu li {
+	display: inline-block;
+	position: relative;
+	width: 120px;
+	height: 60px;
+	line-height: 60px;
+}
+
+#menu li ul {
+	display: none;
+	position: absolute;
+	padding: 0;
+}
+
+#menu li ul a {
+	display: block;
+}
+
+#menu a {
+	width: 120px;
+	height: 60px;
+	display: inline-block;
+	text-decoration: none;
+	color: beige;
+	font-family:Georgia, 'Times New Roman', Times, serif
+}
+
+#menu a:hover {
+	background-color: #444;
+}
+
+#menu li:hover ul {
+	display: block;
+}
+
+h1 {
+	font-size: 72px;
+	font-weight: bold;
+}
+
+.reason_phrase {
+	font-size: 48px;
+	font-weight:normal;
+	margin-top: 10px;
+}
+
+.error_msg {
+	font-size: 18px;
+	margin-bottom: 30px;
+}
+
+footer {
+	background-color: #222;
+	color: beige;
+	padding: 10px;
+	margin: 0;
+	margin-top: 20px;
+	font-size: 15px;
+	font-weight: bold;
+	font-family: Georgia, 'Times New Roman', Times, serif;
 }

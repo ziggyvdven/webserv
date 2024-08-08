@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>About the project</title>
+	<link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+	<div id="main-container">
+		<nav id="menu">
+			<ul>
+				<li><a href="index.html">Home</a></li>
+				<li><a href="#">CGI</a>
+					<ul>
+						<li><a href="upload.html">Upload</a></li>
+						<li><a href="time.html">Time</a></li>
+					</ul>
+				</li>
+				<li><a href="about.html">About</a></li>
+			</ul>
+		</nav>
+		<h1>About the project</h1>
+		<div class="content">
+			<img src="images/HTTP.gif" alt="HTTP" width="400" height="200">
+			The goal for this project was to create a webserver from scratch in C++, managing HTTP requests and sending the correct responses in return to the clients. To achieve this, we looked at the RFC to learn about the specifics of the HTTP protocol and also based ourselves on Nginx to create a configuration file for our webserver. We also implemented a CGI to run external scripts, most notably for uploading files to the server through a html form.
+		</div>
+		<footer>
+			<p>
+				<img src="images/triforce.png" width="16" height="13">
+				&nbsp;&nbsp;All Hail Ganondorf&nbsp;&nbsp;
+				<img src="images/triforce.png" width="16" height="13">
+			</p>
+		</footer>
+	</div>
+</body>
+</html>

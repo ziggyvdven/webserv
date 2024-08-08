@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/08 18:56:37 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 17:49:12 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/07 19:22:07 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <iostream>
 # include <string>
 # include <netinet/in.h>
+# include <arpa/inet.h>
 # include <sys/socket.h>
 # include <fcntl.h>
 

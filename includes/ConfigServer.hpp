@@ -32,6 +32,7 @@ public:
 
 
 	unsigned short				getPort() const;
+	Config&						getConfig();
 	string						getHost() const;
 	string						getServerName() const;
 	size_t						getClientMaxBodySize() const;
@@ -46,6 +47,7 @@ public:
 	pair<short, string>			getRedirect() const;
 	map<string, ConfigServer*>	getRoutes() const;
 	string						getTarget() const;
+	string						getUploadDir() const;
 
 	void						setTarget(string const & route);
 
@@ -63,6 +65,7 @@ private:
 	string								_Index;
 	string								_CGIbin;
 	string								_CGIext;
+	string								_UploadDir;
 	pair<short, string>					_Return;
 	map<string, ConfigServer*>			_Routes;
 	vector<vector<pair<string, unsigned> > > _Location_blocks;
@@ -85,6 +88,7 @@ private:
 	void				ParseRoot(pair<string, unsigned> & linepair);
 	void				ParseMethods(pair<string, unsigned> & linepair);
 	void				ParseIndex(pair<string, unsigned> & linepair);
+	void				ParseUploadDir(pair<string, unsigned> & linepair);
 	void				ParseCGIbin(pair<string, unsigned> & linepair);
 	void				ParseCGIext(pair<string, unsigned> & linepair);
 	void				ParseReturn(pair<string, unsigned> & linepair);

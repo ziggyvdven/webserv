@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/08/07 19:10:17 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/08/07 19:58:09 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@
 # include "WebClient.hpp"
 # include "Config.hpp"
 
-#define CLIENT_TIMEOUT 500
+#define CLIENT_TIMEOUT 1
 
 class HttpHandler;
 
@@ -50,8 +50,14 @@ private:
 	void						_handleNewConnections();
 	void						_processClients();
 	void						_removeClient(WebClient *client_ptr);
+	static bool					_serverOn;
+	bool						_closeConnection;
+
+	bool						_isListeningSocket(int fd) const;
 	void						_acceptConnection(int fd);
 	void						_compressFdsArray(void);
+
+	static void					_sighandler(int signum);
 
 public:
 	WebServer(std::vector<TcpListener> socketList, Config &config);
@@ -63,6 +69,9 @@ public:
 	void						cleanUpSockets(void) const;
 	int							getNFds(void) const;
 	Config&						getConfig(void);
+
+	void						printFdsArray(void) const;
+
 };
 
 #endif

@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 20:52:51 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 20:54:20 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ private:
 	void								_server_msg( void );
 	bool								_isDirectory(const char *path);
 	bool								_check_40x_error( HttpRequest const &request );
-	bool								_check_redirect();
+	bool								_check_redirect(HttpResponse &response);
 
 	void								_get(HttpRequest const &request);
 	void								_post(HttpRequest const &request);

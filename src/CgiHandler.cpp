@@ -129,7 +129,6 @@ std::string	CgiHandler::execCgiScript()
 		chunk_size = ::min(chunk_size, _request.body().size() - i);
 		write(parent_to_child[1], _request.body().data() + i, chunk_size);
 	}
-	std::cout << _request.body().data() << std::endl;
 	close(parent_to_child[1]);
 
 	if (_timeout_cgi(process_id, wstatus, TIMEOUT))

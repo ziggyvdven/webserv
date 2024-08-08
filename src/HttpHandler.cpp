@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 20:51:33 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 20:55:14 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,7 +85,7 @@ void	HttpHandler::buildResponse(HttpRequest const &request, HttpResponse &respon
 		
 		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", _config->getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
 		_setRequestParameters(request);
-		bool	redirect = _check_redirect();
+		bool	redirect = _check_redirect(response);
 		if (!_check_40x_error( request ) && !redirect)
 		{
 			_contentType = _getContentType();
@@ -108,7 +108,7 @@ void	HttpHandler::buildResponse(HttpRequest const &request, HttpResponse &respon
 	}
 }
 
-bool	HttpHandler::_check_redirect()
+bool	HttpHandler::_check_redirect(HttpResponse &response)
 {
 	if (_config->getRedirect().first != 0)
 	{

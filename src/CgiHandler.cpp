@@ -76,7 +76,7 @@ std::string	CgiHandler::execCgiScript()
 	std::string	const			method = "REQUEST_METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
 	std::string const			content_type = "CONTENT_TYPE=" + _request.getHeader("content-type");
-	std::string const			upload_folder = "UPLOAD_DIR=" + _htmlRoot + _ConfigServer->getUploadDir();
+	std::string const			upload_folder = "UPLOAD_DIR=" + _htmlRoot + _ConfigServer->getUploadDir(); 
 
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();

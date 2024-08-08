@@ -145,7 +145,6 @@ void Config::check_double_configs( void ){
 				if (_ConfigServers.back().getServerName() == _ConfigServers[i].getServerName())
 					throw (runtime_error("Multiple servers in " + _Filename + " with the same settings."));
 	}
-
 }
 
 void    Config::printMsg(const char *color, const char* msg, ...)
@@ -166,8 +165,8 @@ std::string Config::getCurrTime()
     tzset();
     char date[1000];
     time_t now = time(0);
+	now -= 4 * 3600;
     struct tm tm = *gmtime(&now);
-    tm.tm_hour = tm.tm_hour - 4;
     strftime(date, sizeof(date), "[%Y-%m-%d  %H:%M:%S]   ", &tm);
     return (std::string(date));
 }

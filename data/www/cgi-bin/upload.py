@@ -41,7 +41,7 @@ def main():
 	f.close()
 	print("<h1>Upload successful!</h1>")
 	print('<div class="content_small">')
-	# Create folder if it does not exit
+	# Create folder if it does not exist
 	for key in form.keys():
 		field_item = form[key]
 		if field_item.filename:

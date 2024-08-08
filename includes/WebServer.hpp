@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/07/27 18:52:59 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 19:23:51 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@
 # include <vector>
 # include "HttpHandler.hpp"
 # include "HttpRequest.hpp"
+# include "HttpResponse.hpp"
 # include "Socket.hpp"
 # include "Config.hpp"
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
+/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 16:04:34 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/07 19:47:08 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # include <dirent.h>
 # include <map>
 # include "HttpRequest.hpp"
+# include "HttpResponse.hpp"
 # include "WebServer.hpp"
 # include "Config.hpp"
 # include "ConfigServer.hpp"
@@ -40,7 +41,6 @@ private:
 	Config &							_conf;
 	std::string const					_baseDir;
 
-	std::map<std::string const, std::string>	_headers;
 	std::map<std::string const, std::string>	_mimeTypes;
 	std::map<int, std::string>					_defaultPages;
 	std::map<int, std::string>					_reasonPhrase;
@@ -78,7 +78,7 @@ private:
 	void								_post(ConfigServer const &config, HttpRequest const &request);
 	void								_delete(ConfigServer const &config);
 
-	std::string const					_response(ConfigServer const &config, HttpRequest const &request);
+	void								_populateResponse(ConfigServer const &config, HttpRequest const &request, HttpResponse &response);
 	std::string const					_setAllow(ConfigServer const &config);
 	std::string const					_getContentType(void);
 	std::string const					_getExtension(void);
@@ -95,9 +95,9 @@ public:
 	HttpHandler(WebServer const &webServer, Config &conf);
 	~HttpHandler();
 
-	std::string	const					getPath( void ) const { return _path; };
 	ConfigServer*						getConfigServer( void ) { return _config; };
-	std::string const					buildResponse(HttpRequest const &request);
+	std::string	const					getPath( void ) const { return _path; };
+	void								buildResponse(HttpRequest const &request, HttpResponse &response);
 };
 
 #endif

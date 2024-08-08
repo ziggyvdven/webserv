@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/08/02 14:28:09 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 20:11:22 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,6 @@ int	WebServer::run(void)
 	int			current_fds_size;
 
 	signal(SIGINT, _sighandler);
-	_serverOn = true;
 	while (_serverOn)
 	{
 		// Poll process. Checks the fds array to see if some file descriptors are ready for I/O
@@ -77,8 +76,10 @@ int	WebServer::run(void)
 					{
 						// Send HTTP Response
 						HttpRequest request(_request);
+						HttpResponse response;
 						_request.clear();
-						_response = http.buildResponse(request);
+						http.buildResponse(request, response);
+						_response = response.getResponse();
 						_sendData(_fds[i].fd, _response.data(), _response.size());
 					}
 					// printFdsArray();
@@ -136,10 +137,8 @@ bool	WebServer::_readData(int socket)
 	}
 	if (rtn == 0)
 	{
-		_closeConnection = true;
 		return (false);
 	}
-	_closeConnection = false;
 	return (true);
 }
 

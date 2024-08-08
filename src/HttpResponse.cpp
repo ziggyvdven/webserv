@@ -28,7 +28,7 @@ HttpResponse::HttpResponse(void)
 	_headers["cache-control"] = "no-cache, private";
 	_headers["connection"] = "keep-alive";
 	_headers["content-length"] = "0";
-	_headers["content-type"] = "text/plain";
+	_headers["content-type"] = "text/html";
 	_headers["date"] = "";
 	_headers["location"] = "";
 }

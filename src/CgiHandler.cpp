@@ -25,7 +25,8 @@ bool CgiHandler::isCgiRequest() const
 
 bool	CgiHandler::isCgiScript(std::string const &target)
 {
-	std::string 	cgi_bin = _ConfigServer->getCGIbin();
+	std::string	cgi_bin = _ConfigServer->getCGIbin();
+
 	if (cgi_bin.back() != '/')
 		cgi_bin += "/";
 	size_t				it = target.find(cgi_bin);
@@ -75,6 +76,7 @@ std::string	CgiHandler::execCgiScript()
 	std::string	const			method = "REQUEST_METHOD=" + _request.method();
 	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
 	std::string const			content_type = "CONTENT_TYPE=" + _request.getHeader("content-type");
+	std::string const			upload_folder = "UPLOAD_DIR=" + _htmlRoot + _ConfigServer->getUploadDir();
 
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
@@ -108,6 +110,7 @@ std::string	CgiHandler::execCgiScript()
 		_envp.push_back(filename.data());
 		_envp.push_back(content_length.str().data());
 		_envp.push_back(content_type.data());
+		_envp.push_back(upload_folder.data());
 		_envp.push_back(NULL);
 
 		execve (_scriptPath.data(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));
@@ -126,7 +129,7 @@ std::string	CgiHandler::execCgiScript()
 		chunk_size = ::min(chunk_size, _request.body().size() - i);
 		write(parent_to_child[1], _request.body().data() + i, chunk_size);
 	}
-
+	std::cout << _request.body().data() << std::endl;
 	close(parent_to_child[1]);
 
 	if (_timeout_cgi(process_id, wstatus, TIMEOUT))

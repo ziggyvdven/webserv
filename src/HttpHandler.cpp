@@ -6,7 +6,7 @@
 /*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 17:59:43 by oroy             ###   ########.fr       */
+/*   Updated: 2024/08/07 20:43:49 by oroy             ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,15 +56,6 @@ HttpHandler::HttpHandler(WebServer const &webServer, Config &conf) : _webServer(
 	_reasonPhrase[405] = "Method Not Allowed";
 	_reasonPhrase[413] = "Request Entity Too Large";
 	_reasonPhrase[500] = "Internal Server error";
-	// 
-	_headers["Accept-Ranges"] = "bytes";
-	_headers["Allow"] = "GET, POST, DELETE";
-	_headers["Cache-Control"] = "no-cache, private";
-	_headers["Connection"] = "keep-alive";
-	_headers["Content-Length"] = "0";
-	_headers["Content-Type"] = "text/plain";
-	_headers["Date"] = "";
-	_headers["Location"] = "";
 }
 
 HttpHandler::~HttpHandler()
@@ -84,13 +75,12 @@ void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest 
 	_statusCode = 200;
 }
 
-std::string const	HttpHandler::buildResponse(HttpRequest const &request)
+void	HttpHandler::buildResponse(HttpRequest const &request, HttpResponse &response)
 {
 	try {
 		ConfigServer config = _conf.getServerConfig(request.getHeader("host"), request.target());
 		_config = &config;
 		
-		// cout << config << endl;
 		_autoIndex = false;
 		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", config.getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
 		_setRequestParameters(config, request);
@@ -99,7 +89,7 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 			_statusCode = config.getRedirect().first;
 			if ((_statusCode >= 301 && _statusCode <= 304) || _statusCode == 307 || _statusCode == 308)
 			{
-				_headers["Location"] = config.getRedirect().second;
+				response.setHeader("Location", config.getRedirect().second);
 				goto redirect;
 			}
 			else
@@ -144,11 +134,10 @@ std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 			_openFile(config);
 		redirect:
 		_server_msg();
-		return (_response(config, request));
+		_populateResponse(config, request, response);
 	}
 	catch (exception &e){
 		cerr << "webserv: " << R << "ERROR" << END << "[" << e.what() << "]" << endl;
-		return ("");
 	}
 }
 
@@ -163,32 +152,26 @@ bool	HttpHandler::_isDirectory(const char *cpath){
 
 void	HttpHandler::_server_msg(){
 		
-		if (_autoIndex && _isDirectory(_path.c_str()))
-			_conf.printMsg(B, "Server[%s]: sending response [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
-		else if (_statusCode == 200)
-			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
-		else if (_config->getErrorPage(_statusCode) != "")
-			_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
-		else
-			_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
+	if (_autoIndex && _isDirectory(_path.c_str()))
+		_conf.printMsg(B, "Server[%s]: sending response [%s directory listing][%d]", _config->getServerName().c_str() , _path.c_str(),_statusCode);
+	else if (_statusCode == 200)
+		_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+	else if (_config->getErrorPage(_statusCode) != "")
+		_conf.printMsg(B, "Server[%s]: sending response [%s][%d]", _config->getServerName().c_str(), _path.c_str(), _statusCode);
+	else
+		_conf.printMsg(B, "Server[%s]: sending response [Default page][%d]", _config->getServerName().c_str(), _statusCode);
 		
 }
 
-std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
+void	HttpHandler::_populateResponse(ConfigServer const &config, HttpRequest const &request, HttpResponse &response)
 {
-	std::ostringstream	response;
-
-	response << request.version() << " " << _statusCode << " " << _reasonPhrase[_statusCode] << "\r\n";
-	response << "Allow: " << _setAllow(config) << "\r\n";
-	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
-	response << "Content-Length: " << _content.size() << "\r\n";
-	response << "Content-Type: " << _contentType << "\r\n";
-	response << "Date: " << _conf.getCurrTime() << "\r\n";
-	response << "Location: " << _getHeaderFieldValue(request, "Location") << "\r\n";
-	response << "\r\n";
-	response << _content;
-
-	return (response.str());
+	response.setContent(_content);
+	response.setHeader("Allow", _setAllow(config));
+	response.setHeader("Content-Length", std::to_string(_content.size()));
+	response.setHeader("Content-Type", _contentType);
+	response.setHeader("Date", _conf.getCurrTime());
+	response.setStatusCode(_statusCode);
+	response.setVersion(request.version());
 }
 
 std::string	HttpHandler::_setDefaultContent(short const & errorCode)
@@ -217,7 +200,6 @@ std::string	HttpHandler::_getPage(ConfigServer const &config, short const & erro
 	if (file.empty() || access(path.c_str(), F_OK) != 0)
 	{
 		_getContentFromFile = false;
-		// return (_defaultPages[errorCode]);
 		return (_setDefaultContent(errorCode));
 	}
 	_getContentFromFile = true;
@@ -403,15 +385,6 @@ std::string const	HttpHandler::_setAllow(ConfigServer const &config)
 		methods += "DELETE";
 	}
 	return (methods);
-}
-
-std::string const	HttpHandler::_getHeaderFieldValue(HttpRequest const &request, std::string const &field)
-{
-	std::string	value = request.getHeader(field);
-
-	if (value.empty())
-		return (_headers.at(field));
-	return (value);
 }
 
 std::string const	HttpHandler::_getContentType(void)

@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/02 16:04:34 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/07 20:28:24 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,27 +64,29 @@ private:
 	std::map<std::string, std::string>	_fields;
 	std::string							_body;
 
-	void								_setRequestParameters(ConfigServer const &config, HttpRequest const &request);
+	void								_setRequestParameters(HttpRequest const &request);
 	std::string							_parseTarget(std::string const &target);
-	std::string 						_createPath(ConfigServer const &config);
-	std::string							_getPage(ConfigServer const &config, short const & errorCode);
+	std::string 						_createPath( void );
+	std::string							_getPage(short const & errorCode);
 	std::string							_setDefaultContent(short const & errorCode);
-	bool								_pathIsDirectory(std::string path, ConfigServer const &config);
-	void								_openFile(ConfigServer const &config);
+	bool								_pathIsDirectory(std::string path);
+	void								_openFile();
 	void								_server_msg( void );
 	bool								_isDirectory(const char *path);
+	bool								_check_40x_error( HttpRequest const &request );
+	bool								_check_redirect();
 
-	void								_get(ConfigServer const &config, HttpRequest const &request);
-	void								_post(ConfigServer const &config, HttpRequest const &request);
-	void								_delete(ConfigServer const &config);
+	void								_get(HttpRequest const &request);
+	void								_post(HttpRequest const &request);
+	void								_delete( void );
 
-	std::string const					_response(ConfigServer const &config, HttpRequest const &request);
-	std::string const					_setAllow(ConfigServer const &config);
+	std::string const					_response(HttpRequest const &request);
+	std::string const					_setAllow();
 	std::string const					_getContentType(void);
 	std::string const					_getExtension(void);
 	std::string const					_getHeaderFieldValue(HttpRequest const &request, std::string const &field);
 
-	std::string const					_autoIndexGenerator(std::string & path, std::string const & target, ConfigServer const &config);
+	std::string const					_autoIndexGenerator(std::string & path, std::string const & target);
 
 	bool								_execCGIScript(HttpRequest const &request) const;
 	bool								_isCGIScript(std::string const &target);

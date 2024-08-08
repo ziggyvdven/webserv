@@ -6,7 +6,7 @@
 /*   By: zvan-de- <zvan-de-@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/08/07 19:42:58 by zvan-de-         ###   ########.fr       */
+/*   Updated: 2024/08/07 20:30:12 by zvan-de-         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,81 +78,95 @@ HttpHandler::~HttpHandler()
 
 /*	Functions	************************************************************* */
 
-void	HttpHandler::_setRequestParameters(ConfigServer const &config, HttpRequest const &request)
+void	HttpHandler::_setRequestParameters(HttpRequest const &request)
 {
 	_contentType = "text/html";
 	_autoIndex = false;
 	_getContentFromFile = false;
 	_htmlFile = _parseTarget(request.target());
-	_path = _createPath(config);
+	_path = _createPath();
 	_statusCode = 200;
 	_autoIndex = false;
 }
 
 std::string const	HttpHandler::buildResponse(HttpRequest const &request)
 {
+
 	try {
 		ConfigServer config = _conf.getServerConfig(request.getHeader("host"), request.target());
 		_config = &config;
 		
-		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", config.getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
-		_setRequestParameters(config, request);
-		if (config.getRedirect().first != 0)
-		{
-			_statusCode = config.getRedirect().first;
-			if ((_statusCode >= 301 && _statusCode <= 304) || _statusCode == 307 || _statusCode == 308)
-			{
-				_headers["Location"] = config.getRedirect().second;
-				goto redirect;
-			}
-			else
-			{
-				if (config.getRedirect().second.empty()){
-					_content = _getPage(config, _statusCode);
-					goto page;
-				}
-				else{
-					_content = config.getRedirect().second;
-					goto redirect;
-				}
-			}
-		}
-		if (config.getClientMaxBodySize() && request.body().size() > config.getClientMaxBodySize())
-		{
-			_content = _getPage(config, 413);
-			_statusCode = 413;
-		}
-		else if (!config.getMethod(request.method()))
-		{
-			_content = _getPage(config, 405);
-			_statusCode = 405;
-		}
-		else if (access(_path.c_str(), F_OK) != 0)
-		{
-			_content = _getPage(config, 404);
-			_statusCode = 404;
-		}
-		else
+		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", _config->getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
+		_setRequestParameters(request);
+		bool	redirect = _check_redirect();
+		if (!_check_40x_error( request ) && !redirect)
 		{
 			_contentType = _getContentType();
 			if (request.method() == "GET")
-				_get(config, request);
+				_get(request);
 			else if (request.method() == "POST")
-				_post(config, request);
+				_post(request);
 			else if (request.method() == "DELETE")
-				_delete(config);
+				_delete();
 		}
-		page:
-		while (_getContentFromFile)
-			_openFile(config);
-		redirect:
+		if (!redirect){
+			while (_getContentFromFile)
+				_openFile();
+		}
 		_server_msg();
-		return (_response(config, request));
+		return (_response(request));
 	}
 	catch (exception &e){
 		cerr << "webserv: " << R << "ERROR" << END << "[" << e.what() << "]" << endl;
 		return ("");
 	}
+}
+
+bool	HttpHandler::_check_redirect()
+{
+	if (_config->getRedirect().first != 0)
+	{
+		_statusCode = _config->getRedirect().first;
+		if ((_statusCode >= 301 && _statusCode <= 304) || _statusCode == 307 || _statusCode == 308)
+		{
+			_headers["Location"] = _config->getRedirect().second;
+			return true;
+		}
+		else
+		{
+			if (_config->getRedirect().second.empty()){
+				_content = _getPage(_statusCode);
+			}
+			else{
+				_content = _config->getRedirect().second;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool	HttpHandler::_check_40x_error( HttpRequest const &request )
+{
+	if (_config->getClientMaxBodySize() && request.body().size() > _config->getClientMaxBodySize())
+	{
+		_content = _getPage(413);
+		_statusCode = 413;
+		return true;
+	}
+	else if (!_config->getMethod(request.method()))
+	{
+		_content = _getPage(405);
+		_statusCode = 405;
+		return true;
+	}
+	else if (access(_path.c_str(), F_OK) != 0)
+	{
+		_content = _getPage(404);
+		_statusCode = 404;
+		return true;
+	}
+	return false;
 }
 
 bool	HttpHandler::_isDirectory(const char *cpath){
@@ -177,12 +191,12 @@ void	HttpHandler::_server_msg(){
 		
 }
 
-std::string const	HttpHandler::_response(ConfigServer const &config, HttpRequest const &request)
+std::string const	HttpHandler::_response(HttpRequest const &request)
 {
 	std::ostringstream	response;
 
 	response << request.version() << " " << _statusCode << " " << _reasonPhrase[_statusCode] << "\r\n";
-	response << "Allow: " << _setAllow(config) << "\r\n";
+	response << "Allow: " << _setAllow() << "\r\n";
 	response << "Cache-Control: " << _getHeaderFieldValue(request, "Cache-Control") << "\r\n";
 	response << "Content-Length: " << _content.size() << "\r\n";
 	response << "Content-Type: " << _contentType << "\r\n";
@@ -211,12 +225,12 @@ std::string	HttpHandler::_setDefaultContent(short const & errorCode)
 	return (content.str());
 }
 
-std::string	HttpHandler::_getPage(ConfigServer const &config, short const & errorCode)
+std::string	HttpHandler::_getPage(short const & errorCode)
 {
-	std::string	file = config.getErrorPage(errorCode);
-	std::string path = _baseDir + config.getRoot() + "/" + file;
+	std::string	file = _config->getErrorPage(errorCode);
+	std::string path = _baseDir + _config->getRoot() + "/" + file;
 
-	if (file.empty() || access(path.c_str(), F_OK) != 0 || config.getRedirect().first != 0)
+	if (file.empty() || access(path.c_str(), F_OK) != 0 || _config->getRedirect().first != 0)
 	{
 		_getContentFromFile = false;
 		// return (_defaultPages[errorCode]);
@@ -227,7 +241,7 @@ std::string	HttpHandler::_getPage(ConfigServer const &config, short const & erro
 	return (file);
 }
 
-void	HttpHandler::_openFile(ConfigServer const &config)
+void	HttpHandler::_openFile()
 {
 	std::ifstream	file(_path, std::ios::binary);
 
@@ -239,13 +253,13 @@ void	HttpHandler::_openFile(ConfigServer const &config)
 	}
 	else
 	{
-		_content = _getPage(config, 500);
+		_content = _getPage(500);
 		_statusCode = 500;
 	}
 	file.close();
 }
 
-bool	HttpHandler::_pathIsDirectory(std::string path, ConfigServer const &config)
+bool	HttpHandler::_pathIsDirectory(std::string path)
 {
 	struct stat s;
 
@@ -258,7 +272,7 @@ bool	HttpHandler::_pathIsDirectory(std::string path, ConfigServer const &config)
 	}
 	else
 	{
-		_content = _getPage(config, 500);
+		_content = _getPage(500);
 		_statusCode = 500;
 		throw std::exception();
 	}
@@ -267,27 +281,27 @@ bool	HttpHandler::_pathIsDirectory(std::string path, ConfigServer const &config)
 
 /*	Target Parsing	********************************************************* */
 
-std::string	HttpHandler::_createPath(ConfigServer const &config)
+std::string	HttpHandler::_createPath( void )
 {
 	std::string	path;
 	std::string temp;
 
-	path = _baseDir + config.getRoot() + _htmlFile;
-	if (!config.getTarget().empty() && config.getTarget() != "/")	// Added config.getTarget() != "/" here
+	path = _baseDir + _config->getRoot() + _htmlFile;
+	if (!_config->getTarget().empty() && _config->getTarget() != "/")	// Added _config->getTarget() != "/" here
 	{
-		size_t pos = path.find(config.getTarget());
+		size_t pos = path.find(_config->getTarget());
 		if (pos != std::string::npos)
-			path.erase(pos, config.getTarget().length());
+			path.erase(pos, _config->getTarget().length());
 	}
 	if (_isDirectory(path.c_str())){
 		if (!_htmlFile.empty() && _htmlFile.back() == '/')
-			temp = path + config.getIndex();
+			temp = path + _config->getIndex();
 		else
-			temp = path + "/" + config.getIndex();
+			temp = path + "/" + _config->getIndex();
 	}
 	if (access(temp.c_str(), F_OK) == -1)
 	{
-		if (config.getAutoIndex())
+		if (_config->getAutoIndex())
 			_autoIndex = true;
 	}
 	else
@@ -308,7 +322,7 @@ std::string	HttpHandler::_parseTarget(std::string const &target)
 
 /*	Methods		************************************************************* */
 
-void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
+void	HttpHandler::_get( HttpRequest const &request)
 {
 	try
 	{
@@ -317,10 +331,10 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 		if ((_isDirectory(_path.c_str())))
 		{
 			if (_autoIndex)
-				_content = _autoIndexGenerator(_path, request.target(), config);
+				_content = _autoIndexGenerator(_path, request.target());
 			else
 			{
-				_content = _getPage(config, 403);
+				_content = _getPage(403);
 				_statusCode = 403;
 			}
 		}
@@ -337,19 +351,19 @@ void	HttpHandler::_get(ConfigServer const &config, HttpRequest const &request)
 	}
 }
 
-void	HttpHandler::_post(ConfigServer const &config, HttpRequest const &request)
+void	HttpHandler::_post(HttpRequest const &request)
 {
 	try
 	{
 		CgiHandler cgi_handler(request, _config);
 
-		if (_pathIsDirectory(_path, config))
+		if (_pathIsDirectory(_path))
 		{
 			if (_autoIndex)
-				_content = _autoIndexGenerator(_path, request.target(), config);
+				_content = _autoIndexGenerator(_path, request.target());
 			else
 			{
-				_content = _getPage(config, 403);
+				_content = _getPage(403);
 				_statusCode = 403;
 			}
 		}
@@ -366,39 +380,39 @@ void	HttpHandler::_post(ConfigServer const &config, HttpRequest const &request)
 	}
 }
 
-void	HttpHandler::_delete(ConfigServer const &config)
+void	HttpHandler::_delete( void )
 {
 	// No need to check for file existence.
 	// We already know since we tried opening it in the createPath() function.
 	if (std::remove(_path.c_str()) == 0)
 	{
-		_content = _getPage(config, 200);
+		_content = _getPage(200);
 		_statusCode = 200;
 	}
 	else
 	{
-		_content = _getPage(config, 403);
+		_content = _getPage(403);
 		_statusCode = 403;
 	}
 }
 
 /*	Header Fields	********************************************************* */
 
-std::string const	HttpHandler::_setAllow(ConfigServer const &config)
+std::string const	HttpHandler::_setAllow( )
 {
 	std::string	methods;
 
-	if (config.getMethod("GET"))
+	if (_config->getMethod("GET"))
 	{
 		methods += "GET";
 	}
-	if (config.getMethod("POST"))
+	if (_config->getMethod("POST"))
 	{
-		if (!methods.empty())2
+		if (!methods.empty())
 			methods += ", ";
 		methods += "POST";
 	}
-	if (config.getMethod("DELETE"))
+	if (_config->getMethod("DELETE"))
 	{
 		if (!methods.empty())
 			methods += ", ";
@@ -446,7 +460,7 @@ std::string const	HttpHandler::_getExtension(void)
 
 /*	AutoIndex	************************************************************* */
 
-std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::string const & target, ConfigServer const &config){
+std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::string const & target){
 	DIR *dir;
 	struct dirent *dp;
 	const char* cpath = path.c_str();
@@ -486,7 +500,7 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
 	dp = readdir (dir);
 	while((dp = readdir (dir)) != NULL){
 		// cout << dp->d_name << endl;
-		content += "\t\t<p><a href=\"http://" + config.getHost() + ":" + to_string(config.getPort()) + target;
+		content += "\t\t<p><a href=\"http://" + _config->getHost() + ":" + to_string(_config->getPort()) + target;
 		if (target.back() != '/')
 			content += "/";
 		content += std::string(dp->d_name) + "\">" + dp->d_name + "</a></p>\n";

@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   WebServer.cpp                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/06/18 20:20:26 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/08/07 20:11:22 by oroy             ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../includes/WebServer.hpp"
 #include <cstddef>
 #include <ios>
@@ -45,7 +33,7 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	HttpHandler	http(*this, _config);
+	HttpHandler	http(_config);
 	int			current_fds_size;
 
 	signal(SIGINT, _sighandler);
@@ -53,10 +41,7 @@ int	WebServer::run(void)
 	{
 		// Poll process. Checks the fds array to see if some file descriptors are ready for I/O
 		if (poll(_fds, _nfds, 0) < 0)
-		{
-			// std::cerr << "poll() failed" << std::endl;
-		}
-
+			continue;
 		// Loop through the fds that returned POLLIN and check if it's the listening or active socket
 		current_fds_size = _nfds;
 		for (int i = 0; i < current_fds_size; i++)

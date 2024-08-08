@@ -12,6 +12,8 @@ void toLowerCase(std::string & str);
 std::vector<std::string> ft_split(std::string str, std::string const &delim);
 long int time_since(std::chrono::steady_clock::time_point start);
 
+std::string const	getExtension(std::string const &file);
+
 template <typename T> T min(T a, T b)
 {
 	if (a < b)

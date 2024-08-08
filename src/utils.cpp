@@ -87,3 +87,14 @@ long int time_since(std::chrono::steady_clock::time_point start)
 	return std::chrono::duration_cast<std::chrono::milliseconds>
 		(std::chrono::steady_clock::now() - start).count();
 }
+
+std::string const	getExtension(std::string const &file)
+{
+	size_t	dotPos = file.rfind('.');
+
+	if (dotPos != std::string::npos)
+	{
+		return (file.substr(dotPos));
+	}
+	return ("");
+}

@@ -7,6 +7,28 @@ HttpResponse::HttpResponse(void)
 	_statusCode = 200;
 	_version = "HTTP/1.1";
 
+	_headers["allow"] = "GET";
+	_headers["cache-control"] = "no-cache, private";
+	_headers["connection"] = "keep-alive";
+	_headers["content-length"] = "0";
+	_headers["content-type"] = "text/html";
+	_headers["date"] = "";
+	_headers["location"] = "";
+
+	_mimeTypes[".txt"] = "text/plain";
+	_mimeTypes[".css"] = "text/css";
+	_mimeTypes[".htm"] = "text/html";
+	_mimeTypes[".html"] = "text/html";
+	_mimeTypes[".js"] = "text/javascript";
+	_mimeTypes[".apng"] = "image/apng";
+	_mimeTypes[".avif"] = "image/avif";
+	_mimeTypes[".gif"] = "image/gif";
+	_mimeTypes[".jpg"] = "image/jpeg";
+	_mimeTypes[".jpeg"] = "image/jpeg";
+	_mimeTypes[".png"] = "image/png";
+	_mimeTypes[".svg"] = "image/svg+xml";
+	_mimeTypes[".webp"] = "image/webp";
+
 	_reasonPhrase[100] = "Continue";
 	_reasonPhrase[200] = "OK";
 	_reasonPhrase[201] = "Created";
@@ -23,14 +45,6 @@ HttpResponse::HttpResponse(void)
 	_reasonPhrase[405] = "Method Not Allowed";
 	_reasonPhrase[413] = "Request Entity Too Large";
 	_reasonPhrase[500] = "Internal Server error";
-
-	_headers["allow"] = "GET";
-	_headers["cache-control"] = "no-cache, private";
-	_headers["connection"] = "keep-alive";
-	_headers["content-length"] = "0";
-	_headers["content-type"] = "text/html";
-	_headers["date"] = "";
-	_headers["location"] = "";
 }
 
 HttpResponse::HttpResponse(HttpResponse const &src)
@@ -93,6 +107,41 @@ std::string const	HttpResponse::getHeaders(void) const
 std::string const	HttpResponse::getContent(void) const
 {
 	return (_content);
+}
+
+std::string const	HttpResponse::getContentType(std::string const &ext) const
+{
+	std::map<std::string const, std::string>::const_iterator	it;
+
+	if (!ext.empty())
+	{
+		for (it = _mimeTypes.begin(); it != _mimeTypes.end(); ++it)
+		{
+			if (it->first == ext)
+			{
+				return it->second;
+			}
+		}
+	}
+	return ("text/html");
+}
+
+std::string const	HttpResponse::getDefaultContent(short const &statusCode) const
+{
+	std::ostringstream	content;
+
+	content << "<!DOCTYPE html>" << "\n";
+	content << "<html>" << "\n";
+	content << "<style>" << "\n";
+	content << "h1 {text-align: center;}" << "\n";
+	content << "</style>" << "\n";
+	content << "<body>" << "\n";
+	content << "<h1>" << statusCode << " " << _reasonPhrase.at(statusCode) << "</h1>" << "\n";
+	content << "<hr>" << "\n";
+	content << "</body>" << "\n";
+	content << "</html>" << "\n";
+
+	return (content.str());
 }
 
 /*	Setters	***************************************************************** */

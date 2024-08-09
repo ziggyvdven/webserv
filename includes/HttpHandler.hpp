@@ -50,7 +50,6 @@ private:
 	void								_delete( void );
 
 	void								_populateResponse(HttpRequest const &request);
-	std::string const					_getAllow();
 
 	std::string const					_autoIndexGenerator(std::string & path, std::string const & target);
 

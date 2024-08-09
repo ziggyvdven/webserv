@@ -144,7 +144,35 @@ std::string const	HttpResponse::getDefaultContent(short const &statusCode) const
 	return (content.str());
 }
 
+std::string const	HttpResponse::getAllowedMethods(void)
+{
+	std::string	methods = "";
+
+	if (_config->getMethod("GET"))
+	{
+		methods += "GET";
+	}
+	if (_config->getMethod("POST"))
+	{
+		if (!methods.empty())
+			methods += ", ";
+		methods += "POST";
+	}
+	if (_config->getMethod("DELETE"))
+	{
+		if (!methods.empty())
+			methods += ", ";
+		methods += "DELETE";
+	}
+	return (methods);
+}
+
 /*	Setters	***************************************************************** */
+
+void	HttpResponse::setConfig(ConfigServer *config)
+{
+	_config = config;
+}
 
 void	HttpResponse::setContent(std::string const &content)
 {

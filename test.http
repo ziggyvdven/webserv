@@ -1,3 +1,1 @@
-DELETE	http://127.0.0.1:80/upload/.png HTTP/1.1
-
-
+HEAD http://127.0.0.1:80/ HTTP/1.1

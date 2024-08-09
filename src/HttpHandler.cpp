@@ -117,8 +117,9 @@ void	HttpHandler::_server_msg(){
 
 void	HttpHandler::_populateResponse(HttpRequest const &request)
 {
+	_response->setConfig(_config);
 	_response->setContent(_content);
-	_response->setHeader("Allow", _getAllow());
+	_response->setHeader("Allow", _response->getAllowedMethods());
 	_response->setHeader("Content-Length", std::to_string(_content.size()));
 	_response->setHeader("Content-Type", _contentType);
 	_response->setHeader("Date", _conf.getCurrTime());
@@ -240,31 +241,6 @@ void	HttpHandler::_delete( void )
 		_content = _getPage(403);
 		_statusCode = 403;
 	}
-}
-
-/*	Header Fields	********************************************************* */
-
-std::string const	HttpHandler::_getAllow()
-{
-	std::string	methods;
-
-	if (_config->getMethod("GET"))
-	{
-		methods += "GET";
-	}
-	if (_config->getMethod("POST"))
-	{
-		if (!methods.empty())
-			methods += ", ";
-		methods += "POST";
-	}
-	if (_config->getMethod("DELETE"))
-	{
-		if (!methods.empty())
-			methods += ", ";
-		methods += "DELETE";
-	}
-	return (methods);
 }
 
 /*	AutoIndex	************************************************************* */

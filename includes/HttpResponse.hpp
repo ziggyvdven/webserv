@@ -4,11 +4,13 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include "ConfigServer.hpp"
 
 class HttpResponse
 {
 private:
 
+	ConfigServer *								_config;
 	short										_statusCode;
 	std::string									_content;
 	std::string									_version;
@@ -24,6 +26,7 @@ public:
 	HttpResponse &operator=(HttpResponse const &rhs);
 	~HttpResponse();
 
+	std::string const							getAllowedMethods(void);
 	std::string const							getContent(void) const;
 	std::string const							getContentType(std::string const &ext) const;
 	std::string const							getDefaultContent(short const &statusCode) const;
@@ -31,6 +34,7 @@ public:
 	std::string const							getResponse(void) const;
 	std::string const							getStatusLine(void) const;
 
+	void										setConfig(ConfigServer *config);
 	void										setContent(std::string const &content);
 	void										setHeader(std::string const &key, std::string const &value);
 	void										setVersion(std::string const &version);

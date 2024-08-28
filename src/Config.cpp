@@ -1,4 +1,6 @@
 #include "../includes/Config.hpp"
+#include <cstdarg>
+#include <iostream>
 
 /*
 ** ------------------------------- CONSTRUCTOR --------------------------------
@@ -158,6 +160,7 @@ void    Config::printMsg(const char *color, const char* msg, ...)
 	std::string date = getCurrTime();
 	std::cout << color << getCurrTime() << output << END << std::endl;   
 	va_end(args);
+	(void)n;
 }
 
 std::string Config::getCurrTime()

@@ -119,7 +119,7 @@ void HttpRequest::_parse_body()
 			it += delimiter.size();
 			_body = std::vector<unsigned char>(it, it + content_length);
 		}
-	} catch (std::invalid_argument)
+	} catch (std::invalid_argument &e)
 	{
 		return;
 	}

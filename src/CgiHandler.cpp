@@ -8,6 +8,7 @@
 #include <vector>
 #include <ctime>
 #include <signal.h>
+#include <sys/wait.h>
 
 #define TIMEOUT 12
 

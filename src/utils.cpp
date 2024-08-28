@@ -1,6 +1,4 @@
 #include "../includes/utils.hpp"
-
-
 #include <cctype>
 #include <iomanip>
 #include <iostream>

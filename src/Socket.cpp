@@ -1,4 +1,5 @@
 #include "../includes/Socket.hpp"
+#include <cstring>
 
 Socket::Socket(std::string const host, unsigned int const port) : _host(host), _port(port), _socketFD(-1)
 {

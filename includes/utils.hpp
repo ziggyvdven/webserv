@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <chrono>
+#include <string>
 
 std::string& trim(std::string& s);
 std::string& ltrim(std::string& s, const char* t);

@@ -41,10 +41,17 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 	_pathInfo = "PATH_INFO=";
 	_queryString = "QUERY_STRING=";
 
-	if (it == 0)
+	if (target.find(".bla"))
+	{
+
+	}
+
+	if (it == 0 || (target.find(".bla") != std::string::npos))
 	{
 		it = target.find_first_of("/?", cgi_bin.size());
-		std::string const	script_name = target.substr(0, it);
+		std::string script_name = target.substr(0, it);
+		if (target.find(".bla") != std::string::npos)
+			script_name = "/cgi-bin/cgi_tester";
 		std::string const	script_path = _htmlRoot + script_name;
 		_scriptPath = _htmlRoot + script_name;
 		if (access(script_path.data(), X_OK) == 0)

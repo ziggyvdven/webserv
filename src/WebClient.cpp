@@ -99,9 +99,6 @@ void	WebClient::_updateTime()
 
 void WebClient::close()
 {
-	std::string debug_str = "[DEBUG] You were disconnected by the server\n";
-	_sendData(debug_str.data(), debug_str.size());
-
 	close_socket();
 	_pollFd->fd = -1;
 }

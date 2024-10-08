@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HttpHandler.cpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
+/*   Updated: 2024/10/08 19:24:24 by kmehour          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../includes/HttpHandler.hpp"
 #include "../includes/CgiHandler.hpp"
 
@@ -209,8 +221,16 @@ void	HttpHandler::_get_post(HttpRequest const &request)
 	{
 		CgiHandler cgi_handler(request, _config);
 		
-		if (_autoIndex)
-			_content = _autoIndexGenerator(_path, request.target());
+		if ((_isDirectory(_path.c_str())))
+		{
+			if (_autoIndex)
+				_content = _autoIndexGenerator(_path, request.target());
+			else
+			{
+				_content = _getPage(404);
+				_statusCode = 404;
+			}
+		}
 		else if (cgi_handler.isCgiScript(request.target()))
 		{
 			_content = cgi_handler.execCgiScript();

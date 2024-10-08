@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <iostream>
 
+// ========== ========== String Utils ========== ==========
 // trim from end of string (right)
 std::string& rtrim(std::string& s, const char* t)
 {
@@ -36,6 +37,15 @@ void printStringWithNonPrintables(const std::string& str) {
     }
 }
 
+bool is_number(const std::string& s)
+{
+	std::string trimed = s;
+	trimed = trim(trimed);
+    std::string::const_iterator it = trimed.begin();
+    while (it != trimed.end() && std::isdigit(*it)) ++it;
+    return !trimed.empty() && it == trimed.end();
+}
+
 void dump_stream(std::istream is)
 {
 	std::string line;
@@ -64,7 +74,7 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 	std::string token;
 
 	size_t pos = 0;
-		
+
 	while ((pos = str.find(delim)) != std::string::npos && !delim.empty() && !str.empty())
 	{
 		token = str.substr(0, pos);
@@ -80,10 +90,19 @@ std::vector<std::string> ft_split(std::string str, std::string const &delim)
 	return list;
 }
 
-long int time_since(std::chrono::steady_clock::time_point start)
+// ========== ========== Time utils========== ==========
+int seconds_since(std::time_t start)
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>
-		(std::chrono::steady_clock::now() - start).count();
+	std::time_t now = std::time(NULL);
+	double elapsed = std::difftime(now, start);
+	return static_cast<int>(elapsed);
+}
+
+
+// ========== ========== Vector<char> manipulatoins ========== ==========
+void insert_vector_data(std::vector<char> &dest, char *src, size_t len)
+{
+	dest.insert(dest.end(), src, src + len);
 }
 
 std::string const	getExtension(std::string const &file)
@@ -95,4 +114,12 @@ std::string const	getExtension(std::string const &file)
 		return (file.substr(dotPos));
 	}
 	return ("");
+}
+void print_vector_data(std::vector<char> const &buffer)
+{
+	for (std::vector<char>::const_iterator it = buffer.begin(); it != buffer.end(); ++it)
+	{
+		std::cout << *it;
+	}
+	std::cout << std::endl;
 }

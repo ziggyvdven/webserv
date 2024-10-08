@@ -61,6 +61,7 @@ HttpResponse	&HttpResponse::operator=(HttpResponse const &rhs)
 		_reasonPhrase = rhs._reasonPhrase;
 		_statusCode = rhs._statusCode;
 		_version = rhs._version;
+		_mimeTypes = rhs._mimeTypes;
 	}
 	return (*this);
 }

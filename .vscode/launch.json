@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": ["config/default.conf"],
-      "cwd": "/Users/oroy/Documents/cursus42/webserv/",
-      "program": "/Users/oroy/Documents/cursus42/webserv/webserv"
+      "cwd": "${workspaceFolder}",
+      "program": "webserv"
     }
   ]
 }

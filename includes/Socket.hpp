@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Socket.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/08 18:56:37 by oroy              #+#    #+#             */
+/*   Updated: 2024/10/08 17:46:36 by kmehour          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef SOCKET_HPP
 # define SOCKET_HPP
 
@@ -12,24 +24,26 @@
 class Socket
 {
 private:
+	Socket() {};
 
-	struct sockaddr_in	_address;
-	std::string const	_host;
-	unsigned int const	_port;
-	int					_socketFD;
-
-	std::string			_root;
-
-	int					_errorMessage(std::string const msg) const;
-
-public:
-
+protected:
+	Socket(int socket_fd);
 	Socket(std::string const host, unsigned int const port);
+	Socket(Socket const &);
+	Socket& operator= (Socket const &);
 	~Socket();
 
-	int					createSocket(void);
-	int					getSocketFD(void) const;
+	struct sockaddr_in	_address;
+	std::string			_host;
+	unsigned int		_port;
+	int					_socketFD;
+	std::string			_root;
+	void				close_socket();
 
+
+public:
+	int					getSocketFD(void) const;
+	int					_errorMessage(std::string const msg) const;
 };
 
 #endif

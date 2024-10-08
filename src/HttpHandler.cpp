@@ -217,17 +217,41 @@ void	HttpHandler::_get_post(HttpRequest const &request)
 		}
 		else if (!_isDirectory(_path.c_str()) && access(_path.c_str(), F_OK) == 0)
 			_getContentFromFile = true;
-		else
-		{
-			_content = _getPage(403);
-			_statusCode = 403;
-		}
+
 	}
 	catch (std::exception const &e)
 	{
-		std::cerr << "Something wrong with CGI Handler" << std::endl;
+		std::cerr << "Something wrong with _get() function" << std::endl;
 	}
 }
+
+// void	HttpHandler::_post(ConfigServer const &config, HttpRequest const &request)
+// {
+// 	try
+// 	{
+// 		CgiHandler cgi_handler(request, _config);
+
+// 		if (_pathIsDirectory(_path, config))
+// 		{
+// 			if (_autoIndex)
+// 				_content = _autoIndexGenerator(_path, request.target(), config);
+// 			else
+// 			{
+// 				_content = _getPage(config, 403);
+// 				_statusCode = 403;
+// 			}
+// 		}
+// 		else if (cgi_handler.isCgiScript(request.target()))
+// 		{
+// 			_content = _getPage(403);
+// 			_statusCode = 403;
+// 		}
+// 	}
+// 	catch (std::exception const &e)
+// 	{
+// 		std::cerr << "Something wrong with CGI Handler" << std::endl;
+// 	}
+// }
 
 void	HttpHandler::_delete( void )
 {
@@ -281,7 +305,7 @@ std::string const HttpHandler::_autoIndexGenerator(std::string & path, std::stri
     <h1>Index of " + cut_path + "</h1>\n\
 	<hr>\n\
     <p>\n";
-	
+
 	dp = readdir (dir);
 	while((dp = readdir (dir)) != NULL){
 		// cout << dp->d_name << endl;

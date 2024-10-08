@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: zvandeven <zvandeven@student.42.fr>        +#+  +:+       +#+         #
+#    By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/01/11 12:46:32 by zvan-de-          #+#    #+#              #
-#    Updated: 2024/08/13 15:01:40 by zvandeven        ###   ########.fr        #
+#    Updated: 2024/10/08 17:44:50 by kmehour          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,7 +31,7 @@ CFLAGS			= -Wall -Wextra -Werror -g
 RM				= rm -f
 MAKE			= make
 
-# Objects 
+# Objects
 OBJS_PATH		= objs/
 OBJS			= $(patsubst $(SRCS_PATH)%.cpp, $(OBJS_PATH)%.o, $(SRCS_FILES))
 
@@ -78,7 +78,7 @@ define print_header
     @echo "$$HEADER"
 endef
 
-					
+
 #------------------------------------------------------------------------------#
 #                                 RULES                                        #
 #------------------------------------------------------------------------------#
@@ -89,12 +89,12 @@ $(NAME): $(OBJS_PATH) $(OBJS)
 	@$(CC)  $(CFLAGS) -o $@ $(OBJS) $(HEADERS)
 	@echo "$(G)\n -- $(NAME) made 👾 --$(RT)"
 
-test: $(OBJS_PATH) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ) 
-	@$(CC)  $(CFLAGS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
+test: $(OBJS_PATH) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
+	@$(CC)  $(CFLAGS) $(HEADERS) -I$(TEST_PATH) -o $(TEST_EXEC) $(filter-out $(OBJS_PATH)main.o, $(OBJS)) $(TEST_OBJ)
 	@./$(TEST_EXEC)
 
 $(OBJS_PATH)%.o: $(SRCS_PATH)%.cpp $(HEADERS_FILES)
-	@$(CC) $(CFLAGS) -o $@ -c $< 
+	@$(CC) $(CFLAGS) -o $@ -c $<
 	$(call update_progress)
 
 $(OBJS_PATH):

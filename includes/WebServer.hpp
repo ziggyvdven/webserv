@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   WebServer.hpp                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
+/*   Updated: 2024/10/08 17:47:28 by kmehour          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef WEBSERVER_HPP
 # define WEBSERVER_HPP
 
@@ -14,7 +26,11 @@
 # include "HttpRequest.hpp"
 # include "HttpResponse.hpp"
 # include "Socket.hpp"
+# include "TcpListener.hpp"
+# include "WebClient.hpp"
 # include "Config.hpp"
+
+#define CLIENT_TIMEOUT 3
 
 class HttpHandler;
 
@@ -24,27 +40,29 @@ private:
 
 	struct pollfd				_fds[FD_SETSIZE];
 	int							_nfds;
-	std::vector<Socket>			_socketList;
-	size_t const				_socketListSize;
+	std::vector<TcpListener>	_listeners_list;
+	std::vector<WebClient>		_clients_list;
 	Config&						_config;
-
 	std::vector<unsigned char>	_request;
 	std::string					_response;
+	HttpHandler					_httpHandler;
 
+	bool						_isListeningSocket(int fd);
+	void						_handleNewConnections();
+	void						_processClients();
+	void						_removeClient(WebClient *client_ptr);
+	WebClient*					_getClient(int socketFd);
 	static bool					_serverOn;
 	bool						_closeConnection;
 
 	bool						_isListeningSocket(int fd) const;
 	void						_acceptConnection(int fd);
 	void						_compressFdsArray(void);
-	bool						_readData(int socket);
-	void						_sendData(int socket, const char* str, size_t len) const;
 
 	static void					_sighandler(int signum);
 
 public:
-
-	WebServer(std::vector<Socket> socketList, Config &config);
+	WebServer(std::vector<TcpListener> socketList, Config &config);
 	~WebServer();
 
 	int	init(void);
@@ -52,6 +70,7 @@ public:
 
 	void						cleanUpSockets(void) const;
 	int							getNFds(void) const;
+	Config&						getConfig(void);
 
 	void						printFdsArray(void) const;
 

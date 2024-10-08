@@ -2,6 +2,7 @@
 # include "../includes/Config.hpp"
 # include "../includes/Socket.hpp"
 # include "../includes/WebServer.hpp"
+# include "../includes/TcpListener.hpp"
 # include <csignal>
 
 using namespace std;
@@ -14,7 +15,7 @@ int main(int argc, char **argv)
 		try 
 		{
 			Config  config(argv[1]);
-			std::vector<Socket>	socketList;
+			std::vector<TcpListener>	socketList;
 			vector<short> portlist;
 			config.printMsg(Y, "Setting up servers...");
 			for (unsigned i = 0; i < config.getNServers(); i++)
@@ -22,7 +23,7 @@ int main(int argc, char **argv)
 				if (std::find(portlist.begin(), portlist.end(), config.getServer(i).getPort()) == portlist.end())
 				{
 					config.printMsg(G, "Server [%s] created with port[%d] and host[%s]", config.getServer(i).getServerName().c_str(), config.getServer(i).getPort(), config.getServer(i).getHost().c_str());
-					Socket				socket(config.getServer(i).getHost(), config.getServer(i).getPort());
+					TcpListener socket(config.getServer(i).getHost(), config.getServer(i).getPort());
 					socketList.push_back(socket);
 					portlist.push_back(config.getServer(i).getPort());
 				}

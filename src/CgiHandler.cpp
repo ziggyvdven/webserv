@@ -3,7 +3,7 @@
 #include <strings.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
-#include <iostream>	
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <ctime>
@@ -15,13 +15,18 @@
 CgiHandler::CgiHandler(HttpRequest const &request, ConfigServer* config)
 	: _request(request), _htmlRoot("./data/www"), _ConfigServer(config)
 {
-	if (!request.isValid())
+	if (request.hasError())
 		throw std::exception();
+	_init();
+}
+
+void CgiHandler::_init() {
+
 }
 
 bool CgiHandler::isCgiRequest() const
 {
-	return _is_valid; 
+	return _is_valid;
 }
 
 bool	CgiHandler::isCgiScript(std::string const &target)
@@ -31,7 +36,7 @@ bool	CgiHandler::isCgiScript(std::string const &target)
 	if (cgi_bin.back() != '/')
 		cgi_bin += "/";
 	size_t				it = target.find(cgi_bin);
-	
+
 	_scriptName = "SCRIPT_NAME=";
 	_pathInfo = "PATH_INFO=";
 	_queryString = "QUERY_STRING=";
@@ -81,7 +86,7 @@ std::string	CgiHandler::execCgiScript()
 
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
-	
+
 	int							child_to_parent[2], parent_to_child[2];
 	int							wstatus;
 
@@ -97,11 +102,11 @@ std::string	CgiHandler::execCgiScript()
 		close(parent_to_child[1]);
 		dup2(parent_to_child[0], STDIN_FILENO);
 		close(parent_to_child[0]);
-		
+
 		close(child_to_parent[0]);
 		dup2(child_to_parent[1], STDOUT_FILENO);
 		close(child_to_parent[1]);
-		
+
 		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
 
@@ -122,7 +127,7 @@ std::string	CgiHandler::execCgiScript()
 	close(child_to_parent[1]);
 
 	// Send request body to CGI
-	
+
 	// TODO: c'est un peu de la chnoute
 	unsigned long chunk_size = 500000;
 	for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
@@ -154,7 +159,7 @@ std::string	CgiHandler::execCgiScript()
 	#define BUFFERSIZE 255
 	char buffer[BUFFERSIZE];
 	bzero(buffer, BUFFERSIZE);
-	
+
 	int bytes_read;
 	while((bytes_read = read (child_to_parent[0], buffer, BUFFERSIZE)) > 0)
 	{
@@ -167,8 +172,7 @@ std::string	CgiHandler::execCgiScript()
 
 bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
 {
-	std::chrono::steady_clock::time_point begin;
-	begin = std::chrono::steady_clock::now();
+	std::time_t begin = std::time(NULL);
 
 	_ConfigServer->getConfig().printMsg(B, "Server[%s]: [Timing for ] %d", _ConfigServer->getServerName().c_str(), timeout_sec);
 	while (true)
@@ -177,11 +181,11 @@ bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
 		if (WIFEXITED(wstatus))
 		{
 			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Child process finished", _ConfigServer->getServerName().c_str());
-			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Elapsed time: %d", _ConfigServer->getServerName().c_str(), time_since(begin));
+			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Elapsed time: %d", _ConfigServer->getServerName().c_str(), seconds_since(begin));
 			return false;
 		}
 
-		if (time_since(begin) > timeout_sec * 1000)
+		if (seconds_since(begin) > timeout_sec * 1000)
 		{
 			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Cgi-handler [TIMEOUT]", _ConfigServer->getServerName().c_str());
 			return true;

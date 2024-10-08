@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   HttpHandler.hpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
+/*   Updated: 2024/10/08 18:03:10 by kmehour          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef HTTPHANDLER_HPP
 # define HTTPHANDLER_HPP
 
@@ -12,16 +24,15 @@
 # include <map>
 # include "HttpRequest.hpp"
 # include "HttpResponse.hpp"
-# include "WebServer.hpp"
 # include "Config.hpp"
 # include "ConfigServer.hpp"
 # include "utils.hpp"
 
-class WebServer;
-
 class HttpHandler
 {
 private:
+
+	// Parameters at contruction -- Start
 
 	Config &							_conf;
 	ConfigServer*						_config;

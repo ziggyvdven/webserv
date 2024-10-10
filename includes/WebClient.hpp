@@ -17,6 +17,7 @@ class WebClient: public Socket {
 	enum State {
 		READING,
 		HANDLING_REQUEST,
+		SENDING_RESPONSE,
 		COMPLETE,
 		ERROR
 	};
@@ -26,10 +27,11 @@ public:
 	~WebClient();
 
 	HttpRequest getRequest() { return _request; };
-	void _sendData(char const *data, size_t data_len);
-	int	getTime() const;
-	bool process();
-	void close();
+	void	_sendData(char const *data, size_t data_len);
+	void	_handleRequest();
+	int		getTime() const;
+	bool	process();
+	void	close();
 	bool	isComplete() const { return _state == COMPLETE; };
 	void	setPollFd(struct pollfd *poll_ptr);
 

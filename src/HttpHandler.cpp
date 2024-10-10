@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/08 19:24:24 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/10/10 19:39:56 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -231,9 +231,10 @@ void	HttpHandler::_get_post(HttpRequest const &request)
 				_statusCode = 404;
 			}
 		}
-		else if (cgi_handler.isCgiScript(request.target()))
+		else if (cgi_handler.isValid())
 		{
-			_content = cgi_handler.execCgiScript();
+			cgi_handler.run();
+			_content = cgi_handler._cgiResponse;
 		}
 		else if (!_isDirectory(_path.c_str()) && access(_path.c_str(), F_OK) == 0)
 			_getContentFromFile = true;
@@ -244,34 +245,6 @@ void	HttpHandler::_get_post(HttpRequest const &request)
 		std::cerr << "Something wrong with _get() function" << std::endl;
 	}
 }
-
-// void	HttpHandler::_post(ConfigServer const &config, HttpRequest const &request)
-// {
-// 	try
-// 	{
-// 		CgiHandler cgi_handler(request, _config);
-
-// 		if (_pathIsDirectory(_path, config))
-// 		{
-// 			if (_autoIndex)
-// 				_content = _autoIndexGenerator(_path, request.target(), config);
-// 			else
-// 			{
-// 				_content = _getPage(config, 403);
-// 				_statusCode = 403;
-// 			}
-// 		}
-// 		else if (cgi_handler.isCgiScript(request.target()))
-// 		{
-// 			_content = _getPage(403);
-// 			_statusCode = 403;
-// 		}
-// 	}
-// 	catch (std::exception const &e)
-// 	{
-// 		std::cerr << "Something wrong with CGI Handler" << std::endl;
-// 	}
-// }
 
 void	HttpHandler::_delete( void )
 {

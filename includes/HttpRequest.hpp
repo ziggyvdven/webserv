@@ -28,7 +28,7 @@ public:
 	bool					hasError() const	{ return _state == ERROR; };
 	bool					isComplete() const	{ return _state == COMPLETE; };
 	std::string const		getHeader(std::string const key) const;
-	int						getContentLength();
+	int						getContentLength() const;
 
 	bool					parse(char *data, int bytes_read);
 	void 					reset();

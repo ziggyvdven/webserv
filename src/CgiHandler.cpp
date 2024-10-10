@@ -4,7 +4,6 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <ctime>
 #include <signal.h>
@@ -17,138 +16,134 @@ CgiHandler::CgiHandler(HttpRequest const &request, ConfigServer* config)
 {
 	if (request.hasError())
 		throw std::exception();
+
+	_env_strings.reserve(32);
+	_envp.reserve(32);
+	_is_valid = false;
+	_state = COLD;
+
 	_init();
 }
 
 void CgiHandler::_init() {
 
+	std::string	cgi_bin = _ConfigServer->getCGIbin();
+	const std::string target = _request.target();
+
+	if (cgi_bin.back() != '/')
+		cgi_bin += "/";
+	size_t	it = target.find(cgi_bin);
+
+	if (it != 0) {
+		return;
+	}
+
+	it = target.find_first_of("/?", cgi_bin.size());
+	_scriptName = target.substr(0, it);
+	// if (target.find(".bla") != std::string::npos)
+	// 	script_name = "/cgi-bin/cgi_tester";
+	_scriptPath = _htmlRoot + _scriptName;
+
+	if (access(_scriptPath.data(), X_OK) != 0) {
+		return ;
+	}
+
+	if (target[it] == '/') {
+		size_t	it_query = target.find_first_of('?', it);
+		_pathInfo = target.substr(it, it_query - it);
+		it = it_query;
+	}
+
+	if (target[it] == '?') {
+		_queryString = target.substr(it + 1);
+	}
+
+	_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _scriptName.c_str());
+	_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _pathInfo.c_str());
+	_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _queryString.c_str());
+
+	this->_is_valid = true;
+	_setEnvp();
 }
 
-bool CgiHandler::isCgiRequest() const
+void CgiHandler::_setEnvp() {
+	_add_env_var("SCRIPT_NAME", _scriptName);
+	_add_env_var("PATH_INFO", _pathInfo);
+	_add_env_var("QUERY_STRING", _queryString);
+	_add_env_var("ROOT", _htmlRoot);
+	_add_env_var("HTTP_VERSION", _request.version());
+	_add_env_var("REQUEST_METHOD", _request.method());
+	_add_env_var("FILENAME", "/data/www/upload/test.txt");
+	_add_env_var("CONTENT_TYPE", _request.getHeader("content-type"));
+	_add_env_var("UPLOAD_DIR", _htmlRoot + _ConfigServer->getUploadDir());
+	_envp.push_back(NULL);
+
+}
+void CgiHandler::_add_env_var(std::string key, std::string value) {
+	_env_strings.push_back(key + "=" + value);
+	_envp.push_back(_env_strings.back().c_str());
+}
+
+bool CgiHandler::isValid() const
 {
 	return _is_valid;
 }
 
-bool	CgiHandler::isCgiScript(std::string const &target)
-{
-	std::string	cgi_bin = _ConfigServer->getCGIbin();
-
-	if (cgi_bin.back() != '/')
-		cgi_bin += "/";
-	size_t				it = target.find(cgi_bin);
-
-	_scriptName = "SCRIPT_NAME=";
-	_pathInfo = "PATH_INFO=";
-	_queryString = "QUERY_STRING=";
-
-	if (target.find(".bla"))
-	{
-
-	}
-
-	if (it == 0 || (target.find(".bla") != std::string::npos))
-	{
-		it = target.find_first_of("/?", cgi_bin.size());
-		std::string script_name = target.substr(0, it);
-		if (target.find(".bla") != std::string::npos)
-			script_name = "/cgi-bin/cgi_tester";
-		std::string const	script_path = _htmlRoot + script_name;
-		_scriptPath = _htmlRoot + script_name;
-		if (access(script_path.data(), X_OK) == 0)
-		{
-			_scriptName += script_name;
-			if (target[it] == '/')
-			{
-				size_t	it_query = target.find_first_of('?', it);
-				_pathInfo += target.substr(it, it_query - it);
-				it = it_query;
-			}
-			if (target[it] == '?')
-			{
-				_queryString += target.substr(it + 1);
-			}
-			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _scriptName.c_str());
-			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _pathInfo.c_str());
-			_ConfigServer->getConfig().printMsg(B, "Server[%s]: %s", _ConfigServer->getServerName().c_str(), _queryString.c_str());
-			_envp.push_back(_scriptName.data());
-			_envp.push_back(_pathInfo.data());
-			_envp.push_back(_queryString.data());
-			return (true);
-		}
-	}
-	return (false);
-}
-
-std::string	CgiHandler::execCgiScript()
-{
+bool CgiHandler::_spawn_process() {
 	std::vector<char const *>	argv;
-	pid_t						process_id;
-
-	std::string	const			root = "ROOT=" + _htmlRoot;
-	std::string	const			version = "HTTP_VERSION=" + _request.version();
-	std::string	const			method = "REQUEST_METHOD=" + _request.method();
-	std::string const			filename = "FILENAME=./data/www/upload/test.txt";
-	std::string const			content_type = "CONTENT_TYPE=" + _request.getHeader("content-type");
-	std::string const			upload_folder = "UPLOAD_DIR=" + _htmlRoot + _ConfigServer->getUploadDir(); 
 
 	std::stringstream			content_length;
 	content_length << "CONTENT_LENGTH=" << _request.body().size();
 
-	int							child_to_parent[2], parent_to_child[2];
-	int							wstatus;
 
-	pipe(child_to_parent);
-	pipe(parent_to_child);
+	pipe(_child_to_parent);
+	pipe(_parent_to_child);
 
-	process_id = fork();
-	if (process_id < 0)
+	_process_id = fork();
+	if (_process_id < 0)
 		perror ("fork() failed");
-	else if (process_id == 0)
+	else if (_process_id == 0)
 	{
 		// _webServer.cleanUpSockets();
-		close(parent_to_child[1]);
-		dup2(parent_to_child[0], STDIN_FILENO);
-		close(parent_to_child[0]);
+		close(_parent_to_child[1]);
+		dup2(_parent_to_child[0], STDIN_FILENO);
+		close(_parent_to_child[0]);
 
-		close(child_to_parent[0]);
-		dup2(child_to_parent[1], STDOUT_FILENO);
-		close(child_to_parent[1]);
+		close(_child_to_parent[0]);
+		dup2(_child_to_parent[1], STDOUT_FILENO);
+		close(_child_to_parent[1]);
 
 		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
-
-		_envp.push_back(root.data());
-		_envp.push_back(version.data());
-		_envp.push_back(method.data());
-		_envp.push_back(filename.data());
-		_envp.push_back(content_length.str().data());
-		_envp.push_back(content_type.data());
-		_envp.push_back(upload_folder.data());
-		_envp.push_back(NULL);
 
 		execve (_scriptPath.data(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));
 		exit (127);
 	}
 
-	close(parent_to_child[0]);
-	close(child_to_parent[1]);
+	close(_parent_to_child[0]);
+	close(_child_to_parent[1]);
+	return true;
+}
 
-	// Send request body to CGI
+void	CgiHandler::run()
+{
+	int							wstatus;
 
-	// TODO: c'est un peu de la chnoute
-	unsigned long chunk_size = 500000;
-	for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
-	{
-		chunk_size = ::min(chunk_size, _request.body().size() - i);
-		write(parent_to_child[1], _request.body().data() + i, chunk_size);
+	if (_state == COLD) {
+		_spawn_process();
+		if (_request.getContentLength() > 0) {
+			_state = SENDING_TO_SCRIPT;
+		} else {
+			_state = READING_FROM_SCRIPT;
+		}
 	}
-	close(parent_to_child[1]);
 
-	if (_timeout_cgi(process_id, wstatus, TIMEOUT))
+	// Check time-out
+	if (_timeout_cgi(_process_id, wstatus, TIMEOUT))
 	{
-		kill(process_id, 9);
+		kill(_process_id, 9);
 		_cgiResponse = "<h1>[CGI] Script timed out!</h1>";
-		return _cgiResponse;
+		_state = TIMED_OUT;
 	}
 
 	if (WIFEXITED(wstatus) && WEXITSTATUS(wstatus) != 0)
@@ -163,28 +158,47 @@ std::string	CgiHandler::execCgiScript()
 		_cgiResponse = "<h1>[DEBUG] Error in executing CGI script</h1>\r\n";
 	}
 
-	#define BUFFERSIZE 255
-	char buffer[BUFFERSIZE];
-	bzero(buffer, BUFFERSIZE);
-
-	int bytes_read;
-	while((bytes_read = read (child_to_parent[0], buffer, BUFFERSIZE)) > 0)
+	if (_state == SENDING_TO_SCRIPT)
 	{
-		buffer[bytes_read] = '\0';
-		_cgiResponse += buffer;
+		// write chunk
+		unsigned long chunk_size = 500000;
+		for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
+		{
+			chunk_size = ::min(chunk_size, _request.body().size() - i);
+			write(_parent_to_child[1], _request.body().data() + i, chunk_size);
+		}
+		close(_parent_to_child[1]);
+		_state = READING_FROM_SCRIPT;
 	}
 
-	return (_cgiResponse);
+	if (_state == READING_FROM_SCRIPT)
+	{
+		// Read chunk
+		#define BUFFERSIZE 255
+		char buffer[BUFFERSIZE];
+		bzero(buffer, BUFFERSIZE);
+		int bytes_read;
+
+		while((bytes_read = read (_child_to_parent[0], buffer, BUFFERSIZE)) > 0)
+		{
+			buffer[bytes_read] = '\0';
+			_cgiResponse += buffer;
+		}
+
+		_state = COMPLETE;
+	}
+	// If the handler is marked as complete, web client reads the _cgiResponse, and sends it
+	// TODO [Optional]: make the webclient send data as it comes, with chunked transfer.
 }
 
-bool CgiHandler::_timeout_cgi(int process_id, int &wstatus, int timeout_sec)
+bool CgiHandler::_timeout_cgi(int _process_id, int &wstatus, int timeout_sec)
 {
 	std::time_t begin = std::time(NULL);
 
 	_ConfigServer->getConfig().printMsg(B, "Server[%s]: [Timing for ] %d", _ConfigServer->getServerName().c_str(), timeout_sec);
 	while (true)
 	{
-		waitpid(process_id, &wstatus, WNOHANG);
+		waitpid(_process_id, &wstatus, WNOHANG);
 		if (WIFEXITED(wstatus))
 		{
 			_ConfigServer->getConfig().printMsg(B, "Server[%s]: Child process finished", _ConfigServer->getServerName().c_str());

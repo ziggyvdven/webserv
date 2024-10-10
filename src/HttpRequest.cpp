@@ -84,7 +84,7 @@ std::string const HttpRequest::getHeader(std::string key) const
 	return "";
 }
 
-int	HttpRequest::getContentLength()
+int	HttpRequest::getContentLength() const
 {
 
 	std::string _contentLength;

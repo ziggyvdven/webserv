@@ -22,7 +22,6 @@ void WebClient::_sendData(char const *data, size_t data_len) {
 		rtn = send(_socketFD, data + idx, send_size, 0);
 		idx += rtn;
 	}
-
 }
 
 WebClient::~WebClient() {}
@@ -32,11 +31,9 @@ void WebClient::_processInput()
 	int bytes_read = 0;
 	char buffer[BUFFER_SIZE];
 
-
 	if (_pollFd->revents & POLLIN)
 	{
 		bytes_read = recv(_socketFD, buffer, BUFFER_SIZE, 0);
-
 		if (bytes_read <= 0)
 		{
 			_state = HANDLING_REQUEST;
@@ -46,9 +43,7 @@ void WebClient::_processInput()
 
 	// Parse the request
 	_request.parse(buffer, bytes_read);
-
 	if (_request.hasError() || _request.isComplete()) {
-
 		_state = HANDLING_REQUEST;
 	}
 }
@@ -62,6 +57,10 @@ void WebClient::_processCGI() {
 	//
 
 }
+void WebClient::_handleRequest(){
+	_httpHandler->buildResponse(_request, _response);
+	_state=SENDING_RESPONSE;
+}
 
 bool WebClient::process()
 {
@@ -70,10 +69,12 @@ bool WebClient::process()
 			_processInput();
 			break;
 		case HANDLING_REQUEST:
-			_httpHandler->buildResponse(_request, _response);
+			_handleRequest();
+			return false;
+		case SENDING_RESPONSE:
 			_sendData(_response.getResponse().data(), _response.getResponse().size());
 			_state = COMPLETE;
-			return false;
+			break;
 		case COMPLETE:
 			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
 			break;

@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/10 19:39:56 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/10/17 13:32:19 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -214,12 +214,16 @@ std::string	HttpHandler::_parseTarget(std::string const &target)
 }
 
 /*	Methods		************************************************************* */
+bool HttpHandler::checkCgi(HttpRequest const &request) const {
+	CgiHandler cgi(request, _config->getCGIbin());
+	return cgi.isValid();
+}
+
 
 void	HttpHandler::_get_post(HttpRequest const &request)
 {
 	try
 	{
-		CgiHandler cgi_handler(request, _config);
 		
 		if ((_isDirectory(_path.c_str())))
 		{
@@ -231,14 +235,12 @@ void	HttpHandler::_get_post(HttpRequest const &request)
 				_statusCode = 404;
 			}
 		}
-		else if (cgi_handler.isValid())
-		{
-			cgi_handler.run();
-			_content = cgi_handler._cgiResponse;
+		else if (checkCgi(request)) {
+			return;
 		}
-		else if (!_isDirectory(_path.c_str()) && access(_path.c_str(), F_OK) == 0)
+		else if (!_isDirectory(_path.c_str()) && access(_path.c_str(), F_OK) == 0) {
 			_getContentFromFile = true;
-
+		}
 	}
 	catch (std::exception const &e)
 	{

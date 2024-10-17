@@ -178,6 +178,7 @@ void	HttpResponse::setConfig(ConfigServer *config)
 void	HttpResponse::setContent(std::string const &content)
 {
 	_content = content;
+	setHeader("Content-Length", std::to_string(content.size()));
 }
 
 void	HttpResponse::setHeader(std::string const &key, std::string const &value)

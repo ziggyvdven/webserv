@@ -123,3 +123,28 @@ void print_vector_data(std::vector<char> const &buffer)
 	}
 	std::cout << std::endl;
 }
+
+void  printMsg(const char *color, const char* msg, ...)
+{
+    char        output[8192];
+    va_list     args;
+    int         n;
+
+	va_start(args, msg);
+	n = vsnprintf(output, 8192, msg, args);
+	std::string date = getCurrTime();
+	std::cout << color << getCurrTime() << output << END << std::endl;   
+	va_end(args);
+	(void)n;
+}
+
+std::string getCurrTime()
+{
+    tzset();
+    char date[1000];
+    time_t now = time(0);
+	now -= 4 * 3600;
+    struct tm tm = *gmtime(&now);
+    strftime(date, sizeof(date), "[%Y-%m-%d  %H:%M:%S]   ", &tm);
+    return (std::string(date));
+}

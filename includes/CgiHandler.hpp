@@ -14,7 +14,8 @@ class CgiHandler
 		SENDING_TO_SCRIPT,
 		READING_FROM_SCRIPT,
 		COMPLETE,
-		TIMED_OUT,
+		TIMED_OUT
+		,
 		ERROR,
 	};
 
@@ -28,7 +29,7 @@ private:
 	std::string			_scriptPath;
 	std::string			_pathInfo;
 	std::string			_queryString;
-	ConfigServer*		_ConfigServer;
+	std::string			_cgi_bin;
 	int					_child_to_parent[2], _parent_to_child[2];
 	pid_t				_process_id;
 
@@ -47,8 +48,10 @@ private:
 	void	_setEnvp();
 	bool	_spawn_process();
 public:
-	CgiHandler(HttpRequest const &request, ConfigServer* config);
+	CgiHandler(HttpRequest const &request, std::string const &cgi_bin);
 
 	bool	isValid() const; 
+	bool	completed() const;
 	void	run();
+	std::string getContent() const { return _cgiResponse; };
 };

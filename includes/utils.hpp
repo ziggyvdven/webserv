@@ -3,6 +3,7 @@
 #include <vector>
 #include <ctime>
 #include <iostream>
+#include "Common.hpp"
 
 std::string const	getExtension(std::string const &file);
 
@@ -32,3 +33,5 @@ bool is_number(const std::string& s);
 
 void insert_vector_data(std::vector<char> &dest, char *src, size_t len);
 void print_vector_data(std::vector<char> const &buffer);
+void printMsg(const char *color, const char* msg, ...);
+std::string getCurrTime();

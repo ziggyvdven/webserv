@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/10/08 17:47:28 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/10/17 13:50:29 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@
 # include "WebClient.hpp"
 # include "Config.hpp"
 
-#define CLIENT_TIMEOUT 3
+#define CLIENT_TIMEOUT 3000
 
 class HttpHandler;
 

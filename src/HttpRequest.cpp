@@ -191,7 +191,7 @@ void HttpRequest::_parse_body()
 		return;
 	}
 
-	read_bytes = min(_buffer.size(), _contentLength - _body.size());
+	read_bytes = ::min(_buffer.size(), _contentLength - _body.size());
 	_body.insert(_body.end(), _buffer.begin(), _buffer.begin() + read_bytes);
 	_buffer.clear();
 

@@ -46,7 +46,7 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	HttpHandler	http(_config);
+	// HttpHandler	http(_config);
 
 	signal(SIGINT, _sighandler);
 	while (_serverOn)
@@ -116,6 +116,7 @@ void	WebServer::_processClients()
 		if (client_it->isComplete() 
 			|| client_it->getTime() > CLIENT_TIMEOUT)
 		{
+			printMsg(R, "Server: Removing Web Client");
 			_removeClient(&(*client_it));
 			return ;
 		}

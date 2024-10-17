@@ -6,6 +6,7 @@ WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler, pollfd *
 	_state(READING), _httpHandler(httpHandler)
 	
 {
+	_cgi = NULL;
 	setPollFd(pollFd_ptr);
 	_updateTime();
 }
@@ -24,7 +25,10 @@ void WebClient::_sendData(char const *data, size_t data_len) {
 	}
 }
 
-WebClient::~WebClient() {}
+WebClient::~WebClient() {
+	if (_cgi)
+		delete _cgi;
+}
 
 void WebClient::_processInput()
 {
@@ -49,17 +53,30 @@ void WebClient::_processInput()
 }
 
 void WebClient::_processCGI() {
+	
 	// Init cgi execution
-	std::cout << "[UNIMPLEMENTED] Handling CGI" << std::endl;
+	if (_cgi == NULL)
+	{
+		ConfigServer config = _httpHandler->_conf.getServerConfig(_request.getHeader("host"), _request.target());
+		std::string cgi_bin = config.getCGIbin();
+		_cgi = new CgiHandler(_request, _httpHandler->getConfigServer()->getCGIbin());
+	}
+	_cgi->run();
 
-	// Time the cgi execution
+	if (_cgi->completed())
+	{
+		_response.setContent(_response.getContent() + _cgi->getContent());
+		_state = SENDING_RESPONSE;
+	}
 
-	//
 
 }
 void WebClient::_handleRequest(){
 	_httpHandler->buildResponse(_request, _response);
-	_state=SENDING_RESPONSE;
+	if(_httpHandler->checkCgi(_request))
+		_state = HANDLING_CGI;
+	else
+		_state=SENDING_RESPONSE;
 }
 
 bool WebClient::process()
@@ -70,6 +87,9 @@ bool WebClient::process()
 			break;
 		case HANDLING_REQUEST:
 			_handleRequest();
+			return false;
+		case HANDLING_CGI:
+			_processCGI();
 			return false;
 		case SENDING_RESPONSE:
 			_sendData(_response.getResponse().data(), _response.getResponse().size());

@@ -22,6 +22,7 @@ CgiHandler::CgiHandler(HttpRequest const &request, std::string const &cgi_bin)
 	_envp.reserve(32);
 	_is_valid = false;
 	_state = COLD;
+	_sent_bytes = 0;
 
 	_init();
 }
@@ -74,6 +75,7 @@ void CgiHandler::_setEnvp() {
 	_add_env_var("HTTP_VERSION", _request.version());
 	_add_env_var("REQUEST_METHOD", _request.method());
 	_add_env_var("FILENAME", "/data/www/upload/test.txt");
+	_add_env_var("UPLOAD_DIR", "./data/www/upload2");
 	_add_env_var("CONTENT_TYPE", _request.getHeader("content-type"));
 	_envp.push_back(NULL);
 
@@ -171,13 +173,16 @@ void	CgiHandler::run()
 	{
 		// write chunk
 		unsigned long chunk_size = 500000;
-		for (unsigned long i = 0; i < _request.body().size(); i += chunk_size)
+		if(_sent_bytes >= _request.getContentLength())
 		{
-			chunk_size = ::min(chunk_size, _request.body().size() - i);
-			write(_parent_to_child[1], _request.body().data() + i, chunk_size);
+			close(_parent_to_child[1]);
+			_state = READING_FROM_SCRIPT;
 		}
-		close(_parent_to_child[1]);
-		_state = READING_FROM_SCRIPT;
+		else {
+			chunk_size = ::min(chunk_size, _request.body().size() - _sent_bytes);
+			write(_parent_to_child[1], _request.body().data() + _sent_bytes, chunk_size);
+			_sent_bytes += chunk_size;
+		}
 		return;
 	}
 

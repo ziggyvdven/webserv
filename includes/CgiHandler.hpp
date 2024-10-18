@@ -31,6 +31,7 @@ private:
 	std::string			_queryString;
 	std::string			_cgi_bin;
 	int					_child_to_parent[2], _parent_to_child[2];
+	int					_sent_bytes;
 	pid_t				_process_id;
 
 public:

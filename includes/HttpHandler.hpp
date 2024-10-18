@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/17 15:06:37 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/10/18 15:06:46 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,11 +31,11 @@
 class HttpHandler
 {
 public:
-	Config &							_conf;
 private:
 
 	// Parameters at contruction -- Start
 
+	Config &							_conf;
 	ConfigServer*						_config;
 	HttpResponse*						_response;
 	std::string const					_baseDir;
@@ -48,6 +48,7 @@ private:
 	std::string							_contentType;
 	std::string							_htmlFile;
 	std::string							_path;
+	std::string							_cgi_bin;
 
 
 	void								_setRequestParameters(HttpRequest const &request);
@@ -74,6 +75,7 @@ public:
 
 	ConfigServer*						getConfigServer( void ) { return _config; };
 	std::string	const					getPath( void ) const { return _path; };
+	std::string							getCGIbin() const { return _cgi_bin; };
 	bool								isCgi( void ) const; 
 	void								buildResponse(HttpRequest const &request, HttpResponse &response);
 	bool								checkCgi(HttpRequest const &request) const;

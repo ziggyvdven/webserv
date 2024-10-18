@@ -8,6 +8,7 @@
 #include <ctime>
 #include <signal.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define TIMEOUT 12
 
@@ -101,6 +102,9 @@ bool CgiHandler::_spawn_process() {
 	pipe(_child_to_parent);
 	pipe(_parent_to_child);
 
+	// Set pipe to non-blocking
+	fcntl(_child_to_parent[0], F_SETFL, fcntl(_child_to_parent[0], F_GETFL) | O_NONBLOCK);
+
 	_process_id = fork();
 	if (_process_id < 0)
 		perror ("fork() failed");
@@ -118,16 +122,9 @@ bool CgiHandler::_spawn_process() {
 		argv.push_back(_scriptPath.data());
 		argv.push_back(NULL);
 
-		std::cerr 
-			<< " [CGI] scriptPath" << _scriptPath << "\n"
-			<< " [CGI] argv: " << const_cast<char * const *>(argv.data()) << "\n"
-			<< std::endl; 
-
 		execve (_scriptPath.data(), const_cast<char * const *>(argv.data()), const_cast<char * const *>(_envp.data()));
 		exit (127);
 	}
-
-	exit(0);
 
 	close(_parent_to_child[0]);
 	close(_child_to_parent[1]);
@@ -193,7 +190,7 @@ void	CgiHandler::run()
 		int bytes_read;
 
 		bytes_read = read (_child_to_parent[0], buffer, BUFFERSIZE);
-		printMsg(G, "CGI: bytes_read(%i) buffer: %s", bytes_read, buffer);
+		// printMsg(G, "CGI: bytes_read(%i) buffer: %s", bytes_read, buffer);
 		if (bytes_read > 0)
 		{
 			buffer[bytes_read] = '\0';

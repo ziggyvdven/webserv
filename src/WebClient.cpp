@@ -15,12 +15,11 @@ void WebClient::_sendData(char const *data, size_t data_len) {
 	size_t	rtn = 0;
 	size_t	idx = 0;
 	size_t	chunk_size = 255;
-	size_t	send_size = 0;
+	// size_t	send_size = 0;
 
 	while (idx < data_len)
 	{
-		send_size = data_len - idx < chunk_size ? data_len - idx : chunk_size;
-		rtn = send(_socketFD, data + idx, send_size, 0);
+		rtn = send(_socketFD, data + idx, chunk_size, 0);
 		idx += rtn;
 	}
 }
@@ -57,9 +56,7 @@ void WebClient::_processCGI() {
 	// Init cgi execution
 	if (_cgi == NULL)
 	{
-		ConfigServer config = _httpHandler->_conf.getServerConfig(_request.getHeader("host"), _request.target());
-		std::string cgi_bin = config.getCGIbin();
-		_cgi = new CgiHandler(_request, _httpHandler->getConfigServer()->getCGIbin());
+		_cgi = new CgiHandler(_request, _httpHandler->getCGIbin());
 	}
 	_cgi->run();
 

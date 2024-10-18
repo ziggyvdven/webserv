@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/06/18 20:18:55 by olivierroy        #+#    #+#             */
-/*   Updated: 2024/10/17 13:50:29 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/10/18 14:43:37 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ private:
 	std::vector<unsigned char>	_request;
 	std::string					_response;
 	HttpHandler					_httpHandler;
+	std::string					_cgi_bin;
 
 	bool						_isListeningSocket(int fd);
 	void						_handleNewConnections();

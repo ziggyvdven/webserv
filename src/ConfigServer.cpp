@@ -58,12 +58,11 @@ vector<pair<string, unsigned> >::iterator	ConfigServer::CreateLocationBlocks(vec
 	return (it);
 }
 
-ConfigServer::ConfigServer( const ConfigServer & src ):  _Block(src._Block), _Config(src._Config), _Port(src._Port), _Host(src._Host),
-_ServerName(src._ServerName), _ClientMaxBodySize(src._ClientMaxBodySize), _ErrorPages(src._ErrorPages), _AutoIndex(src._AutoIndex), _Root(src._Root),
-_Index(src._Index), _CGIbin(src._CGIbin), _CGIext(src._CGIext), _Return(src._Return), _Routes(src._Routes), _Target(src._Target), _UploadDir(src._UploadDir){
+ConfigServer::ConfigServer( const ConfigServer & src )
+	: _Config(src._Config)
+{
 	// std::cout << G << "ConfigServer Copy constructor called" << END << std::endl;
-	for (int i = 0; i < 3; i++)
-		_Methods[i] = src._Methods[i];
+	*this = src;
 }
 
 /*

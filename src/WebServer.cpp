@@ -20,6 +20,7 @@ WebServer::WebServer(std::vector<TcpListener> socketList, Config &conf) : _nfds(
 _listeners_list(socketList), _config(conf), _httpHandler(conf)
 {
 	memset(_fds, 0, sizeof(_fds));
+	_clients_list.reserve(1024);
 }
 
 WebServer::~WebServer()
@@ -46,8 +47,6 @@ int	WebServer::init(void)
 
 int	WebServer::run(void)
 {
-	// HttpHandler	http(_config);
-
 	signal(SIGINT, _sighandler);
 	while (_serverOn)
 	{

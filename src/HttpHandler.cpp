@@ -6,7 +6,7 @@
 /*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/17 13:32:19 by kmehour          ###   ########.fr       */
+/*   Updated: 2024/10/18 15:07:30 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ void	HttpHandler::buildResponse(HttpRequest const &request, HttpResponse &respon
 		ConfigServer config = _conf.getServerConfig(request.getHeader("host"), request.target());
 		_config = &config;
 		_response = &response;
+		_cgi_bin = config.getCGIbin();
 		
 		_conf.printMsg(B, "Server[%s]: request recieved [Method[%s] Target[%s] Version[%s]]", _config->getServerName().c_str(), request.method().c_str(), request.target().c_str(), request.version().c_str());
 		_setRequestParameters(request);
@@ -215,7 +216,7 @@ std::string	HttpHandler::_parseTarget(std::string const &target)
 
 /*	Methods		************************************************************* */
 bool HttpHandler::checkCgi(HttpRequest const &request) const {
-	CgiHandler cgi(request, _config->getCGIbin());
+	CgiHandler cgi(request, getCGIbin());
 	return cgi.isValid();
 }
 

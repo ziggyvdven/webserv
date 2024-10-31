@@ -12,6 +12,21 @@ HttpRequest::HttpRequest()
 	: _state(READING_REQUEST_LINE), _contentLength(0) {
 }
 
+HttpRequest::HttpRequest(HttpRequest const &other){
+	*this = other;
+}
+
+HttpRequest& HttpRequest::operator = (HttpRequest const &other) {
+	_state = other._state;
+	_method = other._method;
+	_target = other._target;
+	_version = other._version;
+	_buffer = other._buffer;
+	_body = other._body;
+	_headers = other._headers;
+	_contentLength = other._contentLength;
+	return *this;
+}
 // ========== ========== Vector<char> manipulatoins ========== ==========
 
 bool _extract_http_line(std::vector<char> &buffer, std::vector<char> &line)

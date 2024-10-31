@@ -18,6 +18,9 @@ public:
 	};
 
 	HttpRequest();
+	~HttpRequest() {};
+	HttpRequest(HttpRequest const &other);
+	HttpRequest& operator = (HttpRequest const &other);	
 
 	// Getters
 	std::vector<char> const	raw()	const		{ return _buffer; }

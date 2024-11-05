@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/30 15:02:40 by oroy             ###   ########.fr       */
+/*   Updated: 2024/10/31 14:06:44 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ bool	HttpHandler::_check_redirect(void)
 
 bool	HttpHandler::_check_40x_error( HttpRequest const &request )
 {
-	if (_config->getClientMaxBodySize() && request.body().size() > _config->getClientMaxBodySize())
+	if (_config->getClientMaxBodySize() && request.getContentLength() > _config->getClientMaxBodySize())
 	{
 		_content = _getPage(413);
 		_statusCode = 413;

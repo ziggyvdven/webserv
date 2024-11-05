@@ -25,6 +25,8 @@ CgiHandler::CgiHandler(HttpRequest const &request, std::string const &cgi_bin)
   _init();
 }
 
+
+
 void CgiHandler::_init() {
 
   const std::string target = _request.target();
@@ -61,12 +63,8 @@ void CgiHandler::_init() {
     _queryString = target.substr(it + 1);
   }
 
-  // printMsg(B, "CGI: %s _scriptName", _scriptName.c_str());
-  // printMsg(B, "CGI: %s _pathInfo", _pathInfo.c_str());
-  // printMsg(B, "CGI: %s _queryString", _queryString.c_str());
-
-  this->_is_valid = true;
-  _setEnvp();
+	this->_is_valid = true;
+	_setEnvp();
 }
 
 void CgiHandler::_setEnvp() {
@@ -92,6 +90,8 @@ bool CgiHandler::isValid() const { return _is_valid; }
 bool CgiHandler::completed() const {
   return (_state == COMPLETE || _state == TIMED_OUT);
 }
+
+
 
 bool CgiHandler::_spawn_process() {
   std::vector<char const *> argv;

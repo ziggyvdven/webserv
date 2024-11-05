@@ -5,6 +5,7 @@
 #include <string>
 #include <unistd.h>
 #include "ConfigServer.hpp"
+#include "utils.hpp"
 
 
 class CgiHandler
@@ -31,7 +32,7 @@ private:
 	std::string			_queryString;
 	std::string			_cgi_bin;
 	int					_child_to_parent[2], _parent_to_child[2];
-	int					_sent_bytes;
+	unsigned long		_sent_bytes;
 	unsigned long		_request_body_size;
 	pid_t				_process_id;
 	std::time_t			_exec_start;

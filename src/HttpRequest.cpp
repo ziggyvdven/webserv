@@ -79,12 +79,12 @@ bool HttpRequest::parse(char *buffer, int read_bytes)
 std::string const HttpRequest::getHeader(std::string key) const
 {
 	toLowerCase(key);
-	if (_headers.find(key) != _headers.end())
-		return _headers.at(key);
-	return "";
+	std::map<std::string, std::string>::const_iterator it;
+	it = _headers.find(key);
+	return (it != _headers.end()) ? it->second : "";
 }
 
-int	HttpRequest::getContentLength() const
+unsigned long	HttpRequest::getContentLength() const
 {
 
 	std::string _contentLength;
@@ -92,7 +92,7 @@ int	HttpRequest::getContentLength() const
 	if (!is_number(_contentLength))
 		return 0;
 
-	return std::stoi(_contentLength);
+	return std::stoul(_contentLength);
 
 }
 
@@ -198,7 +198,7 @@ void HttpRequest::_parse_body()
 	_body.insert(_body.end(), _buffer.begin(), _buffer.begin() + read_bytes);
 	_buffer.clear();
 
-	if (static_cast<int>(_body.size()) >= _contentLength) {
+	if (_body.size() >= _contentLength) {
 		_state = COMPLETE;
 		return;
 	}

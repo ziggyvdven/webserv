@@ -40,6 +40,7 @@ public:
 	void	setPollFd(struct pollfd *poll_ptr);
 
 	void	_updateTime();
+
 private:
 	struct pollfd		*_pollFd;
 	State				_state;
@@ -53,10 +54,11 @@ private:
 	void				_deleteCGI();
 
 
-	void	_processInput();
-	void	_processCGI();
+	void				_processInput();
+	void				_processCGI();
 
-	std::string _printStatus() const;
+	std::string			_printState() const;
+	void				_updateState(State new_state);
 
 	WebClient();
 };

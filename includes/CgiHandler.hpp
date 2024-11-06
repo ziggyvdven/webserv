@@ -26,11 +26,6 @@ private:
 	std::string			_htmlRoot;
 	bool				_is_valid;
 	State				_state;
-	std::string			_scriptName;
-	std::string			_scriptPath;
-	std::string			_pathInfo;
-	std::string			_queryString;
-	std::string			_cgi_bin;
 	int					_child_to_parent[2], _parent_to_child[2];
 	unsigned long		_sent_bytes;
 	unsigned long		_request_body_size;
@@ -40,12 +35,16 @@ private:
 
 public:
 	std::string			_cgiResponse;
+	std::string			_scriptName;
+	std::string			_scriptPath;
+	std::string			_pathInfo;
+	std::string			_queryString;
+	std::string			_cgi_bin;
 
 private:
 	std::vector<char const *>	_envp;
 	std::vector<std::string>	_env_strings;
 
-	void	_init();
 	void	_send_to_cgi(std::string &src, size_t n_bytes);
 	void	_read_from_cgi(std::string &dst, size_t n_bytes);
 	bool	_timeout_cgi(int process_id, int &wstatus, int timeout_sec);

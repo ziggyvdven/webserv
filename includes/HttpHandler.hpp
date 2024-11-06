@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.hpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:09:00 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/30 14:47:22 by oroy             ###   ########.fr       */
+/*   Updated: 2024/11/05 18:20:03 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 # include "HttpResponse.hpp"
 # include "Config.hpp"
 # include "ConfigServer.hpp"
+# include "CgiHandler.hpp"
 # include "utils.hpp"
 
 class HttpHandler
@@ -49,6 +50,8 @@ private:
 	std::string							_htmlFile;
 	std::string							_path;
 	std::string							_cgi_bin;
+	std::string							_scriptPath;
+	std::string							_scriptName;
 
 
 	void								_setRequestParameters(HttpRequest const &request);
@@ -78,9 +81,9 @@ public:
 	ConfigServer*						getConfigServer( void ) { return _config; };
 	std::string	const					getPath( void ) const { return _path; };
 	std::string							getCGIbin() const { return _cgi_bin; };
-	bool								isCgi( void ) const; 
+	bool								isCgi(HttpRequest const &request);
+	void								populateCgi(CgiHandler &cgi, HttpRequest const &request);
 	void								buildResponse(HttpRequest const &request, HttpResponse &response);
-	bool								checkCgi(HttpRequest const &request) const;
 };
 
 #endif

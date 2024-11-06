@@ -5,12 +5,12 @@
 #include <sys/socket.h>
 
 WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler, pollfd *pollFd_ptr)
-	: Socket(accepted_connection), _pollFd(pollFd_ptr),
-	_state(READING), _httpHandler(httpHandler)
+	: Socket(accepted_connection), _pollFd(pollFd_ptr), _httpHandler(httpHandler)
 
 {
 	_cgi = NULL;
 	_sentBytes = 0;
+	_state = READING;
 	setPollFd(pollFd_ptr);
 	_updateTime();
 }
@@ -101,6 +101,7 @@ void WebClient::_processInput()
 {
 	int bytes_read = 0;
 	char buffer[BUFFER_SIZE];
+	static bool first = true;
 
 	if (_pollFd->revents & POLLIN)
 	{
@@ -115,8 +116,10 @@ void WebClient::_processInput()
 
 	// Parse the request
 	_request.parse(buffer, bytes_read);
-	if(!_request.target().empty())
-		_updateState(READING);
+	if(!_request.target().empty() && first) {
+		_printState();
+		first = false;
+	}
 	if (_request.hasError() || _request.isComplete()) {
 		_updateState(HANDLING_REQUEST);
 	}
@@ -128,6 +131,7 @@ void WebClient::_processCGI() {
 	if (_cgi == NULL)
 	{
 		_cgi = new CgiHandler(_request, _httpHandler->getCGIbin());
+		_httpHandler->populateCgi(*_cgi, _request);
 	}
 	_cgi->run();
 
@@ -141,7 +145,7 @@ void WebClient::_processCGI() {
 
 void WebClient::_handleRequest(){
 	_httpHandler->buildResponse(_request, _response);
-	if(_httpHandler->checkCgi(_request))
+	if(_httpHandler->isCgi(_request))
 		_updateState(HANDLING_CGI);
 	else
 		_updateState(SENDING_RESPONSE);

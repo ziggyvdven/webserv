@@ -22,49 +22,7 @@ CgiHandler::CgiHandler(HttpRequest const &request, std::string const &cgi_bin)
   _sent_bytes = 0;
   _request_body = _request.body();
 
-  _init();
-}
-
-
-
-void CgiHandler::_init() {
-
-  const std::string target = _request.target();
-
-  if (_cgi_bin.back() != '/')
-    _cgi_bin += "/";
-
-  size_t it = target.find(_cgi_bin);
-
-  if (it == 0) {
-    it = target.find_first_of("/?", _cgi_bin.size());
-    _scriptName = target.substr(0, it);
-    if (_scriptName == _cgi_bin)
-      return;
-  } else if (target.find(".bla") != std::string::npos)
-    _scriptName = "/cgi-bin/cgi_tester";
-  else {
-    return;
-  }
-
-  _scriptPath = _htmlRoot + _scriptName;
-
-  if (access(_scriptPath.data(), X_OK) != 0) {
-    return;
-  }
-
-  if (target[it] == '/') {
-    size_t it_query = target.find_first_of('?', it);
-    _pathInfo = target.substr(it, it_query - it);
-    it = it_query;
-  }
-
-  if (target[it] == '?') {
-    _queryString = target.substr(it + 1);
-  }
-
-	this->_is_valid = true;
-	_setEnvp();
+  _setEnvp();
 }
 
 void CgiHandler::_setEnvp() {
@@ -143,7 +101,7 @@ void CgiHandler::_send_to_cgi() {
 	if (rtn <= 0)
 		return;
 	_sent_bytes += rtn;
-    printMsg(G, "[CGI] %d  sent to script", chunk_size);
+    // printMsg(G, "[CGI] %d  sent to script", chunk_size);
 }
 
 void CgiHandler::_recv_from_cgi() {

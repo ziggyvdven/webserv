@@ -18,9 +18,11 @@ public:
 	};
 
 	HttpRequest();
+	HttpRequest(HttpRequest const &request);
+	HttpRequest &operator=(HttpRequest const &request);
 
 	// Getters
-	std::vector<char> const	raw()	const		{ return _buffer; }
+	std::vector<char> const	raw()	const		{ return _buffer; };
 	std::string const		method() const		{ return _method; };
 	std::string const		target() const		{ return _target; };
 	std::string const		version() const		{ return _version; };

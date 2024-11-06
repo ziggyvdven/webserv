@@ -33,7 +33,7 @@ void CgiHandler::_setEnvp() {
   _add_env_var("HTTP_VERSION", _request.version());
   _add_env_var("REQUEST_METHOD", _request.method());
   _add_env_var("FILENAME", "/data/www/upload/test.txt");
-  _add_env_var("UPLOAD_DIR", "./data/www/upload2");
+  _add_env_var("UPLOAD_DIR", "./data/www/upload");
   _add_env_var("CONTENT_TYPE", _request.getHeader("content-type"));
   _add_env_var("SERVER_PROTOCOL", "HTTP/1.1");
   _envp.push_back(NULL);

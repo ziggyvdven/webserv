@@ -3,15 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   HttpHandler.cpp                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: oroy <oroy@student.42.fr>                  +#+  +:+       +#+        */
+/*   By: kmehour <kmehour@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/03 12:30:55 by oroy              #+#    #+#             */
-/*   Updated: 2024/10/30 15:02:40 by oroy             ###   ########.fr       */
+/*   Updated: 2024/11/05 18:30:34 by kmehour          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/HttpHandler.hpp"
-#include "../includes/CgiHandler.hpp"
+#include <cstddef>
 
 HttpHandler::HttpHandler(Config &conf) : _conf(conf), _config(NULL), _baseDir("./data"), _content("") {}
 
@@ -93,7 +93,7 @@ bool	HttpHandler::_check_redirect(void)
 
 bool	HttpHandler::_check_40x_error( HttpRequest const &request )
 {
-	if (_config->getClientMaxBodySize() && request.body().size() > _config->getClientMaxBodySize())
+	if (_config->getClientMaxBodySize() && request.getContentLength() > _config->getClientMaxBodySize())
 	{
 		_content = _getPage(413);
 		_statusCode = 413;
@@ -234,13 +234,6 @@ std::string	HttpHandler::_parseTarget(std::string const &target)
 	return (target);
 }
 
-/*	Methods		************************************************************* */
-bool HttpHandler::checkCgi(HttpRequest const &request) const {
-	CgiHandler cgi(request, getCGIbin());
-	return cgi.isValid();
-}
-
-
 void	HttpHandler::_get_post(HttpRequest const &request)
 {
 	try
@@ -256,7 +249,7 @@ void	HttpHandler::_get_post(HttpRequest const &request)
 				_statusCode = 404;
 			}
 		}
-		else if (checkCgi(request)) {
+		else if (isCgi(request)) {
 			return;
 		}
 		else if (!_isDirectory(_path.c_str()) && access(_path.c_str(), F_OK) == 0) {
@@ -281,6 +274,54 @@ void	HttpHandler::_delete( void )
 		_content = _getPage(403);
 		_statusCode = 403;
 	}
+}
+
+bool HttpHandler::isCgi(HttpRequest const &request) {
+	const std::string target = request.target();
+	// std::string _htmlRoot = _config->getRoot();
+	std::string _htmlRoot = "./data/www";
+
+
+	if (_cgi_bin.back() != '/')
+		_cgi_bin += "/";
+	size_t it = target.find(_cgi_bin);
+	
+	if (it != 0)
+		return false;
+
+	it = target.find_first_of("/?", _cgi_bin.size());
+	_scriptName = target.substr(0, it);
+	if (_scriptName == _cgi_bin)
+		return false;
+	_scriptPath = _htmlRoot + _scriptName;
+
+	if (access(_scriptPath.data(), X_OK) != 0) {
+		return false;
+	}
+	
+
+	return true;
+}
+
+void HttpHandler::populateCgi(CgiHandler &cgi, HttpRequest const &request) {
+
+	std::string target = request.target();
+	size_t it = target.find(_cgi_bin);
+
+	if (target[it] == '/') {
+		size_t it_query = target.find_first_of('?', it);
+		std::string _pathInfo = target.substr(it, it_query - it);
+		it = it_query;
+		cgi._pathInfo = _pathInfo;
+	}
+	if (target[it] == '?') {
+		std::string _queryString = target.substr(it + 1);
+		cgi._queryString = _queryString;
+	}
+	cgi._cgi_bin = _cgi_bin;
+	cgi._scriptName = _scriptName;
+	cgi._scriptPath = _scriptPath;
+
 }
 
 /*	AutoIndex	************************************************************* */

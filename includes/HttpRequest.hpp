@@ -23,15 +23,15 @@ public:
 	HttpRequest& operator = (HttpRequest const &other);	
 
 	// Getters
-	std::vector<char> const	raw()	const		{ return _buffer; }
+	std::vector<char> const	raw()	const		{ return _buffer; };
 	std::string const		method() const		{ return _method; };
 	std::string const		target() const		{ return _target; };
 	std::string const		version() const		{ return _version; };
-	std::vector<char> const	body() const		{ return _body; };
+	std::vector<char> const &body() const		{ return _body; };
 	bool					hasError() const	{ return _state == ERROR; };
 	bool					isComplete() const	{ return _state == COMPLETE; };
 	std::string const		getHeader(std::string const key) const;
-	int						getContentLength() const;
+	unsigned long			getContentLength() const;
 
 	bool					parse(char *data, int bytes_read);
 	void 					reset();
@@ -44,7 +44,7 @@ private:
 	std::vector<char>					_buffer;
 	std::vector<char>					_body;
 	std::map<std::string, std::string>	_headers;
-	int									_contentLength;
+	unsigned long						_contentLength;
 
 
 	void parse();

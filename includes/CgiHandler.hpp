@@ -5,6 +5,7 @@
 #include <string>
 #include <unistd.h>
 #include "ConfigServer.hpp"
+#include "utils.hpp"
 
 
 class CgiHandler
@@ -25,13 +26,8 @@ private:
 	std::string			_htmlRoot;
 	bool				_is_valid;
 	State				_state;
-	std::string			_scriptName;
-	std::string			_scriptPath;
-	std::string			_pathInfo;
-	std::string			_queryString;
-	std::string			_cgi_bin;
 	int					_child_to_parent[2], _parent_to_child[2];
-	int					_sent_bytes;
+	unsigned long		_sent_bytes;
 	unsigned long		_request_body_size;
 	pid_t				_process_id;
 	std::time_t			_exec_start;
@@ -39,22 +35,30 @@ private:
 
 public:
 	std::string			_cgiResponse;
+	std::string			_scriptName;
+	std::string			_scriptPath;
+	std::string			_pathInfo;
+	std::string			_queryString;
+	std::string			_cgi_bin;
 
 private:
 	std::vector<char const *>	_envp;
 	std::vector<std::string>	_env_strings;
 
-	void	_init();
 	void	_send_to_cgi(std::string &src, size_t n_bytes);
 	void	_read_from_cgi(std::string &dst, size_t n_bytes);
 	bool	_timeout_cgi(int process_id, int &wstatus, int timeout_sec);
+	bool	_cgi_returned_error(int &status);
 	void	_add_env_var(std::string key, std::string value);
 	void	_setEnvp();
 	bool	_spawn_process();
+	void	_send_to_cgi();
+	void	_recv_from_cgi();
+
 public:
 	CgiHandler(HttpRequest const &request, std::string const &cgi_bin);
 
-	bool	isValid() const; 
+	bool	isValid() const;
 	bool	completed() const;
 	void	run();
 	std::string getContent() const { return _cgiResponse; };

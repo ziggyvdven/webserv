@@ -5,12 +5,12 @@
 #include <sys/socket.h>
 
 WebClient::WebClient(int accepted_connection, HttpHandler* httpHandler, pollfd *pollFd_ptr)
-	: Socket(accepted_connection), _pollFd(pollFd_ptr), 
-	_state(READING), _httpHandler(httpHandler)
-	
+	: Socket(accepted_connection), _pollFd(pollFd_ptr), _httpHandler(httpHandler)
+
 {
 	_cgi = NULL;
 	_sentBytes = 0;
+	_state = READING;
 	setPollFd(pollFd_ptr);
 	_updateTime();
 }
@@ -24,8 +24,7 @@ WebClient::WebClient(WebClient const &other)
 WebClient::~WebClient() {
 }
 
-void	WebClient::_deleteCGI()
-{
+void	WebClient::_deleteCGI() {
 	if (_cgi)
 	{
 		delete _cgi;
@@ -48,21 +47,53 @@ WebClient& WebClient::operator = (WebClient const &other) {
 	return *this;
 }
 
+bool WebClient::process()
+{
+	switch (_state) {
+		case READING:
+			_processInput();
+			break;
+		case HANDLING_REQUEST:
+			_handleRequest();
+			return false;
+		case HANDLING_CGI:
+			_processCGI();
+			return false;
+		case SENDING_RESPONSE:
+			_sendData(_response.getResponse().data(), _response.getResponse().size());
+			break;
+		case COMPLETE:
+			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
+			break;
+		case ERROR:
+			std::cout << "[UNIMPLEMENTED] Web Clnent ERROR" << std::endl;
+			return false;
+	}
+	return !(_state == COMPLETE);
+}
+
+void WebClient::_updateState(State new_state) {
+	_state = new_state;
+	_printState();
+}
+
 void WebClient::_sendData(char const *data, size_t data_len) {
 	size_t	rtn = 0;
 	size_t chunk_size = 0;
 	size_t max_chunk_size = 65536;
 
 
-	if (_sentBytes < data_len) {
-		chunk_size = ::min(max_chunk_size, data_len - _sentBytes);
-		rtn = send(_socketFD, data + _sentBytes, chunk_size, 0);
-		_sentBytes += rtn;
+	if (_sentBytes >= data_len) {
+		_updateState(COMPLETE);
+		return;
 	}
 
-	if (_sentBytes >= data_len) {
-		_state = COMPLETE;
+	chunk_size = ::min(max_chunk_size, data_len - _sentBytes);
+	rtn = send(_socketFD, data + _sentBytes, chunk_size, 0);
+	if (rtn <= 0) {
+		return;
 	}
+	_sentBytes += rtn;
 }
 
 
@@ -70,30 +101,37 @@ void WebClient::_processInput()
 {
 	int bytes_read = 0;
 	char buffer[BUFFER_SIZE];
+	static bool first = true;
 
 	if (_pollFd->revents & POLLIN)
 	{
 		bytes_read = recv(_socketFD, buffer, BUFFER_SIZE, 0);
-		if (bytes_read <= 0)
-		{
-			_state = HANDLING_REQUEST;
+		if (bytes_read == 0) {
+			_updateState(HANDLING_REQUEST);
 			return ;
 		}
+		if (bytes_read < 0)
+			return;
 	}
 
 	// Parse the request
 	_request.parse(buffer, bytes_read);
+	if(!_request.target().empty() && first) {
+		_printState();
+		first = false;
+	}
 	if (_request.hasError() || _request.isComplete()) {
-		_state = HANDLING_REQUEST;
+		_updateState(HANDLING_REQUEST);
 	}
 }
 
 void WebClient::_processCGI() {
-	
+
 	// Init cgi execution
 	if (_cgi == NULL)
 	{
 		_cgi = new CgiHandler(_request, _httpHandler->getCGIbin());
+		_httpHandler->populateCgi(*_cgi, _request);
 	}
 	_cgi->run();
 
@@ -101,21 +139,41 @@ void WebClient::_processCGI() {
 	{
 		_response.setContent(_cgi->getContent());
 		_deleteCGI();
-		_state = SENDING_RESPONSE;
+		_updateState(SENDING_RESPONSE);
 	}
-
-
 }
+
 void WebClient::_handleRequest(){
 	_httpHandler->buildResponse(_request, _response);
-	if(_httpHandler->checkCgi(_request))
-		_state = HANDLING_CGI;
+	if(_httpHandler->isCgi(_request))
+		_updateState(HANDLING_CGI);
 	else
-		_state=SENDING_RESPONSE;
+		_updateState(SENDING_RESPONSE);
 }
 
-std::string WebClient::_printStatus() const{
+int		WebClient::getTime() const
+{
+	return seconds_since(_last_update);
+}
+
+void	WebClient::_updateTime()
+{
+	_last_update = std::time(NULL);
+}
+
+void WebClient::close()
+{
+	close_socket();
+	_pollFd->fd = -1;
+}
+
+void	WebClient::setPollFd(struct pollfd *poll_ptr) {
+	_pollFd = poll_ptr;
+}
+
+std::string WebClient::_printState() const{
 	std::ostringstream oss;
+	std::string message;
 	std::string state;
 
 	switch (_state) {
@@ -142,53 +200,9 @@ std::string WebClient::_printStatus() const{
 	oss << "[WebClient] target: " << _request.target()
 		<< "\nStatus: " << state
 		<< std::endl;
+
+	message = oss.str();
+
+	printMsg(G, "[INFO] %s", message.data());
 	return oss.str();
-}
-
-bool WebClient::process()
-{
-	switch (_state) {
-		case READING:
-			_processInput();
-			break;
-		case HANDLING_REQUEST:
-			_handleRequest();
-			return false;
-		case HANDLING_CGI:
-			_processCGI();
-			return false;
-		case SENDING_RESPONSE:
-			_sendData(_response.getResponse().data(), _response.getResponse().size());
-			break;
-		case COMPLETE:
-			std::cout << "[UNIMPLEMENTED] Web Client COMPLETE" << std::endl;
-			break;
-		case ERROR:
-			std::cout << "[UNIMPLEMENTED] Web Clnent ERROR" << std::endl;
-			return false;
-	}
-
-	printMsg(G, "%s", _printStatus().c_str());
-
-	return !(_state == COMPLETE);
-}
-
-int		WebClient::getTime() const
-{
-	return seconds_since(_last_update);
-}
-
-void	WebClient::_updateTime()
-{
-	_last_update = std::time(NULL);
-}
-
-void WebClient::close()
-{
-	close_socket();
-	_pollFd->fd = -1;
-}
-
-void	WebClient::setPollFd(struct pollfd *poll_ptr) {
-	_pollFd = poll_ptr;
 }
